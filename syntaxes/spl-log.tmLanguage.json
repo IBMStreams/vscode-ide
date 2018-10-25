@@ -1,0 +1,58 @@
+{
+	"scopeName": "source.splLog",
+	"name": "StreamsSplLog",
+	"fileTypes": [
+	  "log"
+	],
+	"patterns": [
+		{
+			"begin": "Building\\.\\.\\.",
+			"end": "(?=\\[SPL.*\\])",
+			"contentName": "meta.log.debug.body.splLog"
+		},
+		{
+			"begin": "(\\[SPL.*\\]\\[(DEBUG)\\])",
+			"beginCaptures": {
+				"1": {
+					"name": "meta.log.debug.header.splLog"
+				}
+			},
+			"end": "(?=\\[SPL.*\\])",
+			"patterns": [
+				{
+					"begin": "(?<=\\[DEBUG\\])",
+					"end": "(?=\\[SPL.*\\])",
+					"contentName": "meta.log.debug.body.splLog"
+				}
+			]
+		},
+		{
+			"begin": "(\\[SPL.*\\]\\[(ERROR)\\])",
+			"beginCaptures": {
+				"1": {
+					"name": "meta.log.error.header.splLog"
+				}
+			},
+			"end": "(?=\\[SPL.*\\])",
+			"patterns": [
+				{
+					"begin": "(?<=\\[ERROR\\])",
+					"end": "(?=\\[SPL.*\\])",
+					"contentName": "meta.log.error.body.splLog"
+				}
+			]
+		},
+		{
+			"match": "\\[SPL.*\\]\\[(INFO)\\]",
+			"name": "meta.log.info.splLog"
+		},
+		{
+			"match": "\\[SPL.*\\]\\[(SUCCESS)\\]",
+			"name": "meta.log.success.splLog"
+		},
+		{
+			"match": "\\[SPL.*\\]\\[(WARN)\\]",
+			"name": "meta.log.warn.splLog"
+		}
+	]	
+}
