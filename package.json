@@ -1,226 +1,226 @@
 {
-    "name": "ibm-streams",
-    "displayName": "IBM Streams",
-    "description": "IBM Streams Support for Visual Studio Code [Beta]",
-    "version": "0.0.1",
-    "publisher": "IBM",
-    "icon": "images/ibm-streams.png",
-    "homepage": "https://github.com/IBMStreams/vscode-ide/blob/master/README.md",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/IBMStreams/vscode-ide.git"
-    },
-    "bugs": {
-        "url": "https://github.com/IBMStreams/vscode-ide/issues",
-        "email": "nicholls@ca.ibm.com"
-    },
-    "engines": {
-        "vscode": "^1.25.0"
-    },
-    "categories": [
-        "Programming Languages",
-        "Linters",
-        "Themes"
-    ],
-    "keywords": [
-        "IBM",
-        "Streams",
-        "Streaming Analytics",
-        "SPL",
-        "theme"
-    ],
-    "activationEvents": [
-        "*"
-    ],
-    "main": "./out/extension",
-    "contributes": {
-        "configuration": {
-            "type": "object",
-            "title": "IBM Streams",
-            "properties": {
-                "ibm-streams.toolkitsPath": {
-                    "type": "string",
-                    "default": "",
-                    "description": "Path to a directory containing IBM Streams toolkits."
-                },
-                "ibm-streams.streamingAnalyticsCredentials": {
-                    "type": "object",
-                    "default": null,
-                    "description": "Credentials for an IBM Streaming Analytics service."
-                }
-            }
+  "name": "ibm-streams",
+  "displayName": "IBM Streams",
+  "description": "IBM Streams Support for Visual Studio Code [Beta]",
+  "version": "0.1.0",
+  "publisher": "IBM",
+  "icon": "images/ibm-streams.png",
+  "homepage": "https://github.com/IBMStreams/vscode-ide/blob/master/README.md",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/IBMStreams/vscode-ide.git"
+  },
+  "bugs": {
+    "url": "https://github.com/IBMStreams/vscode-ide/issues",
+    "email": "nicholls@ca.ibm.com"
+  },
+  "engines": {
+    "vscode": "^1.25.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters",
+    "Themes"
+  ],
+  "keywords": [
+    "IBM",
+    "Streams",
+    "Streaming Analytics",
+    "SPL",
+    "theme"
+  ],
+  "activationEvents": [
+    "*"
+  ],
+  "main": "./out/extension",
+  "contributes": {
+    "configuration": {
+      "type": "object",
+      "title": "IBM Streams",
+      "properties": {
+        "ibm-streams.toolkitsPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to a directory containing IBM Streams toolkits."
         },
-        "commands": [
-            {
-                "command": "ibm-streams.build",
-                "title": "SPL Build",
-                "category": "IBM Streams"
-            },
-            {
-                "command": "ibm-streams.buildDownload",
-                "title": "SPL Build and Download Bundle",
-                "category": "IBM Streams"
-            },
-            {
-                "command": "ibm-streams.buildSubmit",
-                "title": "SPL Build and Submit Job",
-                "category": "IBM Streams"
-            },
-            {
-                "command": "ibm-streams.createApplication",
-                "title": "Create a SPL Application From Template",
-                "category": "IBM Streams"
-            }
+        "ibm-streams.streamingAnalyticsCredentials": {
+          "type": "object",
+          "default": null,
+          "description": "Credentials for an IBM Streaming Analytics service."
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "ibm-streams.build",
+        "title": "SPL Build",
+        "category": "IBM Streams"
+      },
+      {
+        "command": "ibm-streams.buildDownload",
+        "title": "SPL Build and Download Bundle",
+        "category": "IBM Streams"
+      },
+      {
+        "command": "ibm-streams.buildSubmit",
+        "title": "SPL Build and Submit Job",
+        "category": "IBM Streams"
+      },
+      {
+        "command": "ibm-streams.createApplication",
+        "title": "Create a SPL Application From Template",
+        "category": "IBM Streams"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "spl",
+        "scopeName": "source.spl",
+        "path": "./syntaxes/spl.tmLanguage.json"
+      },
+      {
+        "language": "spl-log",
+        "scopeName": "source.splLog",
+        "path": "./syntaxes/spl-log.tmLanguage.json"
+      }
+    ],
+    "languages": [
+      {
+        "id": "spl",
+        "aliases": [
+          "SPL",
+          "spl"
         ],
-        "grammars": [
-            {
-                "language": "spl",
-                "scopeName": "source.spl",
-                "path": "./syntaxes/spl.tmLanguage.json"
-            },
-            {
-                "language": "spl-log",
-                "scopeName": "source.splLog",
-                "path": "./syntaxes/spl-log.tmLanguage.json"
-            }
+        "extensions": [
+          ".spl"
         ],
-        "languages": [
-            {
-                "id": "spl",
-                "aliases": [
-                    "SPL",
-                    "spl"
-                ],
-                "extensions": [
-                    ".spl"
-                ],
-                "configuration": "./language-configuration.json"
-            },
-            {
-                "id": "spl-log",
-                "mimetypes": [
-                    "text/x-code-output"
-                ]
-            }
-        ],
-        "menus": {
-            "commandPalette": [
-                {
-                    "command": "ibm-streams.build",
-                    "when": "resourceLangId == spl"
-                },
-                {
-                    "command": "ibm-streams.buildDownload",
-                    "when": "resourceLangId == spl"
-                },
-                {
-                    "command": "ibm-streams.buildSubmit",
-                    "when": "resourceLangId == spl"
-                },
-                {
-                    "command": "ibm-streams.createApplication"
-                }
-            ],
-            "explorer/context": [
-                {
-                    "command": "ibm-streams.build",
-                    "when": "resourceLangId == spl",
-                    "group": "SPL_BUILD@1"
-                },
-                {
-                    "command": "ibm-streams.buildDownload",
-                    "when": "resourceLangId == spl",
-                    "group": "SPL_BUILD@2"
-                },
-                {
-                    "command": "ibm-streams.buildSubmit",
-                    "when": "resourceLangId == spl",
-                    "group": "SPL_BUILD@3"
-                },
-                {
-                    "command": "ibm-streams.createApplication",
-                    "group": "SPL_GENERAL@4"
-                }
-            ],
-            "editor/context": [
-                {
-                    "command": "ibm-streams.build",
-                    "when": "resourceLangId == spl",
-                    "group": "SPL_BUILD@1"
-                },
-                {
-                    "command": "ibm-streams.buildDownload",
-                    "when": "resourceLangId == spl",
-                    "group": "SPL_BUILD@2"
-                },
-                {
-                    "command": "ibm-streams.buildSubmit",
-                    "when": "resourceLangId == spl",
-                    "group": "SPL_BUILD@3"
-                },
-                {
-                    "command": "ibm-streams.createApplication",
-                    "group": "SPL_GENERAL@4"
-                }
-            ],
-            "editor/title/context": [
-                {
-                    "command": "ibm-streams.build",
-                    "when": "resourceLangId == spl",
-                    "group": "SPL_BUILD@1"
-                },
-                {
-                    "command": "ibm-streams.buildDownload",
-                    "when": "resourceLangId == spl",
-                    "group": "SPL_BUILD@2"
-                },
-                {
-                    "command": "ibm-streams.buildSubmit",
-                    "when": "resourceLangId == spl",
-                    "group": "SPL_BUILD@3"
-                },
-                {
-                    "command": "ibm-streams.createApplication",
-                    "group": "SPL_GENERAL@4"
-                }
-            ]
-        },
-        "themes": [
-            {
-                "label": "Streams Light",
-                "uiTheme": "vs",
-                "path": "./themes/Streams_Light.json"
-            },
-            {
-                "label": "Streams Dark",
-                "uiTheme": "vs-dark",
-                "path": "./themes/Streams_Dark.json"
-            }
+        "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "spl-log",
+        "mimetypes": [
+          "text/x-code-output"
         ]
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "ibm-streams.build",
+          "when": "resourceLangId == spl"
+        },
+        {
+          "command": "ibm-streams.buildDownload",
+          "when": "resourceLangId == spl"
+        },
+        {
+          "command": "ibm-streams.buildSubmit",
+          "when": "resourceLangId == spl"
+        },
+        {
+          "command": "ibm-streams.createApplication"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "ibm-streams.build",
+          "when": "resourceLangId == spl",
+          "group": "SPL_BUILD@1"
+        },
+        {
+          "command": "ibm-streams.buildDownload",
+          "when": "resourceLangId == spl",
+          "group": "SPL_BUILD@2"
+        },
+        {
+          "command": "ibm-streams.buildSubmit",
+          "when": "resourceLangId == spl",
+          "group": "SPL_BUILD@3"
+        },
+        {
+          "command": "ibm-streams.createApplication",
+          "group": "SPL_GENERAL@4"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "ibm-streams.build",
+          "when": "resourceLangId == spl",
+          "group": "SPL_BUILD@1"
+        },
+        {
+          "command": "ibm-streams.buildDownload",
+          "when": "resourceLangId == spl",
+          "group": "SPL_BUILD@2"
+        },
+        {
+          "command": "ibm-streams.buildSubmit",
+          "when": "resourceLangId == spl",
+          "group": "SPL_BUILD@3"
+        },
+        {
+          "command": "ibm-streams.createApplication",
+          "group": "SPL_GENERAL@4"
+        }
+      ],
+      "editor/title/context": [
+        {
+          "command": "ibm-streams.build",
+          "when": "resourceLangId == spl",
+          "group": "SPL_BUILD@1"
+        },
+        {
+          "command": "ibm-streams.buildDownload",
+          "when": "resourceLangId == spl",
+          "group": "SPL_BUILD@2"
+        },
+        {
+          "command": "ibm-streams.buildSubmit",
+          "when": "resourceLangId == spl",
+          "group": "SPL_BUILD@3"
+        },
+        {
+          "command": "ibm-streams.createApplication",
+          "group": "SPL_GENERAL@4"
+        }
+      ]
     },
-    "devDependencies": {
-        "@types/node": "^10.12.0",
-        "typescript": "^3.1.3",
-        "vsce": "^1.52.0",
-        "vscode": "^1.1.21"
-    },
-    "dependencies": {
-        "@ibmstreams/spl-lsp": "0.x.x",
-        "@types/archiver": "^2.1.2",
-        "@types/copy-paste": "^1.1.30",
-        "@types/underscore": "^1.8.9",
-        "archiver": "^3.0.0",
-        "copy-paste": "^1.3.0",
-        "moment": "^2.22.2",
-        "request": "^2.88.0",
-        "rxjs": "^6.3.2",
-        "underscore": "^1.9.1",
-        "vscode-languageclient": "^4.4.2"
-    },
-    "scripts": {
-        "vscode:prepublish": "npm run compile",
-        "compile": "tsc -p ./",
-        "watch": "tsc -watch -p ./",
-        "postinstall": "node ./node_modules/vscode/bin/install"
-    }
+    "themes": [
+      {
+        "label": "Streams Light",
+        "uiTheme": "vs",
+        "path": "./themes/Streams_Light.json"
+      },
+      {
+        "label": "Streams Dark",
+        "uiTheme": "vs-dark",
+        "path": "./themes/Streams_Dark.json"
+      }
+    ]
+  },
+  "devDependencies": {
+    "@types/node": "^10.12.0",
+    "typescript": "^3.1.3",
+    "vsce": "^1.52.0",
+    "vscode": "^1.1.21"
+  },
+  "dependencies": {
+    "@ibmstreams/spl-lsp": "0.x.x",
+    "@types/archiver": "^2.1.2",
+    "@types/copy-paste": "^1.1.30",
+    "@types/underscore": "^1.8.9",
+    "archiver": "^3.0.0",
+    "copy-paste": "^1.3.0",
+    "moment": "^2.22.2",
+    "request": "^2.88.0",
+    "rxjs": "^6.3.2",
+    "underscore": "^1.9.1",
+    "vscode-languageclient": "^4.4.2"
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "postinstall": "node ./node_modules/vscode/bin/install"
+  }
 }
