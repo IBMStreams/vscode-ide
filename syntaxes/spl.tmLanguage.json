@@ -1,0 +1,1338 @@
+{
+	"scopeName": "source.spl",
+	"name": "StreamsSpl",
+	"fileTypes": [
+	  "spl"
+	],
+	"patterns": [
+	{
+		"begin": "\\b(namespace)\\b\\s*",
+		"beginCaptures": {
+			"1": {
+				"name": "keyword.other.namespace.spl"
+			}
+		},
+		"end": "\\s*(;)",
+		"endCaptures": {
+			"1": {
+				"name": "punctuation.terminator.spl"
+			}
+		},
+		"name": "meta.namespace.spl",
+		"contentName": "storage.modifier.namespace.spl",
+		"patterns": [
+			{
+				"include": "#comments"
+			},
+			{
+				"match": "(?<=\\.)\\s*\\.|\\.(?=\\s*;)",
+				"name": "invalid.illegal.character_not_allowed_here.spl"
+			},
+			{
+				"match": "(?<!_)_(?=\\s*(\\.|;))|\\b\\d+|-+",
+				"name": "invalid.illegal.character_not_allowed_here.spl"
+			},
+			{
+				"match": "(?x)\\b(?<!\\$)\n(abstract|assert|boolean|break|byte|case|catch|rstring|composite|\nconst|continue|default|do|double|else|enum|extends|final|\nfinally|float32|float64|for|goto|if|implements|use|instanceof|int32|int64|\ninterface|long|native|new|namespace|private|protected|public|\nreturn|short|static|strictfp|super|switch|syncronized|this|\nthrow|throws|transient|try|void|volatile|while|\ntrue|false|null)\\b",
+				"name": "invalid.illegal.character_not_allowed_here.spl"
+			},
+			{
+				"match": "\\.",
+				"name": "punctuation.separator.spl"
+			}
+		]
+	},
+	{
+		"begin": "\\b(use)\\b\\s*\\b(static)?\\b\\s",
+		"beginCaptures": {
+			"1": {
+				"name": "keyword.other.use.spl"
+			},
+			"2": {
+				"name": "storage.modifier.spl"
+			}
+		},
+		"end": "\\s*(;)",
+		"endCaptures": {
+			"1": {
+				"name": "punctuation.terminator.spl"
+			}
+		},
+		"name": "meta.use.spl",
+		"contentName": "storage.modifier.use.spl",
+		"patterns": [
+			{
+				"match": "\\.",
+				"name": "punctuation.separator.spl"
+			},
+			{
+				"match": "\\*",
+				"name": "variable.language.wildcard.spl"
+			},
+			{
+				"include": "#comments"
+			},
+			{
+				"match": "(?<=\\.)\\s*\\.|\\.(?=\\s*;)",
+				"name": "invalid.illegal.character_not_allowed_here.spl"
+			},
+			{
+				"match": "(?<!\\.)\\s*\\*",
+				"name": "invalid.illegal.character_not_allowed_here.spl"
+			},
+			{
+				"match": "(?<!_)_(?=\\s*(\\.|;))|\\b\\d+|-+",
+				"name": "invalid.illegal.character_not_allowed_here.spl"
+			},
+			{
+				"match": "(?x)\\b(?<!\\$)\n(abstract|assert|boolean|break|byte|case|catch|rstring|composite|\nconst|continue|default|do|double|else|enum|extends|final|\nfinally|float32|float64|for|goto|if|implements|use|instanceof|int32|int64|\ninterface|long|native|new|namespace|private|protected|public|\nreturn|short|static|strictfp|super|switch|syncronized|this|\nthrow|throws|transient|try|void|volatile|while|\ntrue|false|null)\\b",
+				"name": "invalid.illegal.character_not_allowed_here.spl"
+			}
+		]
+	},
+	{
+		"include": "#comments-spldoc"
+	},
+	{
+		"include": "#standalone-type-def"
+	},
+	{
+		"include": "#composite"
+	},
+	{
+		"include": "#functions"
+	},
+	{
+		"include": "#code"
+	}
+],
+"repository": {
+	"nested-bracket-angle": {
+		"begin": "\\<",
+		"beginCaptures": {
+			"0": {
+				"name": "punctuation.bracket.angle.spl"
+			}
+		},
+		"end": "\\>",
+		"endCaptures": {
+			"0": {
+				"name": "punctuation.bracket.angle.spl"
+			}
+		},
+		"patterns": [
+			{
+				"include": "#primitiveTypes"
+			},
+			{
+				"include": "#nested-bracket-angle"
+			},
+			{
+				"include": "#stream-type-body"
+			}
+		]
+	},
+	"nested-bracket-curly": {
+		"begin": "\\{",
+		"beginCaptures": {
+			"0": {
+				"name": "punctuation.bracket.curly.spl"
+			}
+		},
+		"end": "\\}",
+		"endCaptures": {
+			"0": {
+				"name": "punctuation.bracket.curly.spl"
+			}
+		},
+		"patterns": [
+			{
+				"include": "#code"
+			},
+			{
+				"include": "#nested-bracket-curly"
+			}
+		]
+	},
+	"allTypes": {
+		"patterns": [
+			{
+				"include": "#primitiveTypes"
+			},
+			{
+				"match": "\\b(void)\\b",
+				"name": "storage.type.primitive.spl"
+			},
+			{
+				"include": "#compositeTypes"
+			},
+			{
+				"include": "#jmxNotificationTypes"
+			}
+		]
+	},
+	"composite": {
+		"begin": "(?=(?:public\\s+)?composite)",
+		"end": "}",
+		"endCaptures": {
+			"0": {
+				"name": "punctuation.section.composite.end.bracket.curly.spl"
+			}
+		},
+		"name": "meta.composite.spl",
+		"patterns": [
+			{
+				"match": "(composite)\\s+([A-Za-z$_][\\w$]*)",
+				"captures": {
+					"1": {
+						"name": "keyword.control.spl"
+					},
+					"2": {
+						"name": "entity.name.type.composite.spl"
+					}
+				}
+			},
+			{
+				"begin": "\\(",
+				"beginCaptures": {
+					"0": {
+						"name": "punctuation.composite-in-out.begin.bracket.round.spl"
+					}
+				},
+				"end": "\\)",
+				"endCaptures": {
+					"0": {
+						"name": "punctuation.composite-in-out.end.bracket.round.spl"
+					}
+				},
+				"contentName": "meta.composite-head-in-out.spl",
+				"patterns": [
+					{
+						"include": "#composite-in-out"
+					}
+				]
+			},
+			{
+				"begin": "{",
+				"beginCaptures": {
+					"0": {
+						"name": "punctuation.section.composite.begin.bracket.curly.spl"
+					}
+				},
+				"end": "(?=})",
+				"contentName": "meta.composite.body.spl",
+				"patterns": [
+					{
+						"include": "#composite-body"
+					}
+				]
+			},
+			{
+				"include": "#code"
+			}
+		]
+	},
+	"composite-body": {
+		"patterns": [
+			{
+				"include": "#composite-body-param"
+			},
+			{
+				 "include": "#composite-body-type"
+			},
+			{
+				"include": "#composite-body-graph"
+			},
+			{
+				"include": "#composite-body-config"
+			},
+			{
+				"include": "#stream-type"
+			},
+			{
+				"include": "#code"
+			}
+		]
+	},
+	"composite-in-out": {
+		"begin": "(input|output)",
+		"beginCaptures": {
+			"0": {
+				"name": "keyword.control.spl"
+			}
+		},
+		"end": "(?=;|\\))",
+		"name": "meta.composite-in-out.spl",
+		"patterns": [
+			{
+				"include": "#stream-type"
+			},
+			{
+				"match": "([A-Za-z$_][\\w$]*)",
+				"captures": {
+					"1": {
+						"name": "variable.oter.definition.spl" 
+					}
+				}
+			},
+			{
+				"include": "#code"
+			}
+		]
+	},
+	"statements": {
+		"patterns": [
+			{
+				"include": "#variable-definition"
+			},
+			{
+				"include": "#return-statement"
+			}
+		]
+	},
+	"variable-definition": {
+		"begin": "(?x)(?=(int8|int16|int32|int128|uint8|uint16|uint32|uint64|uint128|float32|float64|decimal32|decimal64|decimal128|complex32|complex64|timestamp|blob|ustring|(?>(enum)\\{\\w*\\}))\\s+[A-Za-z$_][\\w$]*([\\w,$][\\w,\\s]*)?\\s*(=|;))",
+		"end": "(?=;)",
+		"name": "meta.definition.variable.spl",
+		"patterns": [
+			{
+				"match": "([A-Za-z$_][\\w$]*)(?=\\s*(;|=|,))",
+				"captures": {
+					"1": {
+						"name": "variable.other.definition.spl"
+					}
+				}
+			},
+			{
+				"include": "#allTypes"
+			},
+			{
+				"begin": "=",
+				"beginCaptures": {
+					"0": {
+						"name": "keyword.operator.assignment.spl"
+					}
+				},
+				"end": "(?=;)",
+				"patterns": [
+					{
+						"include": "#code"
+					}
+				]
+			},
+			{
+				"include": "#code"
+			}
+		]
+	},
+	"code": {
+		"patterns": [
+			{
+				"include": "#annotations"
+			},
+			{
+				"include": "#variable-definition"
+			},
+			{
+				"include": "#numbers"
+			},
+			{
+				"include": "#allTypes"
+			},
+			{
+				"include": "#strings"
+			},
+			{
+				"include": "#keywords"
+			},
+			{
+				"include": "#storage-modifiers"
+			},
+			{
+				"include": "#comments"
+			},
+			{
+				"include": "#statements"
+			},
+			{
+				"include": "#param"
+			},
+			{
+				"include": "#function-call"
+			},
+			{
+				"include": "#parens"
+			},
+			{
+				"match": ",",
+				"name": "punctuation.separator.delimiter.spl"
+			},
+			{
+				"match": "\\.",
+				"name": "punctuation.separator.period.spl"
+			},
+			{
+				"match": ";",
+				"name": "punctuation.terminator.spl"
+			},
+			{
+				"match": "([A-Za-z$_][\\w$]*)\\.(?:[A-Za-z$_][\\w$]*)",
+				"captures": {
+					"1": {
+						"name": "entity.name.function.object.spl"
+					}
+				}
+			},
+			{
+				"match": "(\\btuple\\b)\\<",
+				"captures": {
+					"1": {
+						"name": "keyword.control.spl"
+					}
+				}
+			},
+			{
+				"match": "[A-Za-z$_][\\w$]*",
+				"name": "variable.other.definition.spl"
+			}
+		]
+	}, 
+	"comments": {
+		"patterns": [
+			{
+				"begin": "/\\*",
+				"captures": {
+					"0": {
+						"name": "punctuation.definition.comment.spl"
+					}
+				},
+				"end": "\\*/",
+				"name": "comment.block.spl"
+			},
+			{
+				"begin": "(^[ \\t]+)?(?=//)",
+				"beginCaptures": {
+					"1": {
+						"name": "punctuation.whitespace.comment.leading.spl"
+					}
+				},
+				"end": "(?!\\G)",
+				"patterns": [
+					{
+						"begin": "//",
+						"beginCaptures": {
+							"0": {
+								"name": "punctuation.definition.comment.spl"
+							}
+						},
+						"end": "\\n",
+						"name": "comment.line.double-slash.spl"
+					}
+				]
+			}
+		]
+	},
+	"primitiveTypes": {
+		"match": "\\b(boolean|int8|int16|int32|int64|int128|uint8|uint16|uint32|uint64|uint128|float32|float64|decimal32|decimal64|decimal128|complex32|complex64|timestamp|blob|ustring|xml|rstring|enum)\\b",
+		"name": "storage.type.primitive.spl"
+	},
+	"compositeTypes": {
+		"patterns": [
+			{
+				"include": "#tupleType"
+			},
+			{
+				"match": "\\b(list|map|set)\\b",
+				"name": "storage.type.composite.spl"
+			}
+		]
+	},
+	"jmxNotificationTypes": {
+		"match": "\\b(MBeanNotification|MBeanNotificationBase|MBeanNotificationUserString)\\b",
+		"captures": {
+			"1": {
+				"name": "storage.type.jmx-notification.spl"
+			}
+		}
+	},
+	"keywords": {
+		"patterns": [
+			{
+				"match": "\\b(if|in|true|false|for|function|operator|while|as|break|continue|return|else|attribute|expression|mutable|window|logic|param|output|config|type|graph|onProcess|onTuple|onPunct|state|tumbling|sliding|timeInterval|partitioned|static|composite)\\b",
+				"name": "keyword.control.spl"
+			},
+			{
+				"match": "(===?|!=|<=|>=|<>|<|>)",
+				"name": "keyword.operator.comparison.spl"
+			},
+			{
+				"match": "(=)",
+				"name": "keyword.operator.assignment.spl"
+			},
+			{
+				"match": "%=|\\+=|-=|\\*=|(?<!\\()/=",
+				"name": "keyword.operator.assignment.compound.spl"
+			},
+			{
+				"match": "&=|\\^=|<<=|>>=|\\|=",
+				"name": "keyword.operator.assignment.compound.bitwise.spl"
+			},
+			{
+				"match": "--",
+				"name": "keyword.operator.decrement.spl"
+			},
+			{
+				"match": "\\+\\+",
+				"name": "keyword.operator.increment.spl"
+			}
+		]
+	},
+	"storage-modifiers": {
+		"patterns": [
+			{
+				"match": "\\b(public|stateful)\\b",
+				"name": "storage.modifier.spl"
+			}
+		]
+	},
+	"functions": {
+		"begin": "(?=[A-Za-z$_][\\w$]*\\s*\\()",
+		"end": "}",
+		"endCaptures": {
+			"0": {
+				"name": "punctuation.section.functions.end.bracket.curly.spl"
+			}
+		},
+		"name": "meta.functions.spl",
+		"patterns": [
+			{
+				"begin": "{",
+				"beginCaptures": {
+					"0": {
+						"name": "punctuation.section.functions.begin.bracket.curly.spl"
+					}
+				},
+				"end": "(?=})",
+				"name": "meta.function-body.spl",
+				"patterns": [
+					{
+						"include": "#code"
+					}
+				]
+			},
+			{
+				"begin": "\\(",
+				"beginCaptures": {
+					"0": {
+						"name": "punctuation.function-params.begin.bracket.round.spl"
+					}
+				},
+				"end": "\\)",
+				"endCaptures": {
+					"0": {
+						"name": "punctuation.function-params.end.bracket.round.spl"
+					}
+				},
+				"contentName": "meta.function-params.spl",
+				"patterns": [
+					{
+						"include": "#parameters"
+					}
+				]
+			},
+			{
+				"match": "([A-Za-z$_][\\w$]*)\\s*",
+				"captures": {
+					"1": {
+						"name": "entity.name.function.composite.spl"
+					}
+				}
+			}
+		]
+	},
+	"function-call": {
+		"begin": "([A-Za-z_$][\\w$]*)\\s*(\\()",
+		"beginCaptures": {
+			"1": {
+				"name": "entity.name.function.spl"
+			},
+			"2": {
+				"name": "punctuation.definition.parameters.begin.bracket.round.spl"
+			}
+		},
+		"end": "\\)",
+		"endCaptures": {
+			"0": {
+				"name": "punctuation.definition.parameters.end.bracket.round.spl"
+			}
+		},
+		"name": "meta.function-call.java",
+		"patterns": [
+			{
+				"include": "#code"
+			}
+		]
+	},
+	"parameters": {
+		"patterns": [
+			{
+				"include": "#allTypes"
+			},
+			{
+				"match": "\\w+",
+				"name": "variable.parameter.spl"
+			},
+			{
+				"match": ",",
+				"name": "punctuation.separator.delimiter.spl"
+			}
+		]
+	},
+	"standalone-type-def": {
+		"begin": "(?=type)",
+		"end": ";",
+		"endCaptures": {
+			"0": {
+				"name": "punctuation.terminator.spl"
+			}
+		},
+		"name": "meta.standalone-type-def.spl",
+		"patterns": [
+			{
+				"match": "(type)\\s+([A-Za-z$_][\\w$]*)",
+				"captures": {
+					"1": {
+						"name": "keyword.control.spl"
+					},
+					"2": {
+						"name": "variable.other.definition.spl"
+					}
+				}
+			},
+			{
+				"begin": "=",
+				"beginCaptures": {
+					"0": {
+						"name": "keyword.operator.assignment.spl"
+					}
+				},
+				"end": "(?=;)",
+				"patterns": [
+					{
+						"include": "#allTypes"
+					},
+					{
+						"include": "#tuple-type-body"
+					}
+				]
+			},
+			{
+				"include": "#code"
+			}
+		]
+	},
+	"tuple-type": {
+		"begin": "(?=tuple)",
+		"end": "(>)",
+		"endCaptures": {
+				"0": {
+						"name": "punctuation.bracket.angle.spl"
+				}
+		},
+		"name": "meta.tuple-type.spl",
+		"patterns": [
+			{
+				"match": "\\btuple\\b",
+				"captures": {
+					"0": {
+						"name": "keyword.control.spl"
+					}
+				}
+			},
+			{
+				"begin": "<",
+				"beginCaptures": {
+					"0": {
+						"name": "punctuation.bracket.angle.spl"
+					}
+				},
+				"end": "(?=>)",
+				"contentName": "meta.tuple-type-body.spl",
+				"patterns": [
+					{
+						"include": "#tuple-type-body"
+					}
+				]
+			}
+		]
+	},
+	"tuple-type-body": {
+		"name": "meta.tuple-type-body.spl",
+		"contentName": "meta.tuple-type-body.spl",
+		"patterns": [
+			{
+				"include": "#tuple-type"
+			},
+			{
+				"include": "#primitiveTypes"
+			},
+			{
+				"match": "(?:\\w+)\\s+([A-Za-z$_][\\w$]*)",
+				"captures": {
+					"1": {
+						"name": "variable.other.definition.spl"
+					}
+				}
+			},
+			{
+				"include": "#code"
+			}
+		]
+	},
+	"stream-type": {
+		"begin": "\\<",
+		"end": "\\>",
+		"name": "meta.stream-type.spl",
+		"patterns": [
+			{
+				"include": "#nested-bracket-angle"
+			},
+			{
+				"include": "#stream-type-body"
+			}
+		]
+	},
+	"stream-type-body": {
+		"name": "meta.stream-type-body.spl",
+		"patterns": [
+			{
+				"include": "#tuple-type-body"
+			},
+			{
+				"include": "#tuple-type"
+			}
+		]
+	},
+	"composite-body-type": {
+		"begin": "(?=type)",
+		"end": "(?=graph|config|})",
+		"name": "meta.composite-body-type.spl",
+		"patterns": [
+			{
+				"include": "#composite-type-def"
+			},
+			{
+				"include": "#code"
+			}
+		]
+	},
+	"composite-body-param": {
+		"begin": "(?=param)",
+		"end": "(?=type|graph|config|\\})",
+		"name": "meta.composite-body-param",
+		"patterns": [
+			{
+				"include": "#composite-formal"
+			},
+			{
+				"include": "#code"
+			}
+		]
+	},
+	"composite-body-graph": {
+		"begin": "(?=graph)",
+		"end": "(?=config|})",
+		"name": "meta.composite-body-graph.spl",
+		"patterns": [
+			{
+				"include": "#op-invoke"
+			},
+			{
+				"include": "#code"
+			}
+		]
+	},
+	"composite-body-config": {
+		"begin": "(?=config)",
+		"end": "(?=})",
+		"name": "meta.composite-body-config.spl",
+		"patterns": [
+			{
+				"include": "#configuration"
+			},
+			{
+				"include": "#code"
+			}
+		]
+	},
+	"composite-formal": {
+		"begin": "(?=expression|attribute|function|type|operator)",
+		"end": "(?=;|\\))",
+		"name": "meta.composite-formal.spl",
+		"patterns": [
+			{
+				"include": "#type-args"
+			},
+			{
+				"begin": "([A-Za-z$_][\\w$]*)\\s*:",
+				"beginCaptures": {
+					"1": {
+						"name": "variable.other.definition.spl"
+					}
+				},
+				"end": "(?=;)",
+				"patterns": [
+					{
+						"include": "#code"
+					}
+				]
+			},
+			{
+				"include": "#code"
+			},
+			{                   
+				"match": "[A-Za-z$_][\\w$]*",
+				"captures": {
+					"0": {
+						"name": "variable.other.definition.spl"
+					}
+				}
+			}
+		]
+	},
+	"composite-type-def": {
+		"begin": "(?=(?:static)?[A-Za-z$_][\\w$]*)",
+		"end": "(?=;)",
+		"name": "meta.composite-type-def.spl",
+		"patterns": [
+			{
+				"include": "#tuple-type-body"
+			},
+			{
+				"include": "#code"
+			},
+			{
+				"match": "([A-Za-z$_][\\w$]*)",
+				"captures": {
+					"1": {
+						"name": "variable.other.definition.spl"
+					}
+				},
+				"contentName": "meta.type-def-head.spl"
+			}
+		]
+	},
+	"type-args": {
+		"begin": "<",
+		"beginCaptures": {
+			"0": {
+				"name": "punctuation.bracket.angle.spl"
+			}
+		},
+		"end": ">",
+		"endCaptures": {
+			"0": {
+				"name": "punctuation.bracket.angle.spl"
+			}
+		},
+		"name": "meta.type-args.spl",
+		"patterns": [
+			{
+				"include": "#code"
+			},
+			{
+				"match": "(\\w\\w*)",
+				"contentName": "meta.type-args-body.spl"
+			}
+		]
+	},
+	"configuration": {
+		"begin": "([A-Za-z$_][\\w$]*)\\s*:\\s*",
+		"beginCaptures": {
+			"1": {
+				"name": "variable.other.definition.spl"
+			}
+		},
+		"end": ";",
+		"endCaptures": {
+			"0": {
+				"name": "punctuation.terminator.spl"
+			}
+		},
+		"name": "meta.composite-body-config.configuration.spl",
+		"patterns": [
+			{
+				"include": "#code"
+			}
+		]
+	},
+	"op-invoke": {
+		"begin": "(?=(?:stream|\\())",
+		"end": "}",
+		"endCaptures": {
+			"0": {
+				"name": "punctuation.section.op-invoke.end.bracket.curly.spl"
+			}
+		},
+		"name": "meta.op-invoke.spl",
+		"patterns": [
+			{
+				"begin": "(?=(?:stream|\\())",
+				"end": "(?=\\=)",
+				"contentName": "meta.op-invoke.head.output.spl",
+				"patterns": [
+					{
+						"include": "#op-invoke-head"
+					}
+				]
+			},
+			{
+				"begin": "(\\=)",
+				"beginCaptures": {
+					"1": {
+						"name": "keyword.operator.assignment.spl"
+					}
+				},
+				"end": "(?={)",
+				"contentName": "meta.op-invoke.head.input.spl",
+				"patterns": [
+					{
+						"begin": "(?<=\\=)",
+						"end": "(?=\\()",
+						"patterns": [
+							{
+								"match": "([A-Za-z$_][\\w$]*)",
+								"name": "entity.name.type.opID.spl"
+							}
+						]	
+					},
+					{
+						"begin": "\\(",
+						"end": "\\)",
+						"contentName": "meta.op-invoke-input.port.spl",
+						"patterns": [
+							{
+								"include": "#op-invoke-head"
+							}
+						]
+					},
+					{
+						"include": "#comments"
+					}
+				]
+			},
+			{
+				"begin": "{",
+				"beginCaptures": {
+					"0": {
+						"name": "punctuation.section.op-invoke.begin.bracket.curly.spl"
+					}
+				},
+				"end": "(?=})",
+				"endCaptures": {
+					"0": {
+						"name": "punctuation.section.op-invoke.end.bracket.curly.spl"
+					}
+				},
+				"contentName": "meta.op-invoke.body.spl",
+				"patterns": [
+					{
+						"include": "#op-invoke-body"
+					}
+				]
+			},
+			{
+				"include": "#code"
+			},
+			{
+				"include": "#comments"
+			}
+		]
+	},
+	"op-invoke-head": {
+		"patterns": [
+			{
+				"match": "(\\bstream\\b)",
+				"name": "storage.modifier.spl"
+			},
+			{
+				"include": "#stream-type"
+			},
+			{
+				"match": "as",
+				"name": "keyword.control.spl"
+			},
+			{
+				"match": "([A-Za-z$_][\\w$]*)",
+				"name": "entity.name.type.streamID.spl"
+			},
+			{
+				"include": "#comments"
+			}
+		]
+	},
+	"op-invoke-body": {
+		"patterns": [
+			{
+				"include": "#op-invoke-logic"
+			},
+			{
+				"include": "#op-invoke-window"
+			},
+			{
+				"include": "#op-invoke-param"
+			},
+			{
+				"include": "#op-invoke-output"
+			},
+			{
+				"include": "#op-invoke-config"
+			},
+			{
+				"include": "#configuration"
+			},
+			{
+				"include": "#code"
+			}
+		]
+	},
+	"op-invoke-logic": {
+		"begin": "(?=logic)",
+		"end": "(?=window|param|output|config|})",
+		"name": "meta.op-invoke-logic.spl",
+		"patterns": [
+			{
+				"include": "#variable-definition"
+			},
+			{
+				"begin": "(?<=onProcess|onTuple|onPunct)",
+				"end": "(?<=\\:)",
+				"patterns": [
+					{
+						"match": "([A-Za-z$_][\\w$]*)",
+						"name": "entity.name.type.streamID.spl"
+					},
+					{
+						"include": "#code"
+					}
+				]
+			},
+			{
+				"include": "#code"
+			}
+		]
+	},
+	"op-invoke-window": {
+		"begin": "(?=window)",
+		"end": "(?=param|output|})",
+		"name": "meta.op-invoke-window.spl",
+		"patterns": [
+			{
+				"include": "#op-invoke-window-body"
+			},
+			{
+				"include": "#code"
+			}
+		]
+	},
+	"op-invoke-window-body": {
+		"begin": "([A-Za-z$_][\\w$]*)\\s*:\\s*",
+		"beginCaptures": {
+			"1": {
+				"name": "entity.name.type.streamID.spl"
+			}
+		},
+		"end": ";",
+		"endCaptures": {
+			"0": {
+				"name": "punctuation.terminator.spl"
+			}
+		},
+		"name": "meta.op-invoke-window.body.spl",
+		"patterns": [
+			{
+				"include": "#code"
+			}
+		]
+	},
+	"op-invoke-param": {
+		"begin": "(?=param)",
+		"end": "(?=output|config|\\})",
+		"name": "meta.op-invoke-param.spl",
+		"patterns": [
+			{
+				"include": "#op-invoke-actual"
+			},
+			{
+				"include": "#code"
+			}
+		]
+	},
+	"op-invoke-actual": {
+		"begin": "([A-Za-z$_][\\w$]*)\\s*:\\s*",
+		"beginCaptures": {
+			"1": {
+				"name": "variable.other.definition.spl"
+			}
+		},
+		"end": ";",
+		"endCaptures": {
+			"0": {
+				"name": "punctuation.terminator.spl"
+			}
+		},
+		"name": "meta.op-invoke-actual.spl",
+		"patterns": [
+			{
+				"match": "([A-Za-z$_][\\w$]*)\\.(?:[A-Za-z$_][\\w$]*)",
+				"captures": {
+					"1": {
+						"name": "entity.name.type.streamID.spl"
+					}
+				}
+			},
+			{
+				"include": "#code"
+			}
+		]
+	},
+	"op-invoke-output": {
+		"begin": "(?=output)",
+		"end": "(?=config|})",
+		"name": "meta.op-invoke-output.spl",
+		"patterns": [
+			{
+				"include": "#op-invoke-output-body"
+			},
+			{
+				"include": "#code"
+			}
+		]
+	},
+	"op-invoke-output-body": {
+		"begin": "([A-Za-z$_][\\w$]*)\\s*:",
+		"beginCaptures": {
+			"1": {
+				"name": "entity.name.type.streamID.spl"
+			}
+		},
+		"end": ";",
+		"endCaptures": {
+			"0": {
+				"name": "punctuation.separator.spl"
+			}
+		},
+		"name": "meta.op-invoke-output-body.spl",
+		"patterns": [
+			{
+				"begin": "([A-Za-z$_][\\w$]*)\\s*=",
+				"beginCaptures": {
+					"1": {
+						"name": "variable.other.definition.spl"
+					}
+				},
+				"end": "(?=,|;)",
+				"patterns": [
+					{
+						"match": "([A-Za-z$_][\\w$]*)\\.(?:[A-Za-z$_][\\w$]*)",
+						"captures": {
+							"1": {
+								"name": "entity.name.type.streamID.spl"
+							}
+						}
+					},
+					{
+						"include": "#code"
+					}
+				]
+			},
+			{
+				"include": "#code"
+			}
+		]
+	},
+	"op-invoke-config": {
+		"begin": "(?=config)",
+		"end": "(?=})",
+		"name": "meta.op-invoke-config.spl",
+		"patterns": [
+			{
+				"include": "#configuration"
+			},
+			{
+				"include": "#code"
+			}
+		]
+	},
+	"numbers": {
+		"patterns": [
+			{
+				"match": "(?x)\\b(?<!\\$)0(x|X)((?<!\\.)[0-9a-fA-F]([0-9a-fA-F_]*[0-9a-fA-F])?[Ll]?(?!\\.)|([0-9a-fA-F]([0-9a-fA-F_]*[0-9a-fA-F])?\\.?|([0-9a-fA-F]([0-9a-fA-F_]*[0-9a-fA-F])?)?\\.[0-9a-fA-F]([0-9a-fA-F_]*[0-9a-fA-F])?)[Pp][+-]?[0-9]([0-9_]*[0-9])?[FfDd]?)\\b(?!\\$)",
+				"name": "constant.numeric.hex.spl"
+			},
+			{
+				"match": "\\b(?<!\\$)0(b|B)[01]([01_]*[01])?[Ll]?\\b(?!\\$)",
+				"name": "constant.numeric.binary.spl"
+			},
+			{
+				"match": "\\b(?<!\\$)0[0-7]([0-7_]*[0-7])?[Ll]?\\b(?!\\$)",
+				"name": "constant.numeric.octal.spl"
+			},
+			{
+				"match": "(?x)(?<!\\$)(\\b[0-9]([0-9_]*[0-9])?\\.\\B(?!\\.)|\\b[0-9]([0-9_]*[0-9])?\\.([Ee][+-]?[0-9]([0-9_]*[0-9])?)[FfDd]?\\b|\\b[0-9]([0-9_]*[0-9])?\\.([Ee][+-]?[0-9]([0-9_]*[0-9])?)?[FfDd]\\b|\\b[0-9]([0-9_]*[0-9])?\\.([0-9]([0-9_]*[0-9])?)([Ee][+-]?[0-9]([0-9_]*[0-9])?)?[FfDd]?\\b|\\b[0-9]([0-9_]*[0-9])?\\.([0-9]([0-9_]*[0-9])?)([Ee][+-]?[0-9]([0-9_]*[0-9])?)?[Ww]?\\b|(?<!\\.)\\B\\.[0-9]([0-9_]*[0-9])?([Ee][+-]?[0-9]([0-9_]*[0-9])?)?[FfDd]?\\b|\\b[0-9]([0-9_]*[0-9])?([Ee][+-]?[0-9]([0-9_]*[0-9])?)[FfDd]?\\b|\\b[0-9]([0-9_]*[0-9])?([Ee][+-]?[0-9]([0-9_]*[0-9])?)?[FfDd]\\b|\\b(0|[1-9]([0-9_]*[0-9])?)(?!\\.)[Ll]?\\b|\\b(0|[1-9]([0-9_]*[0-9])?)(?!\\.)[Uu]?[Ll]?\\b|\\b(0|[1-9]([0-9_]*[0-9])?)(?!\\.)[Ww]?\\b)(?!\\$)",
+				"name": "constant.numeric.decimal.spl"
+			}
+		]
+	},
+	"strings": {
+		"patterns": [
+			{
+				"begin": "\"",
+				"beginCaptures": {
+					"0": {
+						"name": "punctuation.definition.string.begin.spl"
+					}
+				},
+				"end": "\"",
+				"endCaptures": {
+					"0": {
+						"name": "punctuation.definition.string.end.spl"
+					}
+				},
+				"name": "string.quoted.double.spl",
+				"patterns": [
+					{
+						"match": "\\\\.",
+						"name": "constant.character.spl"
+					}
+				]
+			},
+			{
+				"begin": "'",
+				"beginCaptures": {
+					"0": {
+						"name": "punctuation.definition.string.begin.spl"
+					}
+				},
+				"end": "'",
+				"endCaptures": {
+					"0": {
+						"name": "punctuation.definition.string.end.spl"
+					}
+				},
+				"name": "string.quoted.single.spl",
+				"patterns": [
+					{
+						"match": "\\\\.",
+						"name": "constant.character.spl"
+					}
+				]
+			}
+		]
+	},
+	"parens": {
+		"patterns": [
+			{
+				"begin": "\\(",
+				"beginCaptures": {
+					"0": {
+						"name": "punctuation.bracket.round.spl"
+					}
+				},
+				"end": "\\)",
+				"endCaptures": {
+					"0": {
+						"name": "punctuation.bracket.round.spl"
+					}
+				},
+				"patterns": [
+					{
+						"include": "#code"
+					}
+				]
+			},
+			{
+				"begin": "\\[",
+				"beginCaptures": {
+					"0": {
+						"name": "punctuation.bracket.square.spl"
+					}
+				},
+				"end": "\\]",
+				"endCaptures": {
+					"0": {
+						"name": "punctuation.bracket.square.spl"
+					}
+				},
+				"patterns": [
+					{
+						"include": "#code"
+					}
+				]
+			},
+			{
+				"begin": "{",
+				"beginCaptures": {
+					"0": {
+						"name": "punctuation.bracket.curly.spl"
+					}
+				},
+				"end": "}",
+				"endCaptures": {
+					"0": {
+						"name": "punctuation.bracket.curly.spl"
+					}
+				},
+				"patterns": [
+					{
+						"include": "#code"
+					}
+				]
+			}
+		]
+	},
+	"annotations": {
+		"patterns": [
+			{
+				"begin": "(@\\b(?:catch|consistent|eventTime|parallel|spl_category|spl_note|spl_tag|spl__[a-z|A-Z]+|threading|view)\\b)",
+				"beginCaptures": {
+					"0": {
+						"name": "keyword.control.spl"
+					}
+				},
+				"end": "\\)",
+				"endCaptures": {
+					"0": {
+						"name": "punctuation.annotation.end.bracket.round.spl"
+					}
+				},
+				"name": "meta.annotations.spl",
+				"patterns": [
+					{
+						"begin": "\\(",
+						"beginCaptures": {
+							"0": {
+								"name": "punctuation.annotation.begin.bracket.round.spl"
+							}
+						},
+						"end": "(?=\\))",
+						"contentName": "meta.annotation-body.spl",
+						"patterns": [
+							{
+								"include": "#code"
+							}
+						]
+					},
+					{
+						"include": "#code"
+					}
+				]
+			},
+			{
+				"match": "@autonomous",
+				"name": "meta.annotations.spl"
+			}
+		]
+	}
+}
+}
