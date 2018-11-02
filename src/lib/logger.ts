@@ -200,12 +200,30 @@ export class MessageHandler {
      * Handle an error message
      * @param response    The response
      */
-    handleError(response: any): void {
+    handleError(response: any, notificationButtons: Array<any>): void {
+        let labels = [];
+        if (Array.isArray(notificationButtons)) {
+            labels = _.map(notificationButtons, obj => obj.label);
+		}
         if (typeof response === 'string') {
-            throw new Error(response);
-        } else if (response.message) {
+            SplLogger.error(response);
+            if (labels.length) {
+                window.showErrorMessage(response, ...labels)
+                    .then(selection => {
+                        if (selection) {
+                            const buttonObj = _.find(notificationButtons, obj => obj.label === selection );
+                            if (buttonObj && buttonObj.callbackFn) {
+                                buttonObj.callbackFn();
+                            }
+                        }
+                    });
+            }
+        }
+        if (response && response.message) {
             SplLogger.error(response.message);
-            throw response;
+        }
+        if (response && response.stack) {
+            SplLogger.error(response.stack);
         }
     }
 

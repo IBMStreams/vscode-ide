@@ -176,6 +176,7 @@ export class SplBuilder {
 			err => {
 				console.log("build error\n", err);
 				this.messageHandler.handleError(err);
+				this.checkKnownErrors(err);
 			},
 			buildStatusResult => console.log("build status result\n", buildStatusResult),
 		);
@@ -196,7 +197,9 @@ export class SplBuilder {
 		).subscribe(
 			next => {},
 			err => {
+				console.log("build error\n", err);
 				this.messageHandler.handleError(err);
+				this.checkKnownErrors(err);
 			},
 			downloadResult => console.log("download result\n",downloadResult),
 		);
@@ -243,6 +246,7 @@ export class SplBuilder {
 			err => {
 				console.log("build error\n", err);
 				this.messageHandler.handleError(err);
+				this.checkKnownErrors(err);
 			},
 			consoleResult => console.log("submit result\n", consoleResult),
 		);
@@ -280,7 +284,7 @@ export class SplBuilder {
 	}
 
 	getNewBuildOutput(currOutput, prevOutput) {
-		return currOutput.length > prevOutput.length
+		return Array.isArray(currOutput) && Array.isArray(prevOutput) && currOutput.length > prevOutput.length
 			? currOutput.slice(-(currOutput.length - prevOutput.length))
 			: [];
 	}
@@ -311,6 +315,20 @@ export class SplBuilder {
 			return true;
 		} else {
 			return false;
+		}
+	}
+
+	checkKnownErrors(err) {
+		if (typeof(err) === "string") {
+			if (err.includes("CDISB4090E")) {
+				// additional notification with button to open bluemix dashboard so the user can verify their
+				// service is started.
+				this.messageHandler.handleError(
+					"Verify that the streaming analytics service is started and able to handle requests.",
+					[{label: "Open Bluemix Dashboard",
+						callbackFn: ()=>{this.openUrlHandler("https://console.bluemix.net/dashboard/apps")}
+					}]);
+			}
 		}
 	}
 
@@ -471,6 +489,8 @@ export class SplBuilder {
 			request(options, (err, resp, body) => {
 				if (err) {
 					req.error(err);
+				} else if (body.errors && Array.isArray(body.errors)) {
+					req.error(body.errors.map(err => err.message).join("\n"));
 				} else {
 					req.next({resp, body});
 				}
