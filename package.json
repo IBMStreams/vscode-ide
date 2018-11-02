@@ -53,6 +53,16 @@
     },
     "commands": [
       {
+        "command": "ibm-streams.setServiceCredentials",
+        "title": "Set IBM Streaming Analytics Service Credentials",
+        "category": "IBM Streams"
+      },
+      {
+        "command": "ibm-streams.setToolkitsPath",
+        "title": "Set IBM Streams Toolkits Path",
+        "category": "IBM Streams"
+      },
+      {
         "command": "ibm-streams.build",
         "title": "SPL Build",
         "category": "IBM Streams"
@@ -106,6 +116,12 @@
     ],
     "menus": {
       "commandPalette": [
+        {
+          "command": "ibm-streams.setServiceCredentials"
+        },
+        {
+          "command": "ibm-streams.setToolkitsPath"
+        },
         {
           "command": "ibm-streams.build",
           "when": "resourceLangId == spl"

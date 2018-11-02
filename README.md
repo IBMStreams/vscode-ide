@@ -16,11 +16,11 @@ To install the extension, search for __IBM Streams__ in the VS Code [Extension M
 
 #### Build
 
-An [IBM Streaming Analytics](https://console.bluemix.net/docs/services/StreamingAnalytics/index.html#gettingstarted) service is required to build and run your Streams applications. You must provide your service credentials (in JSON format) in order for this extension to connect to your service. Navigate to the [User Settings](https://code.visualstudio.com/docs/getstarted/userinterface#_settings) and set the value of the `ibm-streams.streamingAnalyticsCredentials` configuration setting to your credentials.
+An [IBM Streaming Analytics](https://console.bluemix.net/docs/services/StreamingAnalytics/index.html#gettingstarted) service is required to build and run your Streams applications. You must provide your service credentials (in JSON format) in order for this extension to connect to your service. Execute the `Set IBM Streaming Analytics Service Credentials` command from the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface) and enter your credentials.
 
 #### Toolkits
 
-The IBM Streams product toolkits are bundled with this package. If your Streams applications use additional toolkits, you must copy them to a folder on your workstation. Note that each toolkit must contain a `toolkit.xml` file in order in order to be included. Then, navigate to the [User Settings](https://code.visualstudio.com/docs/getstarted/userinterface#_settings) and set the value of the `ibm-streams.toolkitsPath` configuration setting to the path of your toolkits folder.
+The IBM Streams product toolkits are bundled with this package. If your Streams applications use additional toolkits, you must copy them to a folder on your workstation. Note that each toolkit must contain a `toolkit.xml` file in order in order to be included. Then, execute the `Set IBM Streams Toolkits Path` command from the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface) and enter your path.
 
 ## Functionality
 
@@ -50,6 +50,8 @@ The following commands can be executed via context menus or the [Command Palette
 
 Command | Title | Visibility | Description
 --- | --- | --- | ---
+`ibm-streams.setServiceCredentials` | Set IBM Streaming Analytics Service Credentials | `*` | Sets the credentials for an IBM Streaming Analytics service. This is required to build applications.
+`ibm-streams.setToolkitsPath` | Set IBM Streams Toolkits Path | `*` | Sets the path to a directory containing IBM Streams toolkits. This is required if your applications use toolkits that are not provided with the Streams product.
 `ibm-streams.build` | SPL Build | `*.spl` | Builds an application.
 `ibm-streams.buildDownload` | SPL Build and Download Bundle | `*.spl` | Builds an application and downloads the Streams application bundle (`.sab`) to the local file system in the project's `output/` directory.
 `ibm-streams.buildSubmit` | SPL Build and Submit Job | `*.spl` | Builds an application and downloads the Streams application bundle (`.sab`) to the local file system in the project's `output/` directory. You will be redirected to the [Streaming Analytics](https://console.bluemix.net/docs/services/StreamingAnalytics/index.html#gettingstarted) Console to (configure and) submit the bundle to the Streams instance.
