@@ -1,6 +1,7 @@
 'use strict';
 
 import * as fs from 'fs';
+import * as path from 'path';
 import * as _ from 'underscore';
 
 import { commands, window, workspace, Uri } from 'vscode';
@@ -153,7 +154,7 @@ export class SplBuild {
      * @param composites    The defined composites
      */
     private static async getCompositeToBuild(appRoot: string, namespace: string, composites: Array<string>): Promise<string> {
-        const makefileExists = fs.existsSync(`${appRoot}/Makefile`) || fs.existsSync(`${appRoot}/makefile`);
+        const makefileExists = fs.existsSync(`${appRoot}${path.sep}Makefile`) || fs.existsSync(`${appRoot}${path.sep}makefile`);
         if (makefileExists) {
             SplLogger.warn('Using the project\'s Makefile for the build', true);
         }
@@ -161,7 +162,7 @@ export class SplBuild {
         if (composites.length === 1) {
             return `${namespace}::${composites[0]}`;
         } else {
-            if (fs.existsSync(`${appRoot}/Makefile`) || fs.existsSync(`${appRoot}/makefile`)) {
+            if (fs.existsSync(`${appRoot}${path.sep}Makefile`) || fs.existsSync(`${appRoot}${path.sep}makefile`)) {
                 return `${namespace}::${composites[0]}`;
             } else {
                 return window.showQuickPick(composites, {

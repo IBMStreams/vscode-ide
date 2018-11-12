@@ -44,11 +44,11 @@ export class SplBuilder {
 	async buildSourceArchive(appRoot, toolkitRootPath, fqn) {
 		const archiver = require("archiver");
 
-		const makefileExists = fs.existsSync(`${appRoot}/Makefile`) || fs.existsSync(`${appRoot}/makefile`);
+		const makefileExists = fs.existsSync(`${appRoot}${path.sep}Makefile`) || fs.existsSync(`${appRoot}${path.sep}makefile`);
 		const buildTarget = makefileExists ? "" : ` for ${fqn}`;
 		this.messageHandler.handleBuildProgressMessage(`Building application archive${buildTarget}...`, true);
 
-		const outputFilePath = `${appRoot}/___bundle.zip`;
+		const outputFilePath = `${appRoot}${path.sep}___bundle.zip`;
 
 		// delete existing ___bundle.zip file before creating new one
 		// TODO: handle if file is open better (windows file locks)
@@ -102,18 +102,18 @@ export class SplBuilder {
 				];
 				// Add files
 				rootContents
-					.filter(item => fs.lstatSync(`${appRoot}/${item}`).isFile())
+					.filter(item => fs.lstatSync(`${appRoot}${path.sep}${item}`).isFile())
 					.filter(item => !_.some(ignoreFiles, name => item.includes(name)))
-					.forEach(item => archive.append(fs.readFileSync(`${appRoot}/${item}`), { name: `${newRoot}/${item}` }));
+					.forEach(item => archive.append(fs.readFileSync(`${appRoot}${path.sep}${item}`), { name: `${newRoot}${path.sep}${item}` }));
 
 				// Add directories
 				rootContents
-					.filter(item => fs.lstatSync(`${appRoot}/${item}`).isDirectory())
+					.filter(item => fs.lstatSync(`${appRoot}${path.sep}${item}`).isDirectory())
 					.filter(item => !_.some(ignoreDirs, name => item === name))
-					.forEach(item => archive.directory(`${appRoot}/${item}`, `${newRoot}/${item}`));
+					.forEach(item => archive.directory(`${appRoot}${path.sep}${item}`, `${newRoot}${path.sep}${item}`));
 
-				toolkitPaths.forEach(tk => archive.directory(tk.tkPath, `toolkits/${tk.tk}`));
-				tkPathString = ":../toolkits";
+				toolkitPaths.forEach(tk => archive.directory(tk.tkPath, `toolkits${path.sep}${tk.tk}`));
+				tkPathString = `:../toolkits`;
 				makefilePath = `${newRoot}/`;
 
 				// Call the real Makefile
@@ -122,20 +122,20 @@ export class SplBuilder {
 
 			} else {
 				archive.glob("**/*", {
-					cwd: `${appRoot}/`,
+					cwd: `${appRoot}${path.sep}`,
 					ignore: [
-						'output/**',
-						'opt/client/**',
-						'doc/**',
+						`output${path.sep}**`,
+						`opt${path.sep}client${path.sep}**`,
+						`doc${path.sep}**`,
 						'.git*',
 						'___bundle.zip',
-						'___bundle*/**'
+						`___bundle*${path.sep}**` // in case temp bundle was extracted locally
 					]
 				});
 			}
 
 			// if there is no makefile in the project, add a basic makefile
-			if (!fs.existsSync(`${appRoot}/Makefile`) && !fs.existsSync(`${appRoot}/makefile`)) {
+			if (!fs.existsSync(`${appRoot}${path.sep}Makefile`) && !fs.existsSync(`${appRoot}${path.sep}makefile`)) {
 				const makeCmd = `main:\n\tsc -M ${fqn} -t $$STREAMS_INSTALL/toolkits${tkPathString}`;
 				archive.append(makeCmd, {name: `${makefilePath}Makefile`});
 			}
@@ -176,6 +176,7 @@ export class SplBuilder {
 			err => {
 				console.log("build error\n", err);
 				this.messageHandler.handleError(err);
+				this.checkKnownErrors(err);
 			},
 			buildStatusResult => console.log("build status result\n", buildStatusResult),
 		);
@@ -196,7 +197,9 @@ export class SplBuilder {
 		).subscribe(
 			next => {},
 			err => {
+				console.log("build error\n", err);
 				this.messageHandler.handleError(err);
+				this.checkKnownErrors(err);
 			},
 			downloadResult => console.log("download result\n",downloadResult),
 		);
@@ -243,6 +246,7 @@ export class SplBuilder {
 			err => {
 				console.log("build error\n", err);
 				this.messageHandler.handleError(err);
+				this.checkKnownErrors(err);
 			},
 			consoleResult => console.log("submit result\n", consoleResult),
 		);
@@ -280,7 +284,7 @@ export class SplBuilder {
 	}
 
 	getNewBuildOutput(currOutput, prevOutput) {
-		return currOutput.length > prevOutput.length
+		return Array.isArray(currOutput) && Array.isArray(prevOutput) && currOutput.length > prevOutput.length
 			? currOutput.slice(-(currOutput.length - prevOutput.length))
 			: [];
 	}
@@ -311,6 +315,20 @@ export class SplBuilder {
 			return true;
 		} else {
 			return false;
+		}
+	}
+
+	checkKnownErrors(err) {
+		if (typeof(err) === "string") {
+			if (err.includes("CDISB4090E")) {
+				// additional notification with button to open bluemix dashboard so the user can verify their
+				// service is started.
+				this.messageHandler.handleError(
+					"Verify that the streaming analytics service is started and able to handle requests.",
+					[{label: "Open Bluemix Dashboard",
+						callbackFn: ()=>{this.openUrlHandler("https://console.bluemix.net/dashboard/apps")}
+					}]);
+			}
 		}
 	}
 
@@ -440,7 +458,7 @@ export class SplBuilder {
 
 	performBundleDownloads(downloadResult, input) {
 		const [ statusOutput, downloadOutput ] = downloadResult;
-		const outputDir = `${path.dirname(input.filename)}/output`;
+		const outputDir = `${path.dirname(input.filename)}${path.sep}output`;
 		try {
 			if (!fs.existsSync(outputDir)) {
 				fs.mkdirSync(outputDir);
@@ -451,7 +469,7 @@ export class SplBuilder {
 
 		const observables = _.map(statusOutput.artifacts, artifact => {
 			const index = _.findIndex(statusOutput.artifacts, artifactObj => artifactObj.name === artifact.name);
-			const outputFile = `${outputDir}/${artifact.name}`;
+			const outputFile = `${outputDir}${path.sep}${artifact.name}`;
 			try {
 				if (fs.existsSync(outputFile)) {
 					fs.unlinkSync(outputFile);
@@ -471,6 +489,8 @@ export class SplBuilder {
 			request(options, (err, resp, body) => {
 				if (err) {
 					req.error(err);
+				} else if (body.errors && Array.isArray(body.errors)) {
+					req.error(body.errors.map(err => err.message).join("\n"));
 				} else {
 					req.next({resp, body});
 				}
@@ -488,9 +508,9 @@ export class SplBuilder {
 			if (fs.existsSync(toolkitRootDir)) {
 				let toolkitRootContents = fs.readdirSync(toolkitRootDir);
 				validToolkitPaths = toolkitRootContents
-					.filter(item => fs.lstatSync(`${toolkitRootDir}/${item}`).isDirectory())
-					.filter(dir => fs.readdirSync(`${toolkitRootDir}/${dir}`).filter(tkDirItem => tkDirItem === 'toolkit.xml').length > 0)
-					.map(tk => ({ tk: tk, tkPath: `${toolkitRootDir}/${tk}` }));
+					.filter(item => fs.lstatSync(`${toolkitRootDir}${path.sep}${item}`).isDirectory())
+					.filter(dir => fs.readdirSync(`${toolkitRootDir}${path.sep}${dir}`).filter(tkDirItem => tkDirItem === 'toolkit.xml').length > 0)
+					.map(tk => ({ tk: tk, tkPath: `${toolkitRootDir}${path.sep}${tk}` }));
 			}
 		}
 		return validToolkitPaths;
@@ -508,9 +528,9 @@ export class SplBuilder {
 			const notWorkspaceFolder = dir => (
 				!_.some(rootDirArray, folder => folder === dir)
 			);
-			const noMatchingFiles = dir => !fs.existsSync(`${dir}/info.xml`) && !fs.existsSync(`${dir}/toolkit.xml`) && !fs.existsSync(`${dir}/Makefile`) && !fs.existsSync(`${dir}/makefile`);
+			const noMatchingFiles = dir => !fs.existsSync(`${dir}${path.sep}info.xml`) && !fs.existsSync(`${dir}${path.sep}toolkit.xml`) && !fs.existsSync(`${dir}${path.sep}Makefile`) && !fs.existsSync(`${dir}${path.sep}makefile`);
 			while (notWorkspaceFolder(appDir) && noMatchingFiles(appDir)) {
-				appDir = path.resolve(`${appDir}/..`);
+				appDir = path.resolve(`${appDir}${path.sep}..`);
 			}
 			return appDir;
 		} else {

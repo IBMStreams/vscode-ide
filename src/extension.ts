@@ -9,12 +9,13 @@ import { commands, window, workspace, ConfigurationTarget, ExtensionContext } fr
 import { LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-languageclient/lib/main';
 
 import { SplBuilder } from './lib/spl-build-common';
+import { SplConfig } from './lib/config';
 import { SplLinter } from './lib/linter';
 import { SplLogger } from './lib/logger';
 import { Command } from './lib/commands/command';
+import { SetConfigSettingCommand } from './lib/commands/setConfigSetting';
 import { SplBuildCommand } from './lib/commands/splBuild';
 import { CreateApplicationCommand } from './lib/commands/createApplication';
-import { SplConfig } from './lib/config';
 
 let client: LanguageClient;
 
@@ -71,6 +72,8 @@ export function activate(context: ExtensionContext): void {
 
     // Register commands
     const streamsCommands = new Array<Command>();
+    streamsCommands.push(new SetConfigSettingCommand('ibm-streams.setServiceCredentials'));
+    streamsCommands.push(new SetConfigSettingCommand('ibm-streams.setToolkitsPath'));
     streamsCommands.push(new SplBuildCommand('ibm-streams.build', SplBuilder.BUILD_ACTION.DEFAULT));
     streamsCommands.push(new SplBuildCommand('ibm-streams.buildDownload', SplBuilder.BUILD_ACTION.DOWNLOAD));
     streamsCommands.push(new SplBuildCommand('ibm-streams.buildSubmit', SplBuilder.BUILD_ACTION.SUBMIT));
