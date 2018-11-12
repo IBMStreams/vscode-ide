@@ -92,27 +92,32 @@ export class SplBuilder {
 					'.git',
 					'.project',
 					'.classpath',
+					'toolkit.xml',
 					'___bundle.zip'
 				];
 				const ignoreDirs = [
 					'output',
 					'doc',
+					'samples',
+					`opt/client`,
 					'.settings',
 					'___bundle'
 				];
 				// Add files
 				rootContents
-					.filter(item => fs.lstatSync(`${appRoot}${path.sep}${item}`).isFile())
+					.filter(item => fs.lstatSync(`${appRoot}/${item}`).isFile())
+					.map(a => {console.log(a); return a})
 					.filter(item => !_.some(ignoreFiles, name => item.includes(name)))
-					.forEach(item => archive.append(fs.readFileSync(`${appRoot}${path.sep}${item}`), { name: `${newRoot}${path.sep}${item}` }));
+					.forEach(item => archive.append(fs.readFileSync(`${appRoot}/${item}`), { name: `${newRoot}/${item}` }));
 
 				// Add directories
 				rootContents
-					.filter(item => fs.lstatSync(`${appRoot}${path.sep}${item}`).isDirectory())
+					.filter(item => fs.lstatSync(`${appRoot}/${item}`).isDirectory())
+					.map(a => {console.log(a); return a})
 					.filter(item => !_.some(ignoreDirs, name => item === name))
-					.forEach(item => archive.directory(`${appRoot}${path.sep}${item}`, `${newRoot}${path.sep}${item}`));
+					.forEach(item => archive.directory(`${appRoot}/${item}`, `${newRoot}/${item}`));
 
-				toolkitPaths.forEach(tk => archive.directory(tk.tkPath, `toolkits${path.sep}${tk.tk}`));
+				toolkitPaths.forEach(tk => archive.directory(tk.tkPath, `toolkits/${tk.tk}`));
 				tkPathString = `:../toolkits`;
 				makefilePath = `${newRoot}/`;
 
@@ -122,14 +127,17 @@ export class SplBuilder {
 
 			} else {
 				archive.glob("**/*", {
-					cwd: `${appRoot}${path.sep}`,
+					cwd: `${appRoot}/`,
 					ignore: [
-						`output${path.sep}**`,
-						`opt${path.sep}client${path.sep}**`,
-						`doc${path.sep}**`,
+						`output/**`,
+						`opt/client/**`,
+						`doc/**`,
+						'samples/**',
 						'.git*',
+						'.settings',
+						'toolkit.xml',
 						'___bundle.zip',
-						`___bundle*${path.sep}**` // in case temp bundle was extracted locally
+						`___bundle*/**` // in case temp bundle was extracted locally
 					]
 				});
 			}
