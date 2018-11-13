@@ -19,13 +19,15 @@ export class SetConfigSettingCommand implements Command {
      * @param args       Array of arguments
      */
     execute(context: ExtensionContext, ...args: any[]): any {
-        return this.promptForConfigurationValue();
+        const callbackFn = args[0][0] ? args[0][0] : null;
+        return this.promptForConfigurationValue(callbackFn);
     }
 
      /**
      * Prompt the user to input a value for a configuration setting.
+     * @param callbackFn    The callback function to execute after setting the value
      */
-    private async promptForConfigurationValue(): Promise<void> {
+    private async promptForConfigurationValue(callbackFn): Promise<void> {
         SplLogger.info(`Received request to set the configuration setting: ${this.commandName}`, false, true);
 
         let config = null, prompt = null, placeHolder = null;
@@ -58,6 +60,10 @@ export class SetConfigSettingCommand implements Command {
                             input = null;
                         }
                         SplConfig.setSetting(config, input);
+
+                        if (callbackFn) {
+                            callbackFn();
+                        }
                     } catch(error) {
                         throw error;
                     }

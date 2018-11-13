@@ -170,7 +170,8 @@ export class SplBuilder {
 				this.buildAndSubmitJob(input);
 			}
 		} else {
-			this.messageHandler.handleError("Error parsing VCAP_SERVICES environment variable");
+			this.messageHandler.handleError("Unable to determine Streaming Analytics service credentials.");
+			this.messageHandler.handleCredentialsMissing();
 			throw new Error("Error parsing VCAP_SERVICES environment variable");
 		}
 	}

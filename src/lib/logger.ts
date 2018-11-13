@@ -4,7 +4,7 @@ import * as util from 'util';
 import * as moment from 'moment';
 import * as _ from 'underscore';
 
-import { window, OutputChannel } from 'vscode';
+import { commands, window, OutputChannel } from 'vscode';
 
 export enum Level { DEBUG, ERROR, INFO, SUCCESS, WARN }
 
@@ -204,7 +204,7 @@ export class MessageHandler {
         let labels = [];
         if (Array.isArray(notificationButtons)) {
             labels = _.map(notificationButtons, obj => obj.label);
-		}
+        }
         if (typeof response === 'string') {
             SplLogger.error(response);
             if (labels.length) {
@@ -217,6 +217,8 @@ export class MessageHandler {
                             }
                         }
                     });
+            } else {
+                window.showErrorMessage(response);
             }
         }
         if (response && response.message) {
@@ -258,6 +260,14 @@ export class MessageHandler {
                     }
                 }
             });
+    }
+
+    /**
+     * Handle the scenario where the Streaming Analytics service credentials are missing
+     */
+    handleCredentialsMissing() {
+        const callbackFn = () => window.showInformationMessage('Please re-build your application(s)');
+        commands.executeCommand('ibm-streams.setServiceCredentials', callbackFn);
     }
 
     /**
