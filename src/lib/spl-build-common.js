@@ -14,6 +14,24 @@ import * as ncp from "copy-paste";
 const request = require("request");
 request.defaults({jar: true});
 
+const defaultIgnoreFiles = [
+	".git",
+	".project",
+	".classpath",
+	"toolkit.xml",
+	"___bundle.zip"
+];
+
+const defaultIgnoreDirectories = [
+	"output",
+	"doc",
+	"samples",
+	"opt/client",
+	".settings",
+	"___bundle"
+];
+
+
 export class SplBuilder {
 	static BUILD_ACTION = {DEFAULT: 0, DOWNLOAD: 1, SUBMIT: 2};
 	static SPL_MSG_REGEX = /^([\w.]+\/[\w.]+)\:(\d+)\:(\d+)\:\s+(\w{5}\d{4}[IWE])\s+((ERROR|WARN|INFO)\:.*)$/;
@@ -88,21 +106,8 @@ export class SplBuilder {
 			if (toolkitPaths) {
 				const rootContents = fs.readdirSync(appRoot);
 				const newRoot = path.basename(appRoot);
-				const ignoreFiles = [
-					'.git',
-					'.project',
-					'.classpath',
-					'toolkit.xml',
-					'___bundle.zip'
-				];
-				const ignoreDirs = [
-					'output',
-					'doc',
-					'samples',
-					`opt/client`,
-					'.settings',
-					'___bundle'
-				];
+				const ignoreFiles = defaultIgnoreFiles;
+				const ignoreDirs = defaultIgnoreDirectories.map(entry => `${entry}/**`);
 				// Add files
 				rootContents
 					.filter(item => fs.lstatSync(`${appRoot}/${item}`).isFile())
@@ -126,19 +131,10 @@ export class SplBuilder {
 				archive.append(newCommand, { name: `Makefile` });
 
 			} else {
+				let ignoreList = defaultIgnoreFiles.concat(defaultIgnoreDirectories).map(entry => `${entry}/**`);
 				archive.glob("**/*", {
 					cwd: `${appRoot}/`,
-					ignore: [
-						`output/**`,
-						`opt/client/**`,
-						`doc/**`,
-						'samples/**',
-						'.git*',
-						'.settings',
-						'toolkit.xml',
-						'___bundle.zip',
-						`___bundle*/**` // in case temp bundle was extracted locally
-					]
+					ignore: ignoreList
 				});
 			}
 
