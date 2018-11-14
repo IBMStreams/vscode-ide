@@ -1,6 +1,5 @@
 'use strict';
 
-import * as fs from 'fs';
 import * as path from 'path';
 import * as _ from 'underscore';
 
@@ -11,21 +10,16 @@ import { SplConfig, Config } from './config';
 import { LintHandler } from './linter';
 import { SplLogger, MessageHandler } from './logger';
 
-export class SplBuild {
+export class Build {
     /**
-     * Perform a SPL build
+     * Perform a build
      * @param uri       The file URI
      * @param action    The build action to take
      */
-    public static async handle(uri: Uri, action: number): Promise<void> {
+    public static async build(uri: Uri, action: number): Promise<void> {
         let statusMessage = 'Received request to build';
-        switch(action) {
-            case SplBuilder.BUILD_ACTION.DOWNLOAD:
-                statusMessage += ' and download';
-                break;
-            case SplBuilder.BUILD_ACTION.SUBMIT:
+        if (action === SplBuilder.BUILD_ACTION.SUBMIT) {
             statusMessage += ' and submit';
-                break;
         }
         SplLogger.info(statusMessage, false, true);
 
@@ -48,9 +42,82 @@ export class SplBuild {
             const openUrlHandler = url => commands.executeCommand('vscode.open', Uri.parse(url));
             const builder = new SplBuilder(messageHandler, lintHandler, openUrlHandler);
 
-            const appArchivePath = await builder.buildSourceArchive(appRoot, toolkitsDir, mainComposite);
+            const appArchivePath = await builder.buildSourceArchive(appRoot, toolkitsDir, { useMakefile: false, fqn: mainComposite });
             try {
                 builder.build(action, streamingAnalyticsCredentials, { filename: appArchivePath });
+            } catch(error) {
+                throw error;
+            }
+        } else {
+            throw new Error('Unable to retrieve file path');
+        }
+    }
+
+    /**
+     * Perform a build from a Makefile
+     * @param uri       The file URI
+     * @param action    The build action to take
+     */
+    public static async buildMake(uri: Uri, action: number): Promise<void> {
+        let statusMessage = 'Received request to build from a Makefile';
+        if (action === SplBuilder.BUILD_ACTION.SUBMIT) {
+            statusMessage += ' and submit';
+        }
+        SplLogger.info(statusMessage, false, true);
+
+        const filePath = uri ? uri.fsPath : window.activeTextEditor.document.fileName;
+        if (filePath) {
+            SplLogger.debug(`Selected: ${filePath}`);
+
+            const workspaceFolders = _.map(workspace.workspaceFolders, folder => folder.uri.fsPath);
+            const appRoot = SplBuilder.getApplicationRoot(workspaceFolders, filePath);
+            const credentialsSetting = SplConfig.getSetting(Config.STREAMING_ANALYTICS_CREDENTIALS);
+            const streamingAnalyticsCredentials = credentialsSetting ? JSON.stringify(credentialsSetting) : null;
+            const toolkitsDir = await this.getToolkitsDir();
+
+            const messageHandler = new MessageHandler();
+            const lintHandler = new LintHandler(SplBuilder.SPL_MSG_REGEX, appRoot);
+            const openUrlHandler = url => commands.executeCommand('vscode.open', Uri.parse(url));
+            const builder = new SplBuilder(messageHandler, lintHandler, openUrlHandler);
+
+            const appArchivePath = await builder.buildSourceArchive(appRoot, toolkitsDir, { useMakefile: true, makefilePath: filePath });
+            try {
+                builder.build(action, streamingAnalyticsCredentials, { filename: appArchivePath });
+            } catch(error) {
+                throw error;
+            }
+        } else {
+            throw new Error('Unable to retrieve file path');
+        }
+    }
+
+    /**
+     * Submit an application
+     * @param uri    The file URI
+     */
+    public static async submit(uri: Uri): Promise<void> {
+        let statusMessage = 'Received request to submit an application';
+        SplLogger.info(statusMessage, false, true);
+
+        const filePath = uri ? uri.fsPath : window.activeTextEditor.document.fileName;
+        if (filePath) {
+            SplLogger.debug(`Selected: ${filePath}`);
+
+            let appRoot = path.dirname(filePath);
+            if (path.basename(appRoot) === "output") {
+                appRoot = path.dirname(appRoot);
+            }
+
+            const credentialsSetting = SplConfig.getSetting(Config.STREAMING_ANALYTICS_CREDENTIALS);
+            const streamingAnalyticsCredentials = credentialsSetting ? JSON.stringify(credentialsSetting) : null;
+
+            const messageHandler = new MessageHandler();
+            const lintHandler = new LintHandler(SplBuilder.SPL_MSG_REGEX, appRoot);
+            const openUrlHandler = url => commands.executeCommand('vscode.open', Uri.parse(url));
+            const builder = new SplBuilder(messageHandler, lintHandler, openUrlHandler);
+
+            try {
+                builder.submit(streamingAnalyticsCredentials, { filename: filePath });
             } catch(error) {
                 throw error;
             }
@@ -154,17 +221,9 @@ export class SplBuild {
      * @param composites    The defined composites
      */
     private static async getCompositeToBuild(appRoot: string, namespace: string, composites: Array<string>): Promise<string> {
-        const makefileExists = fs.existsSync(`${appRoot}${path.sep}Makefile`) || fs.existsSync(`${appRoot}${path.sep}makefile`);
-        if (makefileExists) {
-            SplLogger.warn('Using the project\'s Makefile for the build', true);
-        }
-
         if (composites.length === 1) {
             return `${namespace}::${composites[0]}`;
         } else {
-            if (fs.existsSync(`${appRoot}${path.sep}Makefile`) || fs.existsSync(`${appRoot}${path.sep}makefile`)) {
-                return `${namespace}::${composites[0]}`;
-            } else {
                 return window.showQuickPick(composites, {
                     ignoreFocusOut: true,
                     placeHolder: 'Select the main composite to build...'
@@ -177,7 +236,6 @@ export class SplBuild {
                 });
             }
         }
-    }
 
     /**
      * Get the toolkits directory. Prompt the user to select

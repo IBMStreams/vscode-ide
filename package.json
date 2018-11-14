@@ -63,23 +63,33 @@
         "category": "IBM Streams"
       },
       {
-        "command": "ibm-streams.build",
-        "title": "SPL Build",
-        "category": "IBM Streams"
-      },
-      {
         "command": "ibm-streams.buildDownload",
-        "title": "SPL Build and Download Bundle",
+        "title": "Build",
         "category": "IBM Streams"
       },
       {
         "command": "ibm-streams.buildSubmit",
-        "title": "SPL Build and Submit Job",
+        "title": "Build and Submit Job",
+        "category": "IBM Streams"
+      },
+      {
+        "command": "ibm-streams.buildMakeDownload",
+        "title": "Build",
+        "category": "IBM Streams"
+      },
+      {
+        "command": "ibm-streams.buildMakeSubmit",
+        "title": "Build and Submit Job(s)",
+        "category": "IBM Streams"
+      },
+      {
+        "command": "ibm-streams.submit",
+        "title": "Submit Job",
         "category": "IBM Streams"
       },
       {
         "command": "ibm-streams.createApplication",
-        "title": "Create a SPL Application From Template",
+        "title": "Create an IBM Streams Application from Template",
         "category": "IBM Streams"
       }
     ],
@@ -123,16 +133,24 @@
           "command": "ibm-streams.setToolkitsPath"
         },
         {
-          "command": "ibm-streams.build",
-          "when": "resourceLangId == spl"
-        },
-        {
           "command": "ibm-streams.buildDownload",
           "when": "resourceLangId == spl"
         },
         {
           "command": "ibm-streams.buildSubmit",
           "when": "resourceLangId == spl"
+        },
+        {
+          "command": "ibm-streams.buildMakeDownload",
+          "when": "resourceLangId == makefile"
+        },
+        {
+          "command": "ibm-streams.buildMakeSubmit",
+          "when": "resourceLangId == makefile"
+        },
+        {
+          "command": "ibm-streams.submit",
+          "when": "resourceFilename =~ /.*\\.sab/"
         },
         {
           "command": "ibm-streams.createApplication"
@@ -140,65 +158,95 @@
       ],
       "explorer/context": [
         {
-          "command": "ibm-streams.build",
-          "when": "resourceLangId == spl",
-          "group": "SPL_BUILD@1"
-        },
-        {
           "command": "ibm-streams.buildDownload",
           "when": "resourceLangId == spl",
-          "group": "SPL_BUILD@2"
+          "group": "STREAMS@1"
         },
         {
           "command": "ibm-streams.buildSubmit",
           "when": "resourceLangId == spl",
-          "group": "SPL_BUILD@3"
+          "group": "STREAMS@2"
+        },
+        {
+          "command": "ibm-streams.buildMakeDownload",
+          "when": "resourceLangId == makefile",
+          "group": "STREAMS@1"
+        },
+        {
+          "command": "ibm-streams.buildMakeSubmit",
+          "when": "resourceLangId == makefile",
+          "group": "STREAMS@2"
+        },
+        {
+          "command": "ibm-streams.submit",
+          "when": "resourceFilename =~ /.*\\.sab/",
+          "group": "STREAMS@3"
         },
         {
           "command": "ibm-streams.createApplication",
-          "group": "SPL_GENERAL@4"
+          "group": "STREAMS@4"
         }
       ],
       "editor/context": [
         {
-          "command": "ibm-streams.build",
-          "when": "resourceLangId == spl",
-          "group": "SPL_BUILD@1"
-        },
-        {
           "command": "ibm-streams.buildDownload",
           "when": "resourceLangId == spl",
-          "group": "SPL_BUILD@2"
+          "group": "STREAMS@1"
         },
         {
           "command": "ibm-streams.buildSubmit",
           "when": "resourceLangId == spl",
-          "group": "SPL_BUILD@3"
+          "group": "STREAMS@2"
+        },
+        {
+          "command": "ibm-streams.buildMakeDownload",
+          "when": "resourceLangId == makefile",
+          "group": "STREAMS@1"
+        },
+        {
+          "command": "ibm-streams.buildMakeSubmit",
+          "when": "resourceLangId == makefile",
+          "group": "STREAMS@2"
+        },
+        {
+          "command": "ibm-streams.submit",
+          "when": "resourceFilename =~ /.*\\.sab/",
+          "group": "STREAMS@3"
         },
         {
           "command": "ibm-streams.createApplication",
-          "group": "SPL_GENERAL@4"
+          "group": "STREAMS@4"
         }
       ],
       "editor/title/context": [
         {
-          "command": "ibm-streams.build",
-          "when": "resourceLangId == spl",
-          "group": "SPL_BUILD@1"
-        },
-        {
           "command": "ibm-streams.buildDownload",
           "when": "resourceLangId == spl",
-          "group": "SPL_BUILD@2"
+          "group": "STREAMS@1"
         },
         {
           "command": "ibm-streams.buildSubmit",
           "when": "resourceLangId == spl",
-          "group": "SPL_BUILD@3"
+          "group": "STREAMS@2"
+        },
+        {
+          "command": "ibm-streams.buildMakeDownload",
+          "when": "resourceLangId == makefile",
+          "group": "STREAMS@1"
+        },
+        {
+          "command": "ibm-streams.buildMakeSubmit",
+          "when": "resourceLangId == makefile",
+          "group": "STREAMS@2"
+        },
+        {
+          "command": "ibm-streams.submit",
+          "when": "resourceFilename =~ /.*\\.sab/",
+          "group": "STREAMS@3"
         },
         {
           "command": "ibm-streams.createApplication",
-          "group": "SPL_GENERAL@4"
+          "group": "STREAMS@4"
         }
       ]
     },

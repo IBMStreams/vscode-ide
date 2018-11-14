@@ -2,11 +2,11 @@
 
 import { window, ExtensionContext } from 'vscode';
 
-import { Command } from './command';
+import { BaseCommand } from './command';
 import { SplConfig, Config } from '../config';
 import { SplLogger } from '../logger';
 
-export class SetConfigSettingCommand implements Command {
+export class SetConfigSettingCommand implements BaseCommand {
     /**
      * Initialize the command
      * @param commandName    The name of the command

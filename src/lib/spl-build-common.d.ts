@@ -9,6 +9,7 @@ export class SplBuilder {
 
     constructor(messageHandler: MessageHandler, lintHandler: LintHandler, openUrlHandler: Function);
     static getApplicationRoot(rootDirArray: Array<string>, filePath: string): string;
-    buildSourceArchive(appRoot: string, toolkitRootPath: string, fqn: string): Promise<string>;
+    buildSourceArchive(appRoot: string, toolkitRootPath: string, options: { useMakefile?: boolean, makefilePath?: string, fqn?: string }): Promise<string>;
     build(action: number, streamingAnalyticsCredentials: string, input: object): void;
+    submit(streamingAnalyticsCredentials: string, input: object): void;
 }

@@ -174,15 +174,37 @@ export class MessageHandler {
         SplLogger.error('Build failed', true);
     }
 
-    handleSubmitProgressMessage(response: any): void {
-
+    /**
+     * Handle a submit job progress message
+     * @param message    The message
+     */
+    handleSubmitProgressMessage(message: any): void {
+        if (typeof message === "string") {
+            window.showInformationMessage(message);
+        }
+        SplLogger.info(message);
     }
 
     /**
      * Handle a submit job success message
-     * @param response    The submit response
+     * @param response               The submit response
+     * @param notificationButtons    The notification buttons to display
      */
-    handleSubmitSuccess(response: any): void {
+    handleSubmitSuccess(response: any, notificationButtons: Array<any>): void {
+        let labels = [];
+        if (Array.isArray(notificationButtons)) {
+            labels = _.map(notificationButtons, obj => obj.label);
+        }
+        window.showInformationMessage(`Job ${response.name} is ${response.health}`, ...labels)
+            .then(selection => {
+                if (selection) {
+                    const buttonObj = _.find(notificationButtons, obj => obj.label === selection );
+                    if (buttonObj && buttonObj.callbackFn) {
+                        buttonObj.callbackFn();
+                    }
+                }
+            });
+
         SplLogger.success(`Job ${response.name} is ${response.health}`);
     }
 
@@ -198,7 +220,8 @@ export class MessageHandler {
 
     /*
      * Handle an error message
-     * @param response    The response
+     * @param response               The response
+     * @param notificationButtons    The notification buttons to display
      */
     handleError(response: any, notificationButtons: Array<any>): void {
         let labels = [];
@@ -231,30 +254,54 @@ export class MessageHandler {
 
     /**
      * Handle a success message
-     * @param response    The response
+     * @param response               The response
+     * @param detail                 The message details
+     * @param showNotification       Whether to show a notification to the user
+     * @param showConsoleMsg         Whether to log the message
+     * @param notificationButtons    The notification buttons to display
      */
-    handleSuccess(response: any, detail: string, showNotification?: boolean): void {
+    handleSuccess(response: any, detail: string, showNotification?: boolean, showConsoleMsg?: boolean, notificationButtons?: Array<any>): void {
         if (showNotification) {
-            SplLogger.success(response, true);
-            SplLogger.debug(detail);
+            let labels = [];
+            if (Array.isArray(notificationButtons)) {
+                labels = _.map(notificationButtons, obj => obj.label);
+            }
+
+            window.showInformationMessage(response, ...labels)
+                .then(selection => {
+                    if (selection) {
+                        const buttonObj = _.find(notificationButtons, obj => obj.label === selection );
+                        if (buttonObj && buttonObj.callbackFn) {
+                            buttonObj.callbackFn();
+                        }
+                    }
+                });
+        }
+
+        if (showConsoleMsg) {
+            SplLogger.success(`${response}\n${detail}`);
         }
     }
 
     /**
      * Show a dialog to the user
-     * @param message         The message to display
-     * @param detail          The detailed message to display
-     * @param buttonLabels    The button labels to display and associated callback functions
+     * @param message          The message to display
+     * @param detail           The detailed message to display
+     * @param dialogButtons    The dialog buttons to display
      */
-    showDialog(message: string, detail: string, buttonLabels: Array<any>): void {
-        let labels = _.map(buttonLabels, obj => ({
-            title: obj.label,
-            isCloseAffordance: obj.label === 'Close' ? true : false
-        }));
+    showDialog(message: string, detail: string, dialogButtons: Array<any>): void {
+        let labels = [];
+        if (Array.isArray(dialogButtons)) {
+            labels = _.map(dialogButtons, obj => ({
+                title: obj.label,
+                isCloseAffordance: obj.label === 'Cancel' || obj.label === 'Close' ? false : true
+            }));
+        }
+
         window.showInformationMessage(`${message}\n\n${detail}`, { modal: true }, ...labels)
             .then(selection => {
                 if (selection) {
-                    const labelObj = _.find(buttonLabels, obj => obj.label === selection.title );
+                    const labelObj = _.find(dialogButtons, obj => obj.label === selection.title );
                     if (labelObj && labelObj.callbackFn) {
                         labelObj.callbackFn();
                     }
@@ -287,7 +334,7 @@ export class MessageHandler {
      * @param messages    The build message output
      */
     private detectCurrentComposite(messages: Array<any>): void {
-        const scCommandRegExp = /^\s*\/opt\/ibm\/InfoSphere_Streams.*\s([A-Za-z_.]+)::([A-Za-z_]+).*$/;
+        const scCommandRegExp = /sc\s+.*\s([A-Za-z_.]+)::([A-Za-z_]+).*$/;
         const composites = _.chain(messages)
             .filter(obj => obj.message_text.match(scCommandRegExp))
             .map(obj => {
