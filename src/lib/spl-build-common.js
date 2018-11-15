@@ -66,7 +66,7 @@ export class SplBuilder {
 	 *										.fqn : fully qualified main composite name to build. ignored if useMakefile == true
 	 *
 	 */
-	async buildSourceArchive(appRoot: string, toolkitRootPath: string, options: {useMakefile: boolean, makefilePath: string, fqn: string} = {useMakefile: false}) {
+	async buildSourceArchive(appRoot, toolkitRootPath, options) {
 		const archiver = require("archiver");
 
 		const appRootContents = fs.readdirSync(appRoot);
@@ -297,16 +297,23 @@ export class SplBuilder {
 					this.messageHandler.handleSubmitProgressMessage("Submitting application to Streaming Analytics instance...");
 					submissionObservableFunc(submissionObservableInput).pipe(
 						mergeMap(submitResult => {
+
+							const notificationButtons = [
+								{
+									label: "Open Streaming Analytics Console",
+									callbackFn: () => this.openUrlHandler(consoleUrl)
+								}
+							];
 							// when build+submit from makefile/spl file, potentially multiple objects coming back
 							if (Array.isArray(submitResult)) {
 								submitResult.forEach(obj => {
 									if (obj.body) {
-										this.messageHandler.handleSubmitSuccess(obj.body);
+										this.messageHandler.handleSubmitSuccess(obj.body, notificationButtons);
 									}
 								});
 							} else {
 								if (submitResult.body) {
-									this.messageHandler.handleSubmitSuccess(submitResult.body);
+									this.messageHandler.handleSubmitSuccess(submitResult.body, notificationButtons);
 								}
 							}
 							return of(submitResult);
