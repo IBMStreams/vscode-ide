@@ -248,20 +248,7 @@ export class Build {
         const setting = SplConfig.getSetting(Config.TOOLKITS_PATH);
         if (setting.trim() !== '') {
             return setting;
-        } else {
-            return window.showOpenDialog({
-                'canSelectFiles': false,
-                'canSelectFolders': true,
-                'canSelectMany': false,
-                'openLabel': 'Set as IBM Streams toolkits directory'
-            }).then((selected: Uri[]) => {
-                let dir = null;
-                if (selected && selected.length === 1) {
-                    dir = selected[0].fsPath;
-                    SplConfig.setSetting(Config.TOOLKITS_PATH, dir);
-                }
-                return dir;
-            });
-        }
+        } 
+        return null;
     }
 }
