@@ -166,12 +166,7 @@ export class Build {
                 throw new Error('A single namespace must be defined');
             }
         }
-
-        if (namespace !== '') {
-            return namespace;
-        } else {
-            return this.promptForInput('namespace') as Promise<string>;
-        }
+        return namespace;
     }
 
     /**
@@ -221,15 +216,23 @@ export class Build {
      * @param composites    The defined composites
      */
     private static async getCompositeToBuild(appRoot: string, namespace: string, composites: Array<string>): Promise<string> {
+      
         if (composites.length === 1) {
-            return `${namespace}::${composites[0]}`;
+            if (namespace == '') 
+               return composites[0];
+            else
+                return `${namespace}::${composites[0]}`;
         } else {
                 return window.showQuickPick(composites, {
                     ignoreFocusOut: true,
                     placeHolder: 'Select the main composite to build...'
                 }).then(composite => {
                     if (composite) {
-                        return `${namespace}::${composite}`;
+                        if (namespace == '') {
+                            return composite;
+                        }
+                        else
+                            return `${namespace}::${composite}`;
                     } else {
                         throw new Error(`Build canceled, a main composite was not selected`);
                     }
