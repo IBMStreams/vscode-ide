@@ -258,28 +258,15 @@ export class MessageHandler {
      * @param detail                 The message details
      * @param showNotification       Whether to show a notification to the user
      * @param showConsoleMsg         Whether to log the message
-     * @param notificationButtons    The notification buttons to display
+     * @param dialogButtons          The dialog buttons to display
      */
-    handleSuccess(response: any, detail: string, showNotification?: boolean, showConsoleMsg?: boolean, notificationButtons?: Array<any>): void {
-        if (showNotification) {
-            let labels = [];
-            if (Array.isArray(notificationButtons)) {
-                labels = _.map(notificationButtons, obj => obj.label);
-            }
-
-            window.showInformationMessage(response, ...labels)
-                .then(selection => {
-                    if (selection) {
-                        const buttonObj = _.find(notificationButtons, obj => obj.label === selection );
-                        if (buttonObj && buttonObj.callbackFn) {
-                            buttonObj.callbackFn();
-                        }
-                    }
-                });
+    handleSuccess(response: any, detail: string, showNotification?: boolean, showConsoleMsg?: boolean, dialogButtons?: Array<any>): void {
+        if (showNotification && dialogButtons) {
+            this.showDialog(response, null, dialogButtons);
         }
 
         if (showConsoleMsg) {
-            SplLogger.success(`${response}\n${detail}`);
+            showNotification ? SplLogger.success(`${response}\n${detail}`, true) : SplLogger.success(`${response}\n${detail}`);
         }
     }
 
@@ -292,13 +279,18 @@ export class MessageHandler {
     showDialog(message: string, detail: string, dialogButtons: Array<any>): void {
         let labels = [];
         if (Array.isArray(dialogButtons)) {
+            var hasCancelButton = dialogButtons.some(obj => obj.label === 'Cancel' || obj.label === 'Close');
+            if (!hasCancelButton) {
+                dialogButtons.push({ label: 'Cancel', callbackFn: null });
+            }
             labels = _.map(dialogButtons, obj => ({
                 title: obj.label,
                 isCloseAffordance: obj.label === 'Cancel' || obj.label === 'Close' ? false : true
             }));
         }
 
-        window.showInformationMessage(`${message}\n\n${detail}`, { modal: true }, ...labels)
+        const displayMessage = detail ? `${message}\n\n${detail}` : message;
+        window.showInformationMessage(displayMessage, { modal: true }, ...labels)
             .then(selection => {
                 if (selection) {
                     const labelObj = _.find(dialogButtons, obj => obj.label === selection.title );
