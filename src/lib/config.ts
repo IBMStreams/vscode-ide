@@ -124,7 +124,7 @@ export class SplConfig {
                 if (changedSetting) {
                     const oldValue = SplConfig.getState(changedSetting) === '' ? '\"\"' : SplConfig.getState(changedSetting);
                     const newValue = SplConfig.getSetting(changedSetting) === '' ? '\"\"' : SplConfig.getSetting(changedSetting);
-                    SplLogger.debug(`The ${changedSetting} configuration setting was changed from: ${oldValue} to ${newValue}`);
+                    SplLogger.debug(null, `The ${changedSetting} configuration setting was changed from: ${oldValue} to ${newValue}`);
                     SplConfig.setState(changedSetting, newValue);
                 }
             }

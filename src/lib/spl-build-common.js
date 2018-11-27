@@ -39,13 +39,15 @@ export class SplBuilder {
 	static STATUS_POLL_FREQUENCY = 5000;
 	_pollHandleMessage = 0;
 
+	filePath = null;
 	messageHandler = null;
 	lintHandler = null;
 	openUrlHandler = null;
 	serviceCredentials = null;
 	accessToken = null;
 
-	constructor(messageHandler, lintHandler, openUrlHandler) {
+	constructor(filePath, messageHandler, lintHandler, openUrlHandler) {
+		this.filePath = filePath;
 		this.messageHandler = messageHandler;
 		this.lintHandler = lintHandler;
 		this.openUrlHandler = openUrlHandler;
@@ -73,7 +75,7 @@ export class SplBuilder {
 		const makefilesFound = appRootContents.filter(entry => typeof(entry) === "string" && entry.toLowerCase() === "makefile");
 
 		const buildTarget = options.useMakefile ? " with Makefile" : ` for ${options.fqn}`;
-		this.messageHandler.handleBuildProgressMessage(`Building application archive${buildTarget}...`, true);
+		this.messageHandler.handleBuildProgressMessage(this.filePath, `Building application archive${buildTarget}...`, true);
 
 		const outputFilePath = `${appRoot}${path.sep}___bundle.zip`;
 
@@ -91,7 +93,7 @@ export class SplBuilder {
 			const self = this;
 			output.on("close", function() {
 				console.log("Application source archive built");
-				self.messageHandler.handleBuildProgressMessage("Application archive created, submitting to build service...", true);
+				self.messageHandler.handleBuildProgressMessage(self.filePath, "Application archive created, submitting to build service...", true);
 			});
 			// TODO: handle warnings/errors instead of throwing?
 			archive.on("warning", function(err) {
@@ -160,7 +162,7 @@ export class SplBuilder {
 
 			const archiveStream = await archive.finalize();
 		} catch (err) {
-			this.messageHandler.handleError(err);
+			this.messageHandler.handleError(this.filePath, err);
 			return Promise.reject(err);
 		}
 
@@ -178,7 +180,7 @@ export class SplBuilder {
 				this.buildAndSubmitJob(input);
 			}
 		} else {
-			this.messageHandler.handleError("Unable to determine Streaming Analytics service credentials.");
+			this.messageHandler.handleError(this.filePath, "Unable to determine Streaming Analytics service credentials.");
 			this.messageHandler.handleCredentialsMissing();
 			throw new Error("Error parsing VCAP_SERVICES environment variable");
 		}
@@ -200,7 +202,7 @@ export class SplBuilder {
 			next => {},
 			err => {
 				console.log("build error\n", err);
-				this.messageHandler.handleError(err);
+				this.messageHandler.handleError(this.filePath, err);
 				this.checkKnownErrors(err);
 			},
 			downloadResult => console.log("download result\n",downloadResult),
@@ -226,7 +228,7 @@ export class SplBuilder {
 						this.submitJobPrompt(consoleUrl, outputDir, this.submitAppObservable.bind(this), artifacts);
 
 					} else {
-						this.messageHandler.handleError("Cannot retrieve Streaming Analytics Console URL");
+						this.messageHandler.handleError(this.filePath, "Cannot retrieve Streaming Analytics Console URL");
 					}
 				})
 			)),
@@ -234,7 +236,7 @@ export class SplBuilder {
 			next => {},
 			err => {
 				console.log("build and submit via Console error\n", err);
-				this.messageHandler.handleError(err);
+				this.messageHandler.handleError(this.filePath, err);
 				this.checkKnownErrors(err);
 			},
 			consoleResult => console.log("submit via Console result\n", consoleResult),
@@ -262,7 +264,7 @@ export class SplBuilder {
 							this.submitJobPrompt(consoleUrl, outputDir, this.submitSabObservable.bind(this), input);
 
 						} else {
-							this.messageHandler.handleError("Cannot retrieve Streaming Analytics Console URL");
+							this.messageHandler.handleError(this.filePath, "Cannot retrieve Streaming Analytics Console URL");
 						}
 					})
 				)),
@@ -271,13 +273,13 @@ export class SplBuilder {
 				next => {},
 				err => {
 					console.log("submit job error\n", err);
-					this.messageHandler.handleError(err);
+					this.messageHandler.handleError(this.filePath, err);
 					this.checkKnownErrors(err);
 				},
 				consoleResult => console.log("submit result\n", consoleResult),
 			);
 		} else {
-			this.messageHandler.handleError("Unable to determine Streaming Analytics service credentials.");
+			this.messageHandler.handleError(this.filePath, "Unable to determine Streaming Analytics service credentials.");
 			this.messageHandler.handleCredentialsMissing();
 			throw new Error("Error parsing VCAP_SERVICES environment variable");
 		}
@@ -294,7 +296,7 @@ export class SplBuilder {
 			{
 				label: "Submit",
 				callbackFn: () => {
-					this.messageHandler.handleSubmitProgressMessage("Submitting application to Streaming Analytics instance...");
+					this.messageHandler.handleSubmitProgressMessage(this.filePath, "Submitting application to Streaming Analytics instance...");
 					submissionObservableFunc(submissionObservableInput).pipe(
 						mergeMap(submitResult => {
 
@@ -308,12 +310,12 @@ export class SplBuilder {
 							if (Array.isArray(submitResult)) {
 								submitResult.forEach(obj => {
 									if (obj.body) {
-										this.messageHandler.handleSubmitSuccess(obj.body, notificationButtons);
+										this.messageHandler.handleSubmitSuccess(this.filePath, obj.body, notificationButtons);
 									}
 								});
 							} else {
 								if (submitResult.body) {
-									this.messageHandler.handleSubmitSuccess(submitResult.body, notificationButtons);
+									this.messageHandler.handleSubmitSuccess(this.filePath, submitResult.body, notificationButtons);
 								}
 							}
 							return of(submitResult);
@@ -322,7 +324,7 @@ export class SplBuilder {
 						next => {},
 						err => {
 							console.log("default job submit error\n", err);
-							this.messageHandler.handleError(err);
+							this.messageHandler.handleError(this.filePath, err);
 							this.checkKnownErrors(err);
 						},
 						consoleResult => console.log("submit result\n", consoleResult),
@@ -334,6 +336,7 @@ export class SplBuilder {
 				callbackFn: () => {
 					const submitMsg = () => {
 						this.messageHandler.handleSuccess(
+							this.filePath,
 							"Submit via Console",
 							`Use the Streaming Analytics Console to submit.`,
 							true,
@@ -357,7 +360,7 @@ export class SplBuilder {
 
 					} else {
 						// need to download bundles first
-						this.messageHandler.handleSubmitProgressMessage("Downloading application bundles for submission via Streaming analytics Console...");
+						this.messageHandler.handleSubmitProgressMessage(this.filePath, "Downloading application bundles for submission via Streaming analytics Console...");
 						this.downloadBundlesObservable(submissionObservableInput).pipe(
 							map(downloadOutput => ( [ submissionObservableInput, downloadOutput ])),
 							mergeMap(downloadResult => this.performBundleDownloads(downloadResult, null, outputDir)),
@@ -365,7 +368,7 @@ export class SplBuilder {
 							next => {},
 							err => {
 								console.log("Error downloading bundles for Console submit\n", err);
-								this.messageHandler.handleError(err);
+								this.messageHandler.handleError(this.filePath, err);
 								this.checkKnownErrors(err);
 							},
 							submitMsg(),
@@ -380,7 +383,7 @@ export class SplBuilder {
 		];
 
 		this.messageHandler.showDialog(dialogMessage, dialogDetail, dialogButtons);
-		this.messageHandler.handleBuildProgressMessage(`Streaming Analytics Console URL: ${consoleUrl}`);
+		this.messageHandler.handleBuildProgressMessage(this.filePath, `Streaming Analytics Console URL: ${consoleUrl}`);
 
 	}
 
@@ -392,7 +395,7 @@ export class SplBuilder {
 	 */
 	pollBuildStatus(input) {
 		let prevBuildOutput = [];
-		this.messageHandler.handleBuildProgressMessage("Building...", true);
+		this.messageHandler.handleBuildProgressMessage(this.filePath, "Building...", true);
 		return this.getBuildStatusObservable(input)
 			.pipe(
 				map((buildStatusResponse) => ({...input, ...buildStatusResponse.body})),
@@ -404,7 +407,7 @@ export class SplBuilder {
 							tap(s => {
 								if (this._pollHandleMessage % 3 === 0) {
 									const newOutput = this.getNewBuildOutput(s.output, prevBuildOutput);
-									this.messageHandler.handleBuildProgressMessage(newOutput, true);
+									this.messageHandler.handleBuildProgressMessage(this.filePath, newOutput, true);
 									prevBuildOutput = s.output;
 								}
 								this._pollHandleMessage++;
@@ -438,12 +441,12 @@ export class SplBuilder {
 		if (input.status === "failed") {
 			this.lintHandler.lint(input);
 			const newOutput = this.getNewBuildOutput(input.output, prevBuildOutput);
-			this.messageHandler.handleBuildFailure(newOutput);
+			this.messageHandler.handleBuildFailure(this.filePath, newOutput);
 			return true;
 		} else if (input.status === "built") {
 			this.lintHandler.lint(input);
 			const newOutput = this.getNewBuildOutput(input.output, prevBuildOutput);
-			this.messageHandler.handleBuildSuccess(newOutput);
+			this.messageHandler.handleBuildSuccess(this.filePath, newOutput);
 			return true;
 		} else {
 			return false;
@@ -456,6 +459,7 @@ export class SplBuilder {
 				// additional notification with button to open bluemix dashboard so the user can verify their
 				// service is started.
 				this.messageHandler.handleError(
+					this.filePath,
 					"Verify that the streaming analytics service is started and able to handle requests.",
 					[{label: "Open Bluemix Dashboard",
 						callbackFn: ()=>{this.openUrlHandler("https://console.bluemix.net/dashboard/apps")}
@@ -639,7 +643,7 @@ export class SplBuilder {
 					fs.unlinkSync(outputFile);
 				}
 				fs.writeFileSync(outputFile, downloadOutput[index].body);
-				this.messageHandler.handleSuccess(`Application ${artifact.name} bundle downloaded to output directory`, outputFile, true, true);
+				this.messageHandler.handleSuccess(this.filePath, `Application ${artifact.name} bundle downloaded to output directory`, outputFile, true, true);
 				return of(outputDir);
 			} catch (err) {
 				throw new Error(`Error downloading application .sab bundle\n${err}`);

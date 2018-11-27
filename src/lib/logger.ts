@@ -4,74 +4,100 @@ import * as util from 'util';
 import * as moment from 'moment';
 import * as _ from 'underscore';
 
-import { commands, window, OutputChannel } from 'vscode';
+import { commands, window, ExtensionContext, OutputChannel } from 'vscode';
 
 export enum Level { DEBUG, ERROR, INFO, SUCCESS, WARN }
 
 export class SplLogger {
-    private static _outputChannel: OutputChannel;
+    private static _context: ExtensionContext;
+    private static _mainOutputChannel: OutputChannel;
+    public static _outputChannels: Map<String, OutputChannel>;
 
     /**
-     * @param channel    Output channel for logging messages
+     * Perform initial configuration
+     * @param context    The extension context
      */
-    public static registerOutputPanel(channel: OutputChannel): void {
+    public static configure(context: ExtensionContext): void {
+        this._context = context;
+        this._outputChannels = new Map<String, OutputChannel>();
+        
+        // Set up main output channel for logging
+        this._mainOutputChannel = this.registerOutputChannel('IBM Streams');
+    }
 
-        this._outputChannel = channel;
+    /**
+     * @param name    The output channel name
+     */
+    public static registerOutputChannel(name: string): OutputChannel {
+        let outputChannel = this._outputChannels.get(name);
+        if (!outputChannel) {
+            const channelName = name === 'IBM Streams' ? name : `IBM Streams: ${name}`;
+            outputChannel = window.createOutputChannel(channelName);
+            this._outputChannels.set(name, outputChannel);
+            this._context.subscriptions.push(outputChannel);
+        }
+        return outputChannel;
     }
 
     /**
      * Handle messages at the debug level
+     * @param outputChannel        The output channel
      * @param message              The message to log
      * @param showNotification     Whether to show a notification to the user
      * @param showOutputChannel    Whether to switch focus to the output channel
      * @param hideLogTypePrefix    Whether to hide log type prefix in output channel message
      */
-    public static debug(message: string, showNotification?: boolean, showOutputChannel?: boolean, hideLogTypePrefix?: boolean): void {
-        this.handleMessage(message, Level.DEBUG, showNotification, showOutputChannel, hideLogTypePrefix);
+    public static debug(outputChannel: OutputChannel, message: string, showNotification?: boolean, showOutputChannel?: boolean, hideLogTypePrefix?: boolean): void {
+        this.handleMessage(outputChannel, message, Level.DEBUG, showNotification, showOutputChannel, hideLogTypePrefix);
     }
 
     /**
      * Handle messages at the error level
+     * @param outputChannel        The output channel
      * @param message              The message to log
      * @param showNotification     Whether to show a notification to the user
      * @param showOutputChannel    Whether to switch focus to the output channel
      */
-    public static error(message: string, showNotification?: boolean, showOutputChannel?: boolean): void {
-        this.handleMessage(message, Level.ERROR, showNotification, showOutputChannel);
+    public static error(outputChannel: OutputChannel, message: string, showNotification?: boolean, showOutputChannel?: boolean): void {
+        this.handleMessage(outputChannel, message, Level.ERROR, showNotification, showOutputChannel);
     }
 
     /**
      * Handle messages at the info level
+     * @param outputChannel        The output channel
      * @param message              The message to log
      * @param showNotification     Whether to show a notification to the user
      * @param showOutputChannel    Whether to switch focus to the output channel
      */
-    public static info(message: string, showNotification?: boolean, showOutputChannel?: boolean): void {
-        this.handleMessage(message, Level.INFO, showNotification, showOutputChannel);
+    public static info(outputChannel: OutputChannel, message: string, showNotification?: boolean, showOutputChannel?: boolean): void {
+        this.handleMessage(outputChannel, message, Level.INFO, showNotification, showOutputChannel);
     }
 
     /**
      * Handle messages at the success level
+     * @param outputChannel        The output channel
      * @param message              The message to log
      * @param showNotification     Whether to show a notification to the user
      * @param showOutputChannel    Whether to switch focus to the output channel
      */
-    public static success(message: string, showNotification?: boolean, showOutputChannel?: boolean): void {
-        this.handleMessage(message, Level.SUCCESS, showNotification, showOutputChannel);
+    public static success(outputChannel: OutputChannel, message: string, showNotification?: boolean, showOutputChannel?: boolean): void {
+        this.handleMessage(outputChannel, message, Level.SUCCESS, showNotification, showOutputChannel);
     }
 
     /**
      * Handle messages at the warn level
+     * @param outputChannel        The output channel
      * @param message              The message to log
      * @param showNotification     Whether to show a notification to the user
      * @param showOutputChannel    Whether to switch focus to the output channel
      */
-    public static warn(message: string, showNotification?: boolean, showOutputChannel?: boolean): void {
-        this.handleMessage(message, Level.WARN, showNotification, showOutputChannel);
+    public static warn(outputChannel: OutputChannel, message: string, showNotification?: boolean, showOutputChannel?: boolean): void {
+        this.handleMessage(outputChannel, message, Level.WARN, showNotification, showOutputChannel);
     }
 
     /**
      * Handle messages at all levels
+     * @param outputChannel        The output channel
      * @param message              The message to log
      * @param logLevel             The log level
      * @param showNotification     Whether to show a notification to the user
@@ -79,7 +105,7 @@ export class SplLogger {
      * @param throwError           Whether to throw an error
      * @param hideLogTypePrefix    Whether to hide log type prefix in output channel message
      */
-    private static handleMessage(message: string, logLevel: number, showNotification?: boolean, showOutputChannel?: boolean, hideLogTypePrefix?: boolean): void {
+    private static handleMessage(outputChannel: OutputChannel, message: string, logLevel: number, showNotification?: boolean, showOutputChannel?: boolean, hideLogTypePrefix?: boolean): void {
         if (!message || message.trim() === '') {
             return;
         }
@@ -100,30 +126,33 @@ export class SplLogger {
                     break;
             }
         }
-        this.logToOutputChannel(message, logLevel, showOutputChannel, hideLogTypePrefix);
+
+        const channel = outputChannel ? outputChannel : this._mainOutputChannel;
+        this.logToOutputChannel(channel, message, logLevel, showOutputChannel, hideLogTypePrefix);
     }
 
     /**
      * Log a message to the output channel
+     * @param outputChannel        The output channel
      * @param message              The message to log
      * @param logLevel             The log level
      * @param showOutputChannel    Whether to switch focus to the output channel
      * @param hideLogTypePrefix    Whether to hide log type prefix in output channel message
      */
-    private static logToOutputChannel(message: string, logLevel: number, showOutputChannel?: boolean, hideLogTypePrefix?: boolean): void {
-        if (!this._outputChannel) {
+    private static logToOutputChannel(outputChannel: OutputChannel, message: string, logLevel: number, showOutputChannel?: boolean, hideLogTypePrefix?: boolean): void {
+        if (!outputChannel) {
             return;
         }
 
         const levelBufferWhitespace = new Array(Level[3].length - Level[logLevel].length + 1).join(' ');
         const messageBufferWhitespace = message.includes('\n') ? '\n' : '  ';
         if (showOutputChannel) {
-            this._outputChannel.show(true);
+            outputChannel.show(true);
         }
         if (hideLogTypePrefix) {
-            this._outputChannel.appendLine(message);
+            outputChannel.appendLine(message);
         } else {
-            this._outputChannel.appendLine(util.format('[SPL %s][%s]%s%s%s', moment().format(), Level[logLevel], levelBufferWhitespace, messageBufferWhitespace, message));
+            outputChannel.appendLine(util.format('[SPL %s][%s]%s%s%s', moment().format(), Level[logLevel], levelBufferWhitespace, messageBufferWhitespace, message));
         }
     }
 }
@@ -131,66 +160,76 @@ export class SplLogger {
 export class MessageHandler {
     /**
      * Handle a build progress message
+     * @param filePath            The associated file path
      * @param messageOutput       The build message(s)
      * @param showNotification    Whether to show a notification to the user
      */
-    handleBuildProgressMessage(messageOutput: Array<any>|string, showNotification?: boolean): void {
+    handleBuildProgressMessage(filePath: string, messageOutput: Array<any>|string, showNotification?: boolean): void {
+        const outputChannel = SplLogger._outputChannels.get(filePath);
         if (Array.isArray(messageOutput)) {
             this.detectCurrentComposite(messageOutput);
             const message = this.getLoggableMessage(messageOutput);
             if (message) {
-                SplLogger.debug(message, false, false, true);
+                SplLogger.debug(outputChannel, message, false, false, true);
             }
         } else if (typeof messageOutput === 'string') {
-            showNotification ? SplLogger.info(messageOutput, true) : SplLogger.info(messageOutput);
+            showNotification ? SplLogger.info(outputChannel, messageOutput, true) : SplLogger.info(outputChannel, messageOutput);
         }
     }
 
     /**
      * Handle a build success message
+     * @param filePath         The associated file path
      * @param messageOutput    The build message(s)
      */
-    handleBuildSuccess(messageOutput: Array<any>): void {
+    handleBuildSuccess(filePath: string, messageOutput: Array<any>): void {
+        const outputChannel = SplLogger._outputChannels.get(filePath);
         this.detectCurrentComposite(messageOutput);
         const message = this.getLoggableMessage(messageOutput);
         if (message) {
-            SplLogger.debug(message, false, false, true);
+            SplLogger.debug(outputChannel, message, false, false, true);
         }
 
-        SplLogger.success('Build succeeded', true);
+        SplLogger.success(outputChannel, 'Build succeeded', true);
     }
 
     /**
      * Handle a build failure message
+     * @param filePath         The associated file path
      * @param messageOutput    The build message(s)
      */
-    handleBuildFailure(messageOutput: Array<any>): void {
+    handleBuildFailure(filePath: string, messageOutput: Array<any>): void {
+        const outputChannel = SplLogger._outputChannels.get(filePath);
         this.detectCurrentComposite(messageOutput);
         const message = this.getLoggableMessage(messageOutput);
         if (message) {
-            SplLogger.debug(message, false, false, true);
+            SplLogger.debug(outputChannel, message, false, false, true);
         }
 
-        SplLogger.error('Build failed', true);
+        SplLogger.error(outputChannel, 'Build failed', true);
     }
 
     /**
      * Handle a submit job progress message
-     * @param message    The message
+     * @param filePath    The associated file path
+     * @param message     The message
      */
-    handleSubmitProgressMessage(message: any): void {
+    handleSubmitProgressMessage(filePath: string, message: any): void {
+        const outputChannel = SplLogger._outputChannels.get(filePath);
         if (typeof message === "string") {
             window.showInformationMessage(message);
         }
-        SplLogger.info(message);
+        SplLogger.info(outputChannel, message);
     }
 
     /**
      * Handle a submit job success message
+     * @param filePath               The associated file path
      * @param response               The submit response
      * @param notificationButtons    The notification buttons to display
      */
-    handleSubmitSuccess(response: any, notificationButtons: Array<any>): void {
+    handleSubmitSuccess(filePath: string, response: any, notificationButtons: Array<any>): void {
+        const outputChannel = SplLogger._outputChannels.get(filePath);
         let labels = [];
         if (Array.isArray(notificationButtons)) {
             labels = _.map(notificationButtons, obj => obj.label);
@@ -205,31 +244,35 @@ export class MessageHandler {
                 }
             });
 
-        SplLogger.success(`Job ${response.name} is ${response.health}`);
+        SplLogger.success(outputChannel, `Job ${response.name} is ${response.health}`);
     }
 
     /**
      * Handle a submit job failure message
+     * @param filePath    The associated file path
      * @param response    The submit response
      */
-    handleSubmitFailure(response: any): void {
+    handleSubmitFailure(filePath: string, response: any): void {
+        const outputChannel = SplLogger._outputChannels.get(filePath);
         const error = response.errors.map(err => err.message).join('\n');
-        SplLogger.error('Job submission failed');
-        SplLogger.error(error);
+        SplLogger.error(outputChannel, 'Job submission failed');
+        SplLogger.error(outputChannel, error);
     }
 
-    /*
+    /**
      * Handle an error message
+     * @param filePath               The associated file path
      * @param response               The response
      * @param notificationButtons    The notification buttons to display
      */
-    handleError(response: any, notificationButtons: Array<any>): void {
+    handleError(filePath: string, response: any, notificationButtons: Array<any>): void {
+        const outputChannel = SplLogger._outputChannels.get(filePath);
         let labels = [];
         if (Array.isArray(notificationButtons)) {
             labels = _.map(notificationButtons, obj => obj.label);
         }
         if (typeof response === 'string') {
-            SplLogger.error(response);
+            SplLogger.error(outputChannel, response);
             if (labels.length) {
                 window.showErrorMessage(response, ...labels)
                     .then(selection => {
@@ -245,28 +288,30 @@ export class MessageHandler {
             }
         }
         if (response && response.message) {
-            SplLogger.error(response.message);
+            SplLogger.error(outputChannel, response.message);
         }
         if (response && response.stack) {
-            SplLogger.error(response.stack);
+            SplLogger.error(outputChannel, response.stack);
         }
     }
 
     /**
      * Handle a success message
+     * @param filePath               The associated file path
      * @param response               The response
      * @param detail                 The message details
      * @param showNotification       Whether to show a notification to the user
      * @param showConsoleMsg         Whether to log the message
      * @param dialogButtons          The dialog buttons to display
      */
-    handleSuccess(response: any, detail: string, showNotification?: boolean, showConsoleMsg?: boolean, dialogButtons?: Array<any>): void {
+    handleSuccess(filePath: string, response: any, detail: string, showNotification?: boolean, showConsoleMsg?: boolean, dialogButtons?: Array<any>): void {
+        const outputChannel = SplLogger._outputChannels.get(filePath);
         if (showNotification && dialogButtons) {
             this.showDialog(response, null, dialogButtons);
         }
 
         if (showConsoleMsg) {
-            showNotification ? SplLogger.success(`${response}\n${detail}`, true) : SplLogger.success(`${response}\n${detail}`);
+            showNotification ? SplLogger.success(outputChannel, `${response}\n${detail}`, true) : SplLogger.success(outputChannel, `${response}\n${detail}`);
         }
     }
 
