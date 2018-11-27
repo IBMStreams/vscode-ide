@@ -5,7 +5,7 @@ import * as os from 'os';
 import * as _ from 'underscore';
 
 import { Trace } from 'vscode-jsonrpc';
-import { commands, window, workspace, ConfigurationTarget, ExtensionContext } from 'vscode';
+import { commands, workspace, ConfigurationTarget, ExtensionContext } from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-languageclient/lib/main';
 
 import { SplBuilder } from './lib/spl-build-common';
@@ -49,14 +49,10 @@ export function activate(context: ExtensionContext): void {
     // client can be deactivated on extension deactivation
     context.subscriptions.push(client.start());
 
-    // Set up output channel for logging
-    const outputChannel = window.createOutputChannel('IBM Streams');
-    SplLogger.registerOutputPanel(outputChannel);
-    context.subscriptions.push(outputChannel);
-
     // Configure
     SplConfig.configure(context, client);
     SplLinter.configure(context);
+    SplLogger.configure(context);
     workspace.getConfiguration('workbench').update('colorCustomizations', {
         '[Streams Light]': {
             'editor.selectionBackground': '#E2F5FF',
@@ -85,12 +81,12 @@ export function activate(context: ExtensionContext): void {
         context.subscriptions.push(commands.registerCommand(command.commandName, (...args) => {
             command.execute(context, args)
                 .catch(error => {
-                    SplLogger.error(`An error occurred while executing command: ${command.commandName}`);
+                    SplLogger.error(null, `An error occurred while executing command: ${command.commandName}`);
                     if (error && error.stack) {
-                        SplLogger.error(error.stack);
+                        SplLogger.error(null, error.stack);
                     }
                     if (command.commandName.includes('ibm-streams.build')) {
-                        SplLogger.error('Build failed', true, true);
+                        SplLogger.error(null, 'Build failed', true, true);
                     }
                 });
         }));

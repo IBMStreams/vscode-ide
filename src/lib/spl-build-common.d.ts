@@ -7,7 +7,7 @@ export class SplBuilder {
     static SPL_NAMESPACE_REGEX: RegExp;
     static SPL_MAIN_COMPOSITE_REGEX: RegExp;
 
-    constructor(messageHandler: MessageHandler, lintHandler: LintHandler, openUrlHandler: Function);
+    constructor(filePath: string, messageHandler: MessageHandler, lintHandler: LintHandler, openUrlHandler: Function);
     static getApplicationRoot(rootDirArray: Array<string>, filePath: string): string;
     buildSourceArchive(appRoot: string, toolkitRootPath: string, options: { useMakefile?: boolean, makefilePath?: string, fqn?: string }): Promise<string>;
     build(action: number, streamingAnalyticsCredentials: string, input: object): void;

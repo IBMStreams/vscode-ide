@@ -24,7 +24,7 @@ export class CreateApplicationCommand implements BaseCommand {
      * and specify a namespace and composite.
      */
     private async createApplication(): Promise<void> {
-        SplLogger.info('Received request to create an IBM Streams application', false, true);
+        SplLogger.info(null, 'Received request to create an IBM Streams application', false, true);
 
         const rootUri = await this.promptForRootFolder();
         const rootDir = rootUri.fsPath;
@@ -53,7 +53,7 @@ export class CreateApplicationCommand implements BaseCommand {
         workspace.updateWorkspaceFolders(workspace.workspaceFolders ? workspace.workspaceFolders.length : 0, null, { uri: rootUri });
         commands.executeCommand('vscode.open', Uri.file(compositeFile));
 
-        SplLogger.info(`Created ${namespace}::${composite}`);
+        SplLogger.info(null, `Created ${namespace}::${composite}`);
     }
 
     /**
