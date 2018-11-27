@@ -225,7 +225,7 @@ export class SplBuilder {
 					if (consoleResponse.body["streams_console"] && consoleResponse.body["id"]) {
 						const consoleUrl = `${consoleResponse.body["streams_console"]}#application/dashboard/Application%20Dashboard?instance=${consoleResponse.body["id"]}`;
 
-						this.submitJobPrompt(consoleUrl, outputDir, this.submitAppObservable.bind(this), artifacts);
+						this.submitJobPrompt(input.buildPath, consoleUrl, outputDir, this.submitAppObservable.bind(this), artifacts);
 
 					} else {
 						this.messageHandler.handleError(this.filePath, "Cannot retrieve Streaming Analytics Console URL");
@@ -261,7 +261,7 @@ export class SplBuilder {
 						if (consoleResponse.body["streams_console"] && consoleResponse.body["id"]) {
 							const consoleUrl = `${consoleResponse.body["streams_console"]}#application/dashboard/Application%20Dashboard?instance=${consoleResponse.body["id"]}`;
 
-							this.submitJobPrompt(consoleUrl, outputDir, this.submitSabObservable.bind(this), input);
+							this.submitJobPrompt(input.buildPath, consoleUrl, outputDir, this.submitSabObservable.bind(this), input);
 
 						} else {
 							this.messageHandler.handleError(this.filePath, "Cannot retrieve Streaming Analytics Console URL");
@@ -285,11 +285,11 @@ export class SplBuilder {
 		}
 	}
 
-	submitJobPrompt(consoleUrl, outputDir, submissionObservableFunc, submissionObservableInput) {
+	submitJobPrompt(buildPath, consoleUrl, outputDir, submissionObservableFunc, submissionObservableInput) {
 
 		// Submission dialog
 		const dialogMessage = "Job submission";
-		const dialogDetail = "Submit the application(s) to your instance with the default configuration " +
+		const dialogDetail = `${buildPath}\n\nSubmit the application(s) to your instance with the default configuration ` +
 			"or use the Streaming Analytics Console to customize the submission-time configuration.";
 
 		const dialogButtons = [
@@ -460,8 +460,8 @@ export class SplBuilder {
 				// service is started.
 				this.messageHandler.handleError(
 					this.filePath,
-					"Verify that the streaming analytics service is started and able to handle requests.",
-					[{label: "Open Bluemix Dashboard",
+					"Verify that the Streaming Analytics service is started and able to handle requests.",
+					[{label: "Open IBM Cloud Dashboard",
 						callbackFn: ()=>{this.openUrlHandler("https://console.bluemix.net/dashboard/apps")}
 					}]);
 			}

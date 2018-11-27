@@ -47,7 +47,7 @@ export class Build {
 
             const appArchivePath = await builder.buildSourceArchive(appRoot, toolkitsDir, { useMakefile: false, fqn: mainComposite });
             try {
-                builder.build(action, streamingAnalyticsCredentials, { filename: appArchivePath });
+                builder.build(action, streamingAnalyticsCredentials, { filename: appArchivePath, buildPath: displayPath });
             } catch(error) {
                 throw error;
             }
@@ -88,7 +88,7 @@ export class Build {
 
             const appArchivePath = await builder.buildSourceArchive(appRoot, toolkitsDir, { useMakefile: true, makefilePath: filePath });
             try {
-                builder.build(action, streamingAnalyticsCredentials, { filename: appArchivePath });
+                builder.build(action, streamingAnalyticsCredentials, { filename: appArchivePath, buildPath: displayPath });
             } catch(error) {
                 throw error;
             }
@@ -125,7 +125,7 @@ export class Build {
             const builder = new SplBuilder(filePath, messageHandler, lintHandler, openUrlHandler);
 
             try {
-                builder.submit(streamingAnalyticsCredentials, { filename: filePath });
+                builder.submit(streamingAnalyticsCredentials, { filename: filePath, buildPath: displayPath });
             } catch(error) {
                 throw error;
             }
