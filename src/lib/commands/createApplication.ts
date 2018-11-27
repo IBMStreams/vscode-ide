@@ -4,10 +4,10 @@ import * as fs from 'fs';
 
 import { commands, window, workspace, ExtensionContext, Uri } from 'vscode';
 
-import { Command } from './command';
+import { BaseCommand } from './command';
 import { SplLogger } from '../logger';
 
-export class CreateApplicationCommand implements Command {
+export class CreateApplicationCommand implements BaseCommand {
     commandName: string = 'ibm-streams.createApplication';
 
     /**
@@ -20,11 +20,11 @@ export class CreateApplicationCommand implements Command {
     }
 
     /**
-     * Create a simple SPL application. Prompt the user to select a root folder,
+     * Create a simple Streams application. Prompt the user to select a root folder,
      * and specify a namespace and composite.
      */
     private async createApplication(): Promise<void> {
-        SplLogger.info('Received request to create a SPL application', false, true);
+        SplLogger.info(null, 'Received request to create an IBM Streams application', false, true);
 
         const rootUri = await this.promptForRootFolder();
         const rootDir = rootUri.fsPath;
@@ -53,7 +53,7 @@ export class CreateApplicationCommand implements Command {
         workspace.updateWorkspaceFolders(workspace.workspaceFolders ? workspace.workspaceFolders.length : 0, null, { uri: rootUri });
         commands.executeCommand('vscode.open', Uri.file(compositeFile));
 
-        SplLogger.info(`Created ${namespace}::${composite}`);
+        SplLogger.info(null, `Created ${namespace}::${composite}`);
     }
 
     /**

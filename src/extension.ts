@@ -5,16 +5,16 @@ import * as os from 'os';
 import * as _ from 'underscore';
 
 import { Trace } from 'vscode-jsonrpc';
-import { commands, window, workspace, ConfigurationTarget, ExtensionContext } from 'vscode';
+import { commands, workspace, ConfigurationTarget, ExtensionContext } from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-languageclient/lib/main';
 
 import { SplBuilder } from './lib/spl-build-common';
 import { SplConfig } from './lib/config';
 import { SplLinter } from './lib/linter';
 import { SplLogger } from './lib/logger';
-import { Command } from './lib/commands/command';
+import { BaseCommand } from './lib/commands/command';
 import { SetConfigSettingCommand } from './lib/commands/setConfigSetting';
-import { SplBuildCommand } from './lib/commands/splBuild';
+import { BuildCommand, Command } from './lib/commands/build';
 import { CreateApplicationCommand } from './lib/commands/createApplication';
 
 let client: LanguageClient;
@@ -31,7 +31,7 @@ export function activate(context: ExtensionContext): void {
     };
 
     const clientOptions: LanguageClientOptions = {
-        outputChannelName: 'SPL Language Server',
+        outputChannelName: 'IBM Streams SPL Language Server',
         documentSelector: [{ scheme: 'file', language: 'spl' }],
         synchronize: {
             fileEvents: workspace.createFileSystemWatcher('**/*.*')
@@ -40,7 +40,7 @@ export function activate(context: ExtensionContext): void {
     };
 
     // Create the language client and start the client
-    client = new LanguageClient('SPL', serverOptions, clientOptions);
+    client = new LanguageClient('IBM Streams', serverOptions, clientOptions);
 
     // Enable tracing
     client.trace = Trace.Verbose;
@@ -49,14 +49,10 @@ export function activate(context: ExtensionContext): void {
     // client can be deactivated on extension deactivation
     context.subscriptions.push(client.start());
 
-    // Set up output channel for logging
-    const outputChannel = window.createOutputChannel('SPL');
-    SplLogger.registerOutputPanel(outputChannel);
-    context.subscriptions.push(outputChannel);
-
     // Configure
     SplConfig.configure(context, client);
     SplLinter.configure(context);
+    SplLogger.configure(context);
     workspace.getConfiguration('workbench').update('colorCustomizations', {
         '[Streams Light]': {
             'editor.selectionBackground': '#E2F5FF',
@@ -71,24 +67,26 @@ export function activate(context: ExtensionContext): void {
     }, ConfigurationTarget.Global);
 
     // Register commands
-    const streamsCommands = new Array<Command>();
+    const streamsCommands = new Array<BaseCommand>();
     streamsCommands.push(new SetConfigSettingCommand('ibm-streams.setServiceCredentials'));
     streamsCommands.push(new SetConfigSettingCommand('ibm-streams.setToolkitsPath'));
-    streamsCommands.push(new SplBuildCommand('ibm-streams.build', SplBuilder.BUILD_ACTION.DEFAULT));
-    streamsCommands.push(new SplBuildCommand('ibm-streams.buildDownload', SplBuilder.BUILD_ACTION.DOWNLOAD));
-    streamsCommands.push(new SplBuildCommand('ibm-streams.buildSubmit', SplBuilder.BUILD_ACTION.SUBMIT));
+    streamsCommands.push(new BuildCommand(Command.BUILD_DOWNLOAD, SplBuilder.BUILD_ACTION.DOWNLOAD));
+    streamsCommands.push(new BuildCommand(Command.BUILD_SUBMIT, SplBuilder.BUILD_ACTION.SUBMIT));
+    streamsCommands.push(new BuildCommand(Command.BUILD_MAKE_DOWNLOAD, SplBuilder.BUILD_ACTION.DOWNLOAD));
+    streamsCommands.push(new BuildCommand(Command.BUILD_MAKE_SUBMIT, SplBuilder.BUILD_ACTION.SUBMIT));
+    streamsCommands.push(new BuildCommand(Command.SUBMIT));
     streamsCommands.push(new CreateApplicationCommand());
 
     _.each(streamsCommands, command => {
         context.subscriptions.push(commands.registerCommand(command.commandName, (...args) => {
             command.execute(context, args)
                 .catch(error => {
-                    SplLogger.error(`An error occurred while executing command: ${command.commandName}`);
+                    SplLogger.error(null, `An error occurred while executing command: ${command.commandName}`);
                     if (error && error.stack) {
-                        SplLogger.error(error.stack);
+                        SplLogger.error(null, error.stack);
                     }
                     if (command.commandName.includes('ibm-streams.build')) {
-                        SplLogger.error('Build failed', true, true);
+                        SplLogger.error(null, 'Build failed', true, true);
                     }
                 });
         }));

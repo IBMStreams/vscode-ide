@@ -2,11 +2,11 @@
 
 import { window, ExtensionContext } from 'vscode';
 
-import { Command } from './command';
+import { BaseCommand } from './command';
 import { SplConfig, Config } from '../config';
 import { SplLogger } from '../logger';
 
-export class SetConfigSettingCommand implements Command {
+export class SetConfigSettingCommand implements BaseCommand {
     /**
      * Initialize the command
      * @param commandName    The name of the command
@@ -19,14 +19,16 @@ export class SetConfigSettingCommand implements Command {
      * @param args       Array of arguments
      */
     execute(context: ExtensionContext, ...args: any[]): any {
-        return this.promptForConfigurationValue();
+        const callbackFn = args[0][0] ? args[0][0] : null;
+        return this.promptForConfigurationValue(callbackFn);
     }
 
      /**
      * Prompt the user to input a value for a configuration setting.
+     * @param callbackFn    The callback function to execute after setting the value
      */
-    private async promptForConfigurationValue(): Promise<void> {
-        SplLogger.info(`Received request to set the configuration setting: ${this.commandName}`, false, true);
+    private async promptForConfigurationValue(callbackFn): Promise<void> {
+        SplLogger.info(null, `Received request to set the configuration setting: ${this.commandName}`, false, true);
 
         let config = null, prompt = null, placeHolder = null;
         switch(this.commandName) {
@@ -58,6 +60,10 @@ export class SetConfigSettingCommand implements Command {
                             input = null;
                         }
                         SplConfig.setSetting(config, input);
+
+                        if (callbackFn) {
+                            callbackFn();
+                        }
                     } catch(error) {
                         throw error;
                     }
