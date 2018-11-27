@@ -19,7 +19,11 @@ export class Build {
     public static async build(uri: Uri, action: number): Promise<void> {
         const filePath = uri ? uri.fsPath : window.activeTextEditor.document.fileName;
         if (filePath) {
-            const outputChannel = SplLogger.registerOutputChannel(filePath);
+            const workspaceFolders = _.map(workspace.workspaceFolders, folder => folder.uri.fsPath);
+            const appRoot = SplBuilder.getApplicationRoot(workspaceFolders, filePath);
+
+            const displayPath = `${path.basename(appRoot)}${path.sep}${path.relative(appRoot, filePath)}`;
+            const outputChannel = SplLogger.registerOutputChannel(filePath, displayPath);
 
             let statusMessage = 'Received request to build';
             if (action === SplBuilder.BUILD_ACTION.SUBMIT) {
@@ -28,8 +32,6 @@ export class Build {
             SplLogger.info(outputChannel, statusMessage, false, true);
             SplLogger.debug(outputChannel, `Selected: ${filePath}`);
 
-            const workspaceFolders = _.map(workspace.workspaceFolders, folder => folder.uri.fsPath);
-            const appRoot = SplBuilder.getApplicationRoot(workspaceFolders, filePath);
             const credentialsSetting = SplConfig.getSetting(Config.STREAMING_ANALYTICS_CREDENTIALS);
             const streamingAnalyticsCredentials = credentialsSetting ? JSON.stringify(credentialsSetting) : null;
 
@@ -62,7 +64,11 @@ export class Build {
     public static async buildMake(uri: Uri, action: number): Promise<void> {
         const filePath = uri ? uri.fsPath : window.activeTextEditor.document.fileName;
         if (filePath) {
-            const outputChannel = SplLogger.registerOutputChannel(filePath);
+            const workspaceFolders = _.map(workspace.workspaceFolders, folder => folder.uri.fsPath);
+            const appRoot = SplBuilder.getApplicationRoot(workspaceFolders, filePath);
+
+            const displayPath = `${path.basename(appRoot)}${path.sep}${path.relative(appRoot, filePath)}`;
+            const outputChannel = SplLogger.registerOutputChannel(filePath, displayPath);
 
             let statusMessage = 'Received request to build from a Makefile';
             if (action === SplBuilder.BUILD_ACTION.SUBMIT) {
@@ -71,8 +77,6 @@ export class Build {
             SplLogger.info(outputChannel, statusMessage, false, true);
             SplLogger.debug(outputChannel, `Selected: ${filePath}`);
 
-            const workspaceFolders = _.map(workspace.workspaceFolders, folder => folder.uri.fsPath);
-            const appRoot = SplBuilder.getApplicationRoot(workspaceFolders, filePath);
             const credentialsSetting = SplConfig.getSetting(Config.STREAMING_ANALYTICS_CREDENTIALS);
             const streamingAnalyticsCredentials = credentialsSetting ? JSON.stringify(credentialsSetting) : null;
             const toolkitsDir = await this.getToolkitsDir();
@@ -100,16 +104,17 @@ export class Build {
     public static async submit(uri: Uri): Promise<void> {
         const filePath = uri ? uri.fsPath : window.activeTextEditor.document.fileName;
         if (filePath) {
-            const outputChannel = SplLogger.registerOutputChannel(filePath);
-
-            let statusMessage = 'Received request to submit an application';
-            SplLogger.info(outputChannel, statusMessage, false, true);
-            SplLogger.debug(outputChannel, `Selected: ${filePath}`);
-
             let appRoot = path.dirname(filePath);
             if (path.basename(appRoot) === "output") {
                 appRoot = path.dirname(appRoot);
             }
+            
+            const displayPath = `${path.basename(appRoot)}${path.sep}${path.relative(appRoot, filePath)}`;
+            const outputChannel = SplLogger.registerOutputChannel(filePath, displayPath);
+
+            let statusMessage = 'Received request to submit an application';
+            SplLogger.info(outputChannel, statusMessage, false, true);
+            SplLogger.debug(outputChannel, `Selected: ${filePath}`);
 
             const credentialsSetting = SplConfig.getSetting(Config.STREAMING_ANALYTICS_CREDENTIALS);
             const streamingAnalyticsCredentials = credentialsSetting ? JSON.stringify(credentialsSetting) : null;

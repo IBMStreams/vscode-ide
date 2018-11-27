@@ -22,16 +22,18 @@ export class SplLogger {
         this._outputChannels = new Map<String, OutputChannel>();
         
         // Set up main output channel for logging
-        this._mainOutputChannel = this.registerOutputChannel('IBM Streams');
+        this._mainOutputChannel = this.registerOutputChannel('IBM Streams', 'IBM Streams');
     }
 
     /**
-     * @param name    The output channel name
+     * Create an output channel
+     * @param name           The output channel name
+     * @param displayName    The output channel name to display
      */
-    public static registerOutputChannel(name: string): OutputChannel {
+    public static registerOutputChannel(name: string, displayName: string): OutputChannel {
         let outputChannel = this._outputChannels.get(name);
         if (!outputChannel) {
-            const channelName = name === 'IBM Streams' ? name : `IBM Streams: ${name}`;
+            const channelName = displayName === 'IBM Streams' ? displayName : `IBM Streams: ${displayName}`;
             outputChannel = window.createOutputChannel(channelName);
             this._outputChannels.set(name, outputChannel);
             this._context.subscriptions.push(outputChannel);
