@@ -338,7 +338,7 @@ export class SplBuilder {
 						this.messageHandler.handleSuccess(
 							this.filePath,
 							"Submit via Console",
-							`Use the Streaming Analytics Console to submit.`,
+							`${buildPath}\n\nUse the Streaming Analytics Console to submit. Click on the play button in the header and select your application(s).`,
 							true,
 							true,
 							[

@@ -309,7 +309,7 @@ export class MessageHandler {
     handleSuccess(filePath: string, response: any, detail: string, showNotification?: boolean, showConsoleMsg?: boolean, dialogButtons?: Array<any>): void {
         const outputChannel = SplLogger._outputChannels.get(filePath);
         if (showNotification && dialogButtons) {
-            this.showDialog(response, null, dialogButtons);
+            this.showDialog(response, detail, dialogButtons);
         }
 
         if (showConsoleMsg) {
