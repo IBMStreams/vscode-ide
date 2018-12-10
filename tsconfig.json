@@ -5,9 +5,10 @@
         "allowJs": true,
         "outDir": "out",
         "sourceMap": true,
-        "rootDir": "src",
+        "rootDir": ".",
         "strict": false,
-        "noUnusedLocals": true
+        "noUnusedLocals": true,
+        "resolveJsonModule": true
     },
     "exclude": [
         "node_modules",

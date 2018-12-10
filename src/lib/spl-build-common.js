@@ -45,19 +45,23 @@ export class SplBuilder {
 	openUrlHandler = null;
 	serviceCredentials = null;
 	accessToken = null;
+	originatorString = null;
 
-	constructor(filePath, messageHandler, lintHandler, openUrlHandler) {
+	constructor(filePath, messageHandler, lintHandler, openUrlHandler, originator) {
 		this.filePath = filePath;
 		this.messageHandler = messageHandler;
 		this.lintHandler = lintHandler;
 		this.openUrlHandler = openUrlHandler;
+		this.originatorString = originator ? `${originator.originator}-${originator.version}:${originator.type}` : "";
 	}
 
 	dispose() {
-		messageHandler = null;
-		lintHandler = null;
-		serviceCredentials = null;
-		accessToken = null;
+		// this.messageHandler = null;
+		// this.lintHandler = null;
+		// this.openUrlHandler = null;
+		// this.serviceCredentials = null;
+		// this.accessToken = null;
+		// this.originatorString = null;
 	}
 
 	/**
@@ -508,6 +512,9 @@ export class SplBuilder {
 			method: "POST",
 			url: `${this.serviceCredentials.v2_rest_url}/builds`,
 			json: true,
+			qs: {
+				originator: this.originatorString
+			},
 			headers: {
 				"Authorization": `Bearer ${this.accessToken}`,
 				"Content-Type": "application/json"

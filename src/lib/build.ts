@@ -5,6 +5,8 @@ import * as _ from 'underscore';
 
 import { commands, window, workspace, OutputChannel, Uri } from 'vscode';
 
+import packageJson = require('../../package.json');
+
 import { SplBuilder } from './spl-build-common';
 import { SplConfig, Config } from './config';
 import { LintHandler } from './linter';
@@ -43,7 +45,8 @@ export class Build {
             const messageHandler = new MessageHandler();
             const lintHandler = new LintHandler(SplBuilder.SPL_MSG_REGEX, appRoot);
             const openUrlHandler = url => commands.executeCommand('vscode.open', Uri.parse(url));
-            const builder = new SplBuilder(filePath, messageHandler, lintHandler, openUrlHandler);
+            const originator = { originator: 'vscode', version: packageJson.version, type: 'spl' };
+            const builder = new SplBuilder(filePath, messageHandler, lintHandler, openUrlHandler, originator);
 
             const appArchivePath = await builder.buildSourceArchive(appRoot, toolkitsDir, { useMakefile: false, fqn: mainComposite });
             try {
@@ -84,7 +87,8 @@ export class Build {
             const messageHandler = new MessageHandler();
             const lintHandler = new LintHandler(SplBuilder.SPL_MSG_REGEX, appRoot);
             const openUrlHandler = url => commands.executeCommand('vscode.open', Uri.parse(url));
-            const builder = new SplBuilder(filePath, messageHandler, lintHandler, openUrlHandler);
+            const originator = { originator: 'vscode', version: packageJson.version, type: 'make' };
+            const builder = new SplBuilder(filePath, messageHandler, lintHandler, openUrlHandler, originator);
 
             const appArchivePath = await builder.buildSourceArchive(appRoot, toolkitsDir, { useMakefile: true, makefilePath: filePath });
             try {
