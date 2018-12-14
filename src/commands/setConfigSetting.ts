@@ -2,9 +2,9 @@
 
 import { window, ExtensionContext } from 'vscode';
 
-import { BaseCommand } from './command';
-import { SplConfig, Config } from '../config';
-import { SplLogger } from '../logger';
+import { BaseCommand } from './base';
+import { Commands } from './commands';
+import { Settings, SplConfig, SplLogger } from '../utils';
 
 export class SetConfigSettingCommand implements BaseCommand {
     /**
@@ -32,13 +32,13 @@ export class SetConfigSettingCommand implements BaseCommand {
 
         let config = null, prompt = null, placeHolder = null;
         switch(this.commandName) {
-            case 'ibm-streams.setServiceCredentials':
-                config = Config.STREAMING_ANALYTICS_CREDENTIALS;
+            case Commands.SET_SERVICE_CREDENTIALS:
+                config = Settings.STREAMING_ANALYTICS_CREDENTIALS;
                 prompt = 'Provide credentials for an IBM Streaming Analytics service';
                 placeHolder = '{ "apikey": ..., "v2_rest_url": ... }';
                 break;
-            case 'ibm-streams.setToolkitsPath':
-                config = Config.TOOLKITS_PATH;
+            case Commands.SET_TOOLKITS_PATH:
+                config = Settings.TOOLKITS_PATH;
                 prompt = 'Provide a path to a directory containing IBM Streams toolkits';
                 placeHolder = '/path/to/toolkits/directory';
                 break;
@@ -53,7 +53,7 @@ export class SetConfigSettingCommand implements BaseCommand {
                 if (typeof input === 'string') {
                     try {
                         input = input.trim();
-                        if (this.commandName === 'ibm-streams.setServiceCredentials') {
+                        if (this.commandName === Commands.SET_SERVICE_CREDENTIALS) {
                             input = JSON.parse(input);
                         }
                         if (input === 'null') {

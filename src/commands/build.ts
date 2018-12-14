@@ -2,16 +2,9 @@
 
 import { window, ExtensionContext, Uri } from 'vscode';
 
-import { BaseCommand } from './command';
-import { Build } from '../build';
-
-export enum Command {
-    BUILD_DOWNLOAD = 'ibm-streams.buildDownload',
-    BUILD_SUBMIT = 'ibm-streams.buildSubmit',
-    BUILD_MAKE_DOWNLOAD = 'ibm-streams.buildMakeDownload',
-    BUILD_MAKE_SUBMIT = 'ibm-streams.buildMakeSubmit',
-    SUBMIT = 'ibm-streams.submit'
-}
+import { BaseCommand } from './base';
+import { Commands } from './commands';
+import { SplBuild } from '../utils';
 
 export class BuildCommand implements BaseCommand {
     private _buildType: number;
@@ -40,16 +33,16 @@ export class BuildCommand implements BaseCommand {
         }
 
         switch(this.commandName) {
-            case Command.BUILD_DOWNLOAD:
-            case Command.BUILD_SUBMIT:
-                return Build.build(uri, this._buildType)
+            case Commands.BUILD_DOWNLOAD:
+            case Commands.BUILD_SUBMIT:
+                return SplBuild.build(uri, this._buildType)
                     .catch(error => { throw error; });
-            case Command.BUILD_MAKE_DOWNLOAD:
-            case Command.BUILD_MAKE_SUBMIT:
-                return Build.buildMake(uri, this._buildType)
+            case Commands.BUILD_MAKE_DOWNLOAD:
+            case Commands.BUILD_MAKE_SUBMIT:
+                return SplBuild.buildMake(uri, this._buildType)
                     .catch(error => { throw error; });
-            case Command.SUBMIT:
-                return Build.submit(uri)
+            case Commands.SUBMIT:
+                return SplBuild.submit(uri)
                     .catch(error => { throw error; });
         }
     }

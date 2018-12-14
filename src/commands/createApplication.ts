@@ -4,11 +4,12 @@ import * as fs from 'fs';
 
 import { commands, window, workspace, ExtensionContext, Uri } from 'vscode';
 
-import { BaseCommand } from './command';
-import { SplLogger } from '../logger';
+import { BaseCommand } from './base';
+import { Commands } from './commands';
+import { SplLogger } from '../utils';
 
 export class CreateApplicationCommand implements BaseCommand {
-    commandName: string = 'ibm-streams.createApplication';
+    commandName: string = Commands.CREATE_APPLICATION;
 
     /**
      * Execute the command

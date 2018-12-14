@@ -1,5 +1,4 @@
-import { MessageHandler } from './logger';
-import { LintHandler } from './linter';
+import { LintHandler, MessageHandler } from '.';
 
 export class SplBuilder {
     static BUILD_ACTION: { DEFAULT: number, DOWNLOAD: number, SUBMIT: number };

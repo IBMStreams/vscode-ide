@@ -93,6 +93,11 @@
         "category": "IBM Streams"
       }
     ],
+    "configurationDefaults": {
+      "[spl]": {
+        "editor.wordBasedSuggestions": false
+      }
+    },
     "grammars": [
       {
         "language": "spl",
