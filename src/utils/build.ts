@@ -7,12 +7,9 @@ import { commands, window, workspace, OutputChannel, Uri } from 'vscode';
 
 import packageJson = require('../../package.json');
 
-import { SplBuilder } from './spl-build-common';
-import { SplConfig, Config } from './config';
-import { LintHandler } from './linter';
-import { SplLogger, MessageHandler } from './logger';
+import { LintHandler, MessageHandler, Settings, SplBuilder, SplConfig, SplLogger } from '.';
 
-export class Build {
+export class SplBuild {
     /**
      * Perform a build
      * @param uri       The file URI
@@ -34,7 +31,7 @@ export class Build {
             SplLogger.info(outputChannel, statusMessage, false, true);
             SplLogger.debug(outputChannel, `Selected: ${filePath}`);
 
-            const credentialsSetting = SplConfig.getSetting(Config.STREAMING_ANALYTICS_CREDENTIALS);
+            const credentialsSetting = SplConfig.getSetting(Settings.STREAMING_ANALYTICS_CREDENTIALS);
             const streamingAnalyticsCredentials = credentialsSetting ? JSON.stringify(credentialsSetting) : null;
 
             const fileContents = await this.getFileContents(uri);
@@ -80,7 +77,7 @@ export class Build {
             SplLogger.info(outputChannel, statusMessage, false, true);
             SplLogger.debug(outputChannel, `Selected: ${filePath}`);
 
-            const credentialsSetting = SplConfig.getSetting(Config.STREAMING_ANALYTICS_CREDENTIALS);
+            const credentialsSetting = SplConfig.getSetting(Settings.STREAMING_ANALYTICS_CREDENTIALS);
             const streamingAnalyticsCredentials = credentialsSetting ? JSON.stringify(credentialsSetting) : null;
             const toolkitsDir = await this.getToolkitsDir();
 
@@ -109,10 +106,10 @@ export class Build {
         const filePath = uri ? uri.fsPath : window.activeTextEditor.document.fileName;
         if (filePath) {
             let appRoot = path.dirname(filePath);
-            if (path.basename(appRoot) === "output") {
+            if (path.basename(appRoot) === 'output') {
                 appRoot = path.dirname(appRoot);
             }
-            
+
             const displayPath = `${path.basename(appRoot)}${path.sep}${path.relative(appRoot, filePath)}`;
             const outputChannel = SplLogger.registerOutputChannel(filePath, displayPath);
 
@@ -120,7 +117,7 @@ export class Build {
             SplLogger.info(outputChannel, statusMessage, false, true);
             SplLogger.debug(outputChannel, `Selected: ${filePath}`);
 
-            const credentialsSetting = SplConfig.getSetting(Config.STREAMING_ANALYTICS_CREDENTIALS);
+            const credentialsSetting = SplConfig.getSetting(Settings.STREAMING_ANALYTICS_CREDENTIALS);
             const streamingAnalyticsCredentials = credentialsSetting ? JSON.stringify(credentialsSetting) : null;
 
             const messageHandler = new MessageHandler();
@@ -231,9 +228,8 @@ export class Build {
      * @param composites    The defined composites
      */
     private static async getCompositeToBuild(appRoot: string, namespace: string, composites: Array<string>): Promise<string> {
-      
         if (composites.length === 1) {
-            if (namespace == '') 
+            if (namespace == '')
                return composites[0];
             else
                 return `${namespace}::${composites[0]}`;
@@ -260,10 +256,10 @@ export class Build {
      * if there configuration setting is not defined.
      */
     private static async getToolkitsDir(): Promise<string> {
-        const setting = SplConfig.getSetting(Config.TOOLKITS_PATH);
+        const setting = SplConfig.getSetting(Settings.TOOLKITS_PATH);
         if (setting.trim() !== '') {
             return setting;
-        } 
+        }
         return null;
     }
 }

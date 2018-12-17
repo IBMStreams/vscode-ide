@@ -121,7 +121,7 @@ export class LintHandler {
      */
     public lint(response: any): void {
         if (!response) {
-        	return;
+            return;
         }
 
         if (response.output && Array.isArray(response.output)) {

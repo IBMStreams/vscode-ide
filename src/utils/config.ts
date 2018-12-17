@@ -4,13 +4,7 @@ import { workspace, ConfigurationChangeEvent, ConfigurationTarget, ExtensionCont
 import { LanguageClient } from 'vscode-languageclient';
 import { DidChangeConfigurationNotification } from 'vscode-languageserver-protocol';
 
-import { SplLogger } from './logger';
-
-export const CONFIG_ID = 'ibm-streams';
-export enum Config {
-    STREAMING_ANALYTICS_CREDENTIALS = 'streamingAnalyticsCredentials',
-    TOOLKITS_PATH = 'toolkitsPath'
-}
+import { Settings, SplLogger } from '.';
 
 export class SplConfig {
     private static _context: ExtensionContext;
@@ -25,11 +19,28 @@ export class SplConfig {
         this._context = context;
         this._client = client;
 
+        this.customizeWorkbench();
+
         // Store initial settings
         const initialSettings = this.getCurrentSettings();
-        this.setState(CONFIG_ID, initialSettings);
+        this.setState(Settings.ID, initialSettings);
 
         this.watchSettings();
+    }
+
+    private static customizeWorkbench() {
+        workspace.getConfiguration('workbench').update('colorCustomizations', {
+            '[Streams Light]': {
+                'editor.selectionBackground': '#E2F5FF',
+                'editorBracketMatch.background': '#7D7D7D66',
+                'editorCursor.foreground': '#000000'
+            },
+            '[Streams Dark]': {
+                'editor.selectionBackground': '#2F4F4F',
+                'editorBracketMatch.background': '#7D7D7D66',
+                'editorCursor.foreground': '#FFFFFF'
+            }
+        }, ConfigurationTarget.Global);
     }
 
     /**
@@ -37,8 +48,8 @@ export class SplConfig {
      */
     public static getCurrentSettings(): object {
         return {
-            [Config.TOOLKITS_PATH]: this.getSetting(Config.TOOLKITS_PATH),
-            [Config.STREAMING_ANALYTICS_CREDENTIALS]: this.getSetting(Config.STREAMING_ANALYTICS_CREDENTIALS)
+            [Settings.TOOLKITS_PATH]: this.getSetting(Settings.TOOLKITS_PATH),
+            [Settings.STREAMING_ANALYTICS_CREDENTIALS]: this.getSetting(Settings.STREAMING_ANALYTICS_CREDENTIALS)
         };
     }
 
@@ -47,8 +58,8 @@ export class SplConfig {
      */
     private static getOldSettings(): object {
         return {
-            [Config.TOOLKITS_PATH]: this.getState(Config.TOOLKITS_PATH),
-            [Config.STREAMING_ANALYTICS_CREDENTIALS]: this.getState(Config.STREAMING_ANALYTICS_CREDENTIALS)
+            [Settings.TOOLKITS_PATH]: this.getState(Settings.TOOLKITS_PATH),
+            [Settings.STREAMING_ANALYTICS_CREDENTIALS]: this.getState(Settings.STREAMING_ANALYTICS_CREDENTIALS)
         };
     }
 
@@ -73,7 +84,7 @@ export class SplConfig {
      * Get the configuration
      */
     private static getConfig(): WorkspaceConfiguration {
-        return workspace.getConfiguration(CONFIG_ID);
+        return workspace.getConfiguration(Settings.ID);
     }
 
     /**
@@ -105,7 +116,7 @@ export class SplConfig {
      */
     private static watchSettings(): void {
         this._context.subscriptions.push(workspace.onDidChangeConfiguration((event: ConfigurationChangeEvent) => {
-            if (event.affectsConfiguration(CONFIG_ID)) {
+            if (event.affectsConfiguration(Settings.ID)) {
                 // Send all settings to the language server
                 this._client.sendNotification(DidChangeConfigurationNotification.type, {
                     settings: {
@@ -115,10 +126,10 @@ export class SplConfig {
                 });
 
                 let changedSetting = null;
-                if (event.affectsConfiguration(`${CONFIG_ID}.${Config.TOOLKITS_PATH}`)) {
-                    changedSetting = Config.TOOLKITS_PATH;
-                } else if (event.affectsConfiguration(`${CONFIG_ID}.${Config.STREAMING_ANALYTICS_CREDENTIALS}`)) {
-                    changedSetting = Config.STREAMING_ANALYTICS_CREDENTIALS;
+                if (event.affectsConfiguration(`${Settings.ID}.${Settings.TOOLKITS_PATH}`)) {
+                    changedSetting = Settings.TOOLKITS_PATH;
+                } else if (event.affectsConfiguration(`${Settings.ID}.${Settings.STREAMING_ANALYTICS_CREDENTIALS}`)) {
+                    changedSetting = Settings.STREAMING_ANALYTICS_CREDENTIALS;
                 }
 
                 if (changedSetting) {

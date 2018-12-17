@@ -56,12 +56,6 @@ export class SplBuilder {
 	}
 
 	dispose() {
-		// this.messageHandler = null;
-		// this.lintHandler = null;
-		// this.openUrlHandler = null;
-		// this.serviceCredentials = null;
-		// this.accessToken = null;
-		// this.originatorString = null;
 	}
 
 	/**

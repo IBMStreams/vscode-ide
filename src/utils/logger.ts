@@ -6,6 +6,8 @@ import * as _ from 'underscore';
 
 import { commands, window, ExtensionContext, OutputChannel } from 'vscode';
 
+import { Commands } from '../commands';
+
 export enum Level { DEBUG, ERROR, INFO, SUCCESS, WARN }
 
 export class SplLogger {
@@ -218,7 +220,7 @@ export class MessageHandler {
      */
     handleSubmitProgressMessage(filePath: string, message: any): void {
         const outputChannel = SplLogger._outputChannels.get(filePath);
-        if (typeof message === "string") {
+        if (typeof message === 'string') {
             window.showInformationMessage(message);
         }
         SplLogger.info(outputChannel, message);
@@ -353,7 +355,7 @@ export class MessageHandler {
      */
     handleCredentialsMissing() {
         const callbackFn = () => window.showInformationMessage('Please re-build your application(s)');
-        commands.executeCommand('ibm-streams.setServiceCredentials', callbackFn);
+        commands.executeCommand(Commands.SET_SERVICE_CREDENTIALS, callbackFn);
     }
 
     /**
