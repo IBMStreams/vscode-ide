@@ -1,5 +1,6 @@
 'use strict';
 
+import * as path from 'path';
 import * as util from 'util';
 import * as moment from 'moment';
 import * as _ from 'underscore';
@@ -13,7 +14,7 @@ export enum Level { DEBUG, ERROR, INFO, SUCCESS, WARN }
 export class SplLogger {
     private static _context: ExtensionContext;
     private static _mainOutputChannel: OutputChannel;
-    public static _outputChannels: Map<String, OutputChannel>;
+    public static _outputChannels: Object;
 
     /**
      * Perform initial configuration
@@ -21,8 +22,8 @@ export class SplLogger {
      */
     public static configure(context: ExtensionContext): void {
         this._context = context;
-        this._outputChannels = new Map<String, OutputChannel>();
-        
+        this._outputChannels = {};
+
         // Set up main output channel for logging
         this._mainOutputChannel = this.registerOutputChannel('IBM Streams', 'IBM Streams');
     }
@@ -33,11 +34,16 @@ export class SplLogger {
      * @param displayName    The output channel name to display
      */
     public static registerOutputChannel(name: string, displayName: string): OutputChannel {
-        let outputChannel = this._outputChannels.get(name);
-        if (!outputChannel) {
+        let outputChannel = null;
+        if (this._outputChannels[name]) {
+            outputChannel = this._outputChannels[name].outputChannel;
+        } else {
             const channelName = displayName === 'IBM Streams' ? displayName : `IBM Streams: ${displayName}`;
             outputChannel = window.createOutputChannel(channelName);
-            this._outputChannels.set(name, outputChannel);
+            this._outputChannels[name] = {
+                displayName: displayName,
+                outputChannel: outputChannel
+            };
             this._context.subscriptions.push(outputChannel);
         }
         return outputChannel;
@@ -164,12 +170,12 @@ export class SplLogger {
 export class MessageHandler {
     /**
      * Handle a build progress message
-     * @param filePath            The associated file path
+     * @param structure           The associated file path and application root
      * @param messageOutput       The build message(s)
      * @param showNotification    Whether to show a notification to the user
      */
-    handleBuildProgressMessage(filePath: string, messageOutput: Array<any>|string, showNotification?: boolean): void {
-        const outputChannel = SplLogger._outputChannels.get(filePath);
+    handleBuildProgressMessage(structure: { filePath: string, appRoot: string }, messageOutput: Array<any>|string, showNotification?: boolean): void {
+        const outputChannel = this.getOutputChannel(structure);
         if (Array.isArray(messageOutput)) {
             this.detectCurrentComposite(messageOutput);
             const message = this.getLoggableMessage(messageOutput);
@@ -183,11 +189,11 @@ export class MessageHandler {
 
     /**
      * Handle a build success message
-     * @param filePath         The associated file path
+     * @param structure        The associated file path and application root
      * @param messageOutput    The build message(s)
      */
-    handleBuildSuccess(filePath: string, messageOutput: Array<any>): void {
-        const outputChannel = SplLogger._outputChannels.get(filePath);
+    handleBuildSuccess(structure: { filePath: string, appRoot: string }, messageOutput: Array<any>): void {
+        const outputChannel = this.getOutputChannel(structure);
         this.detectCurrentComposite(messageOutput);
         const message = this.getLoggableMessage(messageOutput);
         if (message) {
@@ -199,11 +205,11 @@ export class MessageHandler {
 
     /**
      * Handle a build failure message
-     * @param filePath         The associated file path
+     * @param structure        The associated file path and application root
      * @param messageOutput    The build message(s)
      */
-    handleBuildFailure(filePath: string, messageOutput: Array<any>): void {
-        const outputChannel = SplLogger._outputChannels.get(filePath);
+    handleBuildFailure(structure: { filePath: string, appRoot: string }, messageOutput: Array<any>): void {
+        const outputChannel = this.getOutputChannel(structure);
         this.detectCurrentComposite(messageOutput);
         const message = this.getLoggableMessage(messageOutput);
         if (message) {
@@ -215,11 +221,11 @@ export class MessageHandler {
 
     /**
      * Handle a submit job progress message
-     * @param filePath    The associated file path
-     * @param message     The message
+     * @param structure    The associated file path and application root
+     * @param message      The message
      */
-    handleSubmitProgressMessage(filePath: string, message: any): void {
-        const outputChannel = SplLogger._outputChannels.get(filePath);
+    handleSubmitProgressMessage(structure: { filePath: string, appRoot: string }, message: any): void {
+        const outputChannel = this.getOutputChannel(structure);
         if (typeof message === 'string') {
             window.showInformationMessage(message);
         }
@@ -228,12 +234,12 @@ export class MessageHandler {
 
     /**
      * Handle a submit job success message
-     * @param filePath               The associated file path
+     * @param structure              The associated file path and application root
      * @param response               The submit response
      * @param notificationButtons    The notification buttons to display
      */
-    handleSubmitSuccess(filePath: string, response: any, notificationButtons: Array<any>): void {
-        const outputChannel = SplLogger._outputChannels.get(filePath);
+    handleSubmitSuccess(structure: { filePath: string, appRoot: string }, response: any, notificationButtons: Array<any>): void {
+        const outputChannel = this.getOutputChannel(structure);
         let labels = [];
         if (Array.isArray(notificationButtons)) {
             labels = _.map(notificationButtons, obj => obj.label);
@@ -253,11 +259,11 @@ export class MessageHandler {
 
     /**
      * Handle a submit job failure message
-     * @param filePath    The associated file path
-     * @param response    The submit response
+     * @param structure    The associated file path and application root
+     * @param response     The submit response
      */
-    handleSubmitFailure(filePath: string, response: any): void {
-        const outputChannel = SplLogger._outputChannels.get(filePath);
+    handleSubmitFailure(structure: { filePath: string, appRoot: string }, response: any): void {
+        const outputChannel = this.getOutputChannel(structure);
         const error = response.errors.map(err => err.message).join('\n');
         SplLogger.error(outputChannel, 'Job submission failed');
         SplLogger.error(outputChannel, error);
@@ -265,12 +271,12 @@ export class MessageHandler {
 
     /**
      * Handle an error message
-     * @param filePath               The associated file path
+     * @param structure              The associated file path and application root
      * @param response               The response
      * @param notificationButtons    The notification buttons to display
      */
-    handleError(filePath: string, response: any, notificationButtons: Array<any>): void {
-        const outputChannel = SplLogger._outputChannels.get(filePath);
+    handleError(structure: { filePath: string, appRoot: string }, response: any, notificationButtons: Array<any>): void {
+        const outputChannel = this.getOutputChannel(structure);
         let labels = [];
         if (Array.isArray(notificationButtons)) {
             labels = _.map(notificationButtons, obj => obj.label);
@@ -301,15 +307,15 @@ export class MessageHandler {
 
     /**
      * Handle a success message
-     * @param filePath               The associated file path
-     * @param response               The response
-     * @param detail                 The message details
-     * @param showNotification       Whether to show a notification to the user
-     * @param showConsoleMsg         Whether to log the message
-     * @param dialogButtons          The dialog buttons to display
+     * @param structure           The associated file path and application root
+     * @param response            The response
+     * @param detail              The message details
+     * @param showNotification    Whether to show a notification to the user
+     * @param showConsoleMsg      Whether to log the message
+     * @param dialogButtons       The dialog buttons to display
      */
-    handleSuccess(filePath: string, response: any, detail: string, showNotification?: boolean, showConsoleMsg?: boolean, dialogButtons?: Array<any>): void {
-        const outputChannel = SplLogger._outputChannels.get(filePath);
+    handleSuccess(structure: { filePath: string, appRoot: string }, response: any, detail: string, showNotification?: boolean, showConsoleMsg?: boolean, dialogButtons?: Array<any>): void {
+        const outputChannel = this.getOutputChannel(structure);
         if (showNotification && dialogButtons) {
             this.showDialog(response, detail, dialogButtons);
         }
@@ -356,6 +362,22 @@ export class MessageHandler {
     handleCredentialsMissing() {
         const callbackFn = () => window.showInformationMessage('Please re-build your application(s)');
         commands.executeCommand(Commands.SET_SERVICE_CREDENTIALS, callbackFn);
+    }
+
+    /**
+     * Retrieve an output channel
+     * @param structure    The associated file path and application root
+     */
+    private getOutputChannel(structure: { filePath: string, appRoot: string }): OutputChannel {
+        const channelObj = SplLogger._outputChannels[structure.filePath];
+        if (!channelObj) {
+            const displayPath = `${path.basename(structure.appRoot)}${path.sep}${path.relative(structure.appRoot, structure.filePath)}`;
+            const outputChannel = SplLogger.registerOutputChannel(structure.filePath, displayPath);
+            outputChannel.show();
+            return outputChannel;
+        } else {
+            return channelObj.outputChannel;
+        }
     }
 
     /**

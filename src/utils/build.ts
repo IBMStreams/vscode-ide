@@ -11,8 +11,8 @@ import { LintHandler, MessageHandler, Settings, SplBuilder, SplConfig, SplLogger
 
 export class SplBuild {
     /**
-     * Perform a build
-     * @param uri       The file URI
+     * Perform a build of an SPL file and either download the bundle or submit the application
+     * @param uri       The .spl file URI
      * @param action    The build action to take
      */
     public static async build(uri: Uri, action: number): Promise<void> {
@@ -43,7 +43,7 @@ export class SplBuild {
             const lintHandler = new LintHandler(SplBuilder.SPL_MSG_REGEX, appRoot);
             const openUrlHandler = url => commands.executeCommand('vscode.open', Uri.parse(url));
             const originator = { originator: 'vscode', version: packageJson.version, type: 'spl' };
-            const builder = new SplBuilder(filePath, messageHandler, lintHandler, openUrlHandler, originator);
+            const builder = new SplBuilder({ filePath: filePath, appRoot: appRoot }, messageHandler, lintHandler, openUrlHandler, originator);
 
             const appArchivePath = await builder.buildSourceArchive(appRoot, toolkitsDir, { useMakefile: false, fqn: mainComposite });
             try {
@@ -57,8 +57,8 @@ export class SplBuild {
     }
 
     /**
-     * Perform a build from a Makefile
-     * @param uri       The file URI
+     * Perform a build from a Makefile and either download the bundle(s) or submit the application(s)
+     * @param uri       The Makefile file URI
      * @param action    The build action to take
      */
     public static async buildMake(uri: Uri, action: number): Promise<void> {
@@ -85,7 +85,7 @@ export class SplBuild {
             const lintHandler = new LintHandler(SplBuilder.SPL_MSG_REGEX, appRoot);
             const openUrlHandler = url => commands.executeCommand('vscode.open', Uri.parse(url));
             const originator = { originator: 'vscode', version: packageJson.version, type: 'make' };
-            const builder = new SplBuilder(filePath, messageHandler, lintHandler, openUrlHandler, originator);
+            const builder = new SplBuilder({ filePath: filePath, appRoot: appRoot }, messageHandler, lintHandler, openUrlHandler, originator);
 
             const appArchivePath = await builder.buildSourceArchive(appRoot, toolkitsDir, { useMakefile: true, makefilePath: filePath });
             try {
@@ -99,8 +99,8 @@ export class SplBuild {
     }
 
     /**
-     * Submit an application
-     * @param uri    The file URI
+     * Submit an application bundle
+     * @param uri    The .sab file URI
      */
     public static async submit(uri: Uri): Promise<void> {
         const filePath = uri ? uri.fsPath : window.activeTextEditor.document.fileName;
@@ -123,7 +123,7 @@ export class SplBuild {
             const messageHandler = new MessageHandler();
             const lintHandler = new LintHandler(SplBuilder.SPL_MSG_REGEX, appRoot);
             const openUrlHandler = url => commands.executeCommand('vscode.open', Uri.parse(url));
-            const builder = new SplBuilder(filePath, messageHandler, lintHandler, openUrlHandler);
+            const builder = new SplBuilder({ filePath: filePath, appRoot: appRoot }, messageHandler, lintHandler, openUrlHandler);
 
             try {
                 builder.submit(streamingAnalyticsCredentials, { filename: filePath, buildPath: displayPath });

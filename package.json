@@ -48,6 +48,15 @@
           "type": "object",
           "default": null,
           "description": "Credentials for an IBM Streaming Analytics service."
+        },
+        "spl.trace.server": {
+          "type": "string",
+          "enum": [
+            "off",
+            "verbose"
+          ],
+          "default": "off",
+          "description": "Traces the communication between VS Code and the SPL language server."
         }
       }
     },
@@ -90,6 +99,11 @@
       {
         "command": "ibm-streams.createApplication",
         "title": "Create an IBM Streams Application from Template",
+        "category": "IBM Streams"
+      },
+      {
+        "command": "ibm-streams.removeOutputChannels",
+        "title": "Remove Build Output Channels",
         "category": "IBM Streams"
       }
     ],
@@ -159,6 +173,9 @@
         },
         {
           "command": "ibm-streams.createApplication"
+        },
+        {
+          "command": "ibm-streams.removeOutputChannels"
         }
       ],
       "explorer/context": [

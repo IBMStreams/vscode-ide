@@ -42,4 +42,9 @@ export namespace Commands {
      * Create an IBM Streams Application from Template
      */
     export const CREATE_APPLICATION = `${ID}.createApplication`;
+
+    /**
+     * Remove Build Output Channels
+     */
+    export const REMOVE_OUTPUT_CHANNELS = `${ID}.removeOutputChannels`;
 }

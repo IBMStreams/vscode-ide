@@ -2,13 +2,14 @@
 
 import { commands, ExtensionContext } from 'vscode';
 
-import { BaseCommand, BuildCommand, Commands, CreateApplicationCommand, SetConfigSettingCommand } from '.';
+import { BaseCommand, BuildCommand, Commands, CreateApplicationCommand, RemoveOutputChannelsCommand, SetConfigSettingCommand } from '.';
 import { SplLogger, SplBuilder } from '../utils'
 
 export * from './base';
 export * from './build';
 export * from './commands';
 export * from './createApplication';
+export * from './removeOutputChannels';
 export * from './setConfigSetting';
 
 /**
@@ -25,11 +26,13 @@ export function initialize(context: ExtensionContext) {
     streamsCommands.push(new BuildCommand(Commands.BUILD_MAKE_SUBMIT, SplBuilder.BUILD_ACTION.SUBMIT));
     streamsCommands.push(new BuildCommand(Commands.SUBMIT));
     streamsCommands.push(new CreateApplicationCommand());
+    streamsCommands.push(new RemoveOutputChannelsCommand());
 
     streamsCommands.forEach(command => {
         context.subscriptions.push(commands.registerCommand(command.commandName, (...args) => {
-            command.execute(context, args)
-                .catch(error => {
+            const executionResult = command.execute(context, args)
+            if (executionResult && executionResult.catch) {
+                executionResult.catch(error => {
                     SplLogger.error(null, `An error occurred while executing command: ${command.commandName}`);
                     if (error && error.stack) {
                         SplLogger.error(null, error.stack);
@@ -38,6 +41,7 @@ export function initialize(context: ExtensionContext) {
                         SplLogger.error(null, 'Build failed', true, true);
                     }
                 });
+            }
         }));
     });
 }

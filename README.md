@@ -50,16 +50,25 @@ The following commands can be executed via context menus or the [Command Palette
 
 Command | Title | Visibility | Description
 --- | --- | --- | ---
-`ibm-streams.setServiceCredentials` | Set IBM Streaming Analytics Service Credentials | `*` | Sets the credentials for an IBM Streaming Analytics service. This is required to build applications.
-`ibm-streams.setToolkitsPath` | Set IBM Streams Toolkits Path | `*` | Sets the path to a directory containing IBM Streams toolkits. This is required if your applications use toolkits that are not provided with the Streams product.
-`ibm-streams.buildDownload` | Build | `*.spl` | Builds an application from source and downloads the Streams application bundle (`.sab`) to the local file system in the project's `output/` directory.
-`ibm-streams.buildSubmit` | Build and Submit Job | `*.spl` | Builds an application from source and submits it to a [Streaming Analytics](https://console.bluemix.net/docs/services/StreamingAnalytics/index.html#gettingstarted) instance. There are two submission options: (1) submit with the default configuration; (2) use the Streaming Analytics Console to customize the submission-time configuration.
-`ibm-streams.buildMakeDownload` | Build | `Makefile` | Builds applications defined in a Makefile and downloads the Streams application bundles (`.sab`) to the local file system in the project's `output/` directory.
-`ibm-streams.buildMakeSubmit` | Build and Submit Job(s) | `Makefile` | Builds applications defined in a Makefile and submits them to a [Streaming Analytics](https://console.bluemix.net/docs/services/StreamingAnalytics/index.html#gettingstarted) instance. There are two submission options: (1) submit with the default configuration; (2) use the Streaming Analytics Console to customize the submission-time configuration.
-`ibm-streams.submit` | Submit Job | `*.sab` | Submits an application to a [Streaming Analytics](https://console.bluemix.net/docs/services/StreamingAnalytics/index.html#gettingstarted) instance. There are two submission options: (1) submit with the default configuration; (2) use the Streaming Analytics Console to customize the submission-time configuration.
-`ibm-streams.createApplication` | Create an IBM Streams Application from Template | `*` | Creates a minimal application containing a source `.spl` file and an [`info.xml`](https://www.ibm.com/support/knowledgecenter/SSCRJU_4.3.0/com.ibm.streams.dev.doc/doc/toolkitartifacts.html) file.
+`ibm-streams.`<br>`setServiceCredentials` | Set IBM Streaming Analytics Service Credentials | `*` | Sets the credentials for an IBM Streaming Analytics service. This is required to build applications.
+`ibm-streams.`<br>`setToolkitsPath` | Set IBM Streams Toolkits Path | `*` | Sets the path to a directory containing IBM Streams toolkits. This is required if your applications use toolkits that are not provided with the Streams product.
+`ibm-streams.`<br>`buildDownload` | Build | `*.spl` | Builds an application from source and downloads the Streams application bundle (`.sab`) to the local file system in the project's `output/` directory.
+`ibm-streams.`<br>`buildSubmit` | Build and Submit Job | `*.spl` | Builds an application from source and submits it to a [Streaming Analytics](https://console.bluemix.net/docs/services/StreamingAnalytics/index.html#gettingstarted) instance. There are two submission options: (1) submit with the default configuration; (2) use the Streaming Analytics Console to customize the submission-time configuration.
+`ibm-streams.`<br>`buildMakeDownload` | Build | `Makefile` | Builds applications defined in a Makefile and downloads the Streams application bundles (`.sab`) to the local file system in the project's `output/` directory.
+`ibm-streams.`<br>`buildMakeSubmit` | Build and Submit Job(s) | `Makefile` | Builds applications defined in a Makefile and submits them to a [Streaming Analytics](https://console.bluemix.net/docs/services/StreamingAnalytics/index.html#gettingstarted) instance. There are two submission options: (1) submit with the default configuration; (2) use the Streaming Analytics Console to customize the submission-time configuration.
+`ibm-streams.`<br>`submit` | Submit Job | `*.sab` | Submits an application to a [Streaming Analytics](https://console.bluemix.net/docs/services/StreamingAnalytics/index.html#gettingstarted) instance. There are two submission options: (1) submit with the default configuration; (2) use the Streaming Analytics Console to customize the submission-time configuration.
+`ibm-streams.`<br>`createApplication` | Create an IBM Streams Application from Template | `*` | Creates a minimal application containing a source `.spl` file and an [`info.xml`](https://www.ibm.com/support/knowledgecenter/SSCRJU_4.3.0/com.ibm.streams.dev.doc/doc/toolkitartifacts.html) file.
+`ibm-streams.`<br>`removeOutputChannels` | Remove Build Output Channels | `*` | Remove build output channels that are automatically created after executing build commands. These channels appear in the Output view.
 
-![Commands](./images/commands.png)
+![Commands](./images/commands.gif)
+
+### Settings
+
+The following [settings](https://code.visualstudio.com/docs/getstarted/settings) are supported:
+
+* `ibm-streams.toolkitsPath`: Path to a directory containing IBM Streams toolkits
+* `ibm-streams.streamingAnalyticsCredentials`: Credentials for an IBM Streaming Analytics service
+* `spl.trace.server`: Traces the communication between VS Code and the SPL language server.
 
 ## Known issues
 
