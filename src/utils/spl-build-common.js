@@ -19,6 +19,7 @@ const defaultIgnoreFiles = [
 	".project",
 	".classpath",
 	"toolkit.xml",
+	".build*zip",
 	"___bundle.zip"
 ];
 
@@ -28,6 +29,8 @@ const defaultIgnoreDirectories = [
 	"samples",
 	"opt/client",
 	".settings",
+	".apt_generated",
+	".build*",
 	"___bundle"
 ];
 
@@ -66,18 +69,29 @@ export class SplBuilder {
 	 *										.fqn : fully qualified main composite name to build. ignored if useMakefile == true
 	 *
 	 */
-	async buildSourceArchive(appRoot, toolkitRootPath, options) {
+	async buildSourceArchive(appRoot: string, toolkitRootPath: string, options: {useMakefile: boolean, makefilePath: string, fqn: string} = {useMakefile: false}) {
 		const archiver = require("archiver");
+
+		this.useMakefile = options.useMakefile;
+		if (options.makefilePath) {
+			this.makefilePath = options.makefilePath;
+		}
+		if (options.fqn) {
+			this.fqn = options.fqn;
+		}
 
 		const appRootContents = fs.readdirSync(appRoot);
 		const makefilesFound = appRootContents.filter(entry => typeof(entry) === "string" && entry.toLowerCase() === "makefile");
 
 		const buildTarget = options.useMakefile ? " with Makefile" : ` for ${options.fqn}`;
-		this.messageHandler.handleBuildProgressMessage(this.structure, `Building application archive${buildTarget}...`, true);
+		this.messageHandler.handleInfo(`Building application archive${buildTarget}...`, { structure: this.structure });
 
-		const outputFilePath = `${appRoot}${path.sep}___bundle.zip`;
+		// temporary build archive filename is of format
+		// .build_[fqn].zip or .build_make_[parent_dir].zip for makefile build
+		// eg: .build_sample.Vwap.zip , .build_make_Vwap.zip
+		const outputFilePath = `${appRoot}${path.sep}.build_${options.useMakefile ? "make_"+appRoot.split(path.sep).pop() : options.fqn.replace("::",".")}.zip`;
 
-		// delete existing ___bundle.zip file before creating new one
+		// delete existing build archive file before creating new one
 		// TODO: handle if file is open better (windows file locks)
 		try {
 			if (fs.existsSync(outputFilePath)) {
@@ -88,17 +102,14 @@ export class SplBuilder {
 			const archive = archiver("zip", {
 				zlib: { level: 9} // compression level
 			});
-			const self = this;
-			output.on("close", function() {
+			//const self = this;
+			output.on("close", () => {
 				console.log("Application source archive built");
-				self.messageHandler.handleBuildProgressMessage(self.filePath, "Application archive created, submitting to build service...", true);
+				this.messageHandler.handleInfo("Application archive created, submitting to build service...", { structure: this.structure });
 			});
-			// TODO: handle warnings/errors instead of throwing?
 			archive.on("warning", function(err) {
 				if (err.code === "ENOENT") {
-					// log warning
 				} else {
-					// throw error
 					throw err;
 				}
 			});
@@ -124,13 +135,27 @@ export class SplBuilder {
 				// Add files
 				rootContents
 					.filter(item => fs.lstatSync(`${appRoot}/${item}`).isFile())
-					.filter(item => !_.some(ignoreFiles, name => item.includes(name)))
+					.filter(item => !_.some(ignoreFiles, name => {
+						if (name.includes("*")) {
+							const regex = new RegExp(name.replace(".","\.").replace("*",".*"));
+							return regex.test(item);
+						} else {
+							return item.includes(name);
+						}
+					}))
 					.forEach(item => archive.append(fs.readFileSync(`${appRoot}/${item}`), { name: `${newRoot}/${item}` }));
 
 				// Add directories
 				rootContents
 					.filter(item => fs.lstatSync(`${appRoot}/${item}`).isDirectory())
-					.filter(item => !_.some(ignoreDirs, name => item.endsWith(name)))
+					.filter(item => !_.some(ignoreDirs, name => {
+						if (name.includes("*")) {
+							const regex = new RegExp(name.replace(".","\.").replace("*",".*"));
+							return regex.test(item);
+						} else {
+							return item.includes(name);
+						}
+					}))
 					.forEach(item => archive.directory(`${appRoot}/${item}`, `${newRoot}/${item}`));
 
 				toolkitPaths.forEach(tk => archive.directory(tk.tkPath, `toolkits/${tk.tk}`));
@@ -160,7 +185,7 @@ export class SplBuilder {
 
 			const archiveStream = await archive.finalize();
 		} catch (err) {
-			this.messageHandler.handleError(this.structure, err);
+			this.messageHandler.handleError(err.name, {detail: err.message, stack: err.stack, consoleErrorLog: false, structure: this.structure});
 			return Promise.reject(err);
 		}
 
@@ -178,8 +203,8 @@ export class SplBuilder {
 				this.buildAndSubmitJob(input);
 			}
 		} else {
-			this.messageHandler.handleError(this.structure, "Unable to determine Streaming Analytics service credentials.");
-			this.messageHandler.handleCredentialsMissing();
+			const errorNotification = this.messageHandler.handleError("Unable to determine Streaming Analytics service credentials.", { structure: this.structure });
+			this.messageHandler.handleCredentialsMissing(errorNotification);
 			throw new Error("Error parsing VCAP_SERVICES environment variable");
 		}
 	}
@@ -199,11 +224,24 @@ export class SplBuilder {
 		).subscribe(
 			next => {},
 			err => {
-				console.log("build error\n", err);
-				this.messageHandler.handleError(this.structure, err);
+				let errorNotification = null;
+				if (err instanceof Error) {
+					errorNotification = this.messageHandler.handleError(err.name, {detail: err.message, stack: err.stack, structure: this.structure});
+				} else {
+					errorNotification = this.messageHandler.handleError(err, { structure: this.structure });
+				}
 				this.checkKnownErrors(err);
 			},
-			downloadResult => console.log("download result\n",downloadResult),
+			complete => {
+				console.log("buildAndDownloadBundle observable complete");
+				try {
+					if (input.filename && fs.existsSync(input.filename)) {
+						fs.unlinkSync(input.filename);
+					}
+				} catch (err) {
+					this.messageHandler.handleError(err.name, {detail: err.message, stack: err.stack, structure: this.structure});
+				}
+			}
 		);
 	}
 
@@ -223,25 +261,39 @@ export class SplBuilder {
 					if (consoleResponse.body["streams_console"] && consoleResponse.body["id"]) {
 						const consoleUrl = `${consoleResponse.body["streams_console"]}#application/dashboard/Application%20Dashboard?instance=${consoleResponse.body["id"]}`;
 
-						this.submitJobPrompt(input.buildPath, consoleUrl, outputDir, this.submitAppObservable.bind(this), artifacts);
+						this.submitJobPrompt(consoleUrl, outputDir, this.submitAppObservable.bind(this), artifacts);
 
 					} else {
-						this.messageHandler.handleError(this.structure, "Cannot retrieve Streaming Analytics Console URL");
+						this.messageHandler.handleError("Cannot retrieve Streaming Analytics Console URL", { structure: this.structure });
 					}
 				})
 			)),
 		).subscribe(
 			next => {},
 			err => {
-				console.log("build and submit via Console error\n", err);
-				this.messageHandler.handleError(this.structure, err);
+				let errorNotification = null;
+				if (err instanceof Error) {
+					errorNotification = this.messageHandler.handleError(err.name, {detail: err.message, stack: err.stack, structure: this.structure});
+				} else {
+					errorNotification = this.messageHandler.handleError(err, { structure: this.structure });
+				}
 				this.checkKnownErrors(err);
 			},
-			consoleResult => console.log("submit via Console result\n", consoleResult),
+			complete => {
+				console.log("buildAndSubmitJob observable complete");
+				try {
+					if (input.filename && fs.existsSync(input.filename)) {
+						fs.unlinkSync(input.filename);
+					}
+				} catch (err) {
+					this.messageHandler.handleError(err.name, {detail: err.message, stack: err.stack, structure: this.structure});
+				}
+			}
 		);
 	}
 
 	submit(streamingAnalyticsCredentials, input) {
+		console.log("submit(); input:",arguments);
 		this.serviceCredentials = SplBuilder.parseServiceCredentials(streamingAnalyticsCredentials);
 		const self = this;
 		if (this.serviceCredentials.apikey && this.serviceCredentials.v2_rest_url) {
@@ -259,10 +311,10 @@ export class SplBuilder {
 						if (consoleResponse.body["streams_console"] && consoleResponse.body["id"]) {
 							const consoleUrl = `${consoleResponse.body["streams_console"]}#application/dashboard/Application%20Dashboard?instance=${consoleResponse.body["id"]}`;
 
-							this.submitJobPrompt(input.buildPath, consoleUrl, outputDir, this.submitSabObservable.bind(this), input);
+							this.submitJobPrompt(consoleUrl, outputDir, this.submitSabObservable.bind(this), input);
 
 						} else {
-							this.messageHandler.handleError(this.structure, "Cannot retrieve Streaming Analytics Console URL");
+							this.messageHandler.handleError("Cannot retrieve Streaming Analytics Console URL", { structure: this.structure });
 						}
 					})
 				)),
@@ -270,31 +322,50 @@ export class SplBuilder {
 			).subscribe(
 				next => {},
 				err => {
-					console.log("submit job error\n", err);
-					this.messageHandler.handleError(this.structure, err);
+					let errorNotification = null;
+					if (err instanceof Error) {
+						errorNotification = this.messageHandler.handleError(err.name, {detail: err.message, stack: err.stack, structure: this.structure});
+					} else {
+						errorNotification = this.messageHandler.handleError(err, { structure: this.structure });
+					}
 					this.checkKnownErrors(err);
 				},
-				consoleResult => console.log("submit result\n", consoleResult),
+				complete => console.log("submit .sab observable complete"),
 			);
 		} else {
-			this.messageHandler.handleError(this.structure, "Unable to determine Streaming Analytics service credentials.");
-			this.messageHandler.handleCredentialsMissing();
+			const errorNotification = this.messageHandler.handleError("Unable to determine Streaming Analytics service credentials.", { structure: this.structure });
+			this.messageHandler.handleCredentialsMissing(errorNotification);
 			throw new Error("Error parsing VCAP_SERVICES environment variable");
 		}
 	}
 
-	submitJobPrompt(buildPath, consoleUrl, outputDir, submissionObservableFunc, submissionObservableInput) {
+	submitJobPrompt(consoleUrl, outputDir, submissionObservableFunc, submissionObservableInput) {
+		console.log("submitJobPrompt(); input:",arguments);
+		let submissionTarget = "the application(s)";
+		if (typeof(this.useMakefile) === "boolean") {
+			 if(this.useMakefile) {
+				 submissionTarget = "the application(s) for the Makefile";
+			 } else if (this.fqn) {
+				 submissionTarget = this.fqn;
+			 }
+		} else {
+			if (submissionObservableInput.filename) {
+				submissionTarget = submissionObservableInput.filename.split(path.sep).pop();
+			}
+		}
 
-		// Submission dialog
-		const dialogMessage = "Job submission";
-		const dialogDetail = `${buildPath}\n\nSubmit the application(s) to your instance with the default configuration ` +
+		// Submission notification
+		let submissionNotification = null;
+		const dialogMessage = `Job submission - ${this.useMakefile ? this.makefilePath : submissionTarget}`;
+		const dialogDetail = `Submit ${submissionTarget} to your service with default configuration ` +
 			"or use the Streaming Analytics Console to customize the submission-time configuration.";
 
 		const dialogButtons = [
 			{
 				label: "Submit",
 				callbackFn: () => {
-					this.messageHandler.handleSubmitProgressMessage(this.structure, "Submitting application to Streaming Analytics instance...");
+					console.log("submitButtonCallback");
+					this.messageHandler.handleInfo("Submitting application to Streaming Analytics service...", { structure: this.structure };
 					submissionObservableFunc(submissionObservableInput).pipe(
 						mergeMap(submitResult => {
 
@@ -308,12 +379,12 @@ export class SplBuilder {
 							if (Array.isArray(submitResult)) {
 								submitResult.forEach(obj => {
 									if (obj.body) {
-										this.messageHandler.handleSubmitSuccess(this.structure, obj.body, notificationButtons);
+										this.messageHandler.handleSuccess(`Job ${obj.body.name} is ${obj.body.health}`, {notificationButtons: notificationButtons, structure: this.structure});
 									}
 								});
 							} else {
 								if (submitResult.body) {
-									this.messageHandler.handleSubmitSuccess(this.structure, submitResult.body, notificationButtons);
+									this.messageHandler.handleSuccess(`Job ${submitResult.body.name} is ${submitResult.body.health}`, {notificationButtons: notificationButtons, structure: this.structure});
 								}
 							}
 							return of(submitResult);
@@ -321,79 +392,65 @@ export class SplBuilder {
 					).subscribe(
 						next => {},
 						err => {
-							console.log("default job submit error\n", err);
-							this.messageHandler.handleError(this.structure, err);
+							let errorNotification = null;
+							if (err instanceof Error) {
+								errorNotification = this.messageHandler.handleError(err.name, {detail: err.message, stack: err.stack, structure: this.structure});
+							} else {
+								errorNotification = this.messageHandler.handleError(err, { structure: this.structure });
+							}
+							console.log("submitPrompt error caught, submissionObservableFunc:",submissionObservableFunc, "submissionObservableInput:",submissionObservableInput);
 							this.checkKnownErrors(err);
 						},
-						consoleResult => console.log("submit result\n", consoleResult),
+						complete => console.log("job submission observable complete"),
 					);
+					this.messageHandler.dismissNotification(submissionNotification);
 				}
 			},
 			{
-				label: "Submit via Console",
+				label: "Submit via Streaming Analytics Console",
 				callbackFn: () => {
-					const submitMsg = () => {
-						this.messageHandler.handleSuccess(
-							this.structure,
-							"Submit via Console",
-							`${buildPath}\n\nUse the Streaming Analytics Console to submit. Click on the play button in the header and select your application(s).`,
-							true,
-							true,
-							[
-								{
-									label: "Copy output path",
-									callbackFn: () => ncp.copy(outputDir)
-								},
-								{
-									label: "Open Streaming Analytics Console",
-									callbackFn: () => this.openUrlHandler(consoleUrl)
-								}
-							]
-						);
-					};
 
 					if (submissionObservableInput.filename && submissionObservableInput.filename.toLowerCase().endsWith(".sab")) {
 						// sab is local already
-						submitMsg();
+						this.openUrlHandler(consoleUrl);
 
 					} else {
 						// need to download bundles first
-						this.messageHandler.handleSubmitProgressMessage(this.structure, "Downloading application bundles for submission via Streaming analytics Console...");
+						this.messageHandler.handleInfo("Downloading application bundles for submission via Streaming Analytics Console...", { structure: this.structure });
 						this.downloadBundlesObservable(submissionObservableInput).pipe(
 							map(downloadOutput => ( [ submissionObservableInput, downloadOutput ])),
 							mergeMap(downloadResult => this.performBundleDownloads(downloadResult, null, outputDir)),
 						).subscribe(
 							next => {},
 							err => {
-								console.log("Error downloading bundles for Console submit\n", err);
-								this.messageHandler.handleError(this.structure, err);
+								let errorNotification = null;
+								if (err instanceof Error) {
+									errorNotification = this.messageHandler.handleError(err.name, {detail: err.message, stack: err.stack, structure: this.structure});
+								} else {
+									errorNotification = this.messageHandler.handleError(err, { structure: this.structure });
+								}
 								this.checkKnownErrors(err);
 							},
-							submitMsg(),
+							complete => this.openUrlHandler(consoleUrl)
 						);
 					}
+					this.messageHandler.dismissNotification(submissionNotification);
 				}
 			},
-			{
-				label: "Cancel",
-				callbackFn: null
-			}
 		];
 
-		this.messageHandler.showDialog(dialogMessage, dialogDetail, dialogButtons);
-		this.messageHandler.handleBuildProgressMessage(this.structure, `Streaming Analytics Console URL: ${consoleUrl}`);
-
+		submissionNotification = this.messageHandler.handleInfo(dialogMessage,{detail: dialogDetail, notificationAutoDismiss: false, notificationButtons: dialogButtons, structure: this.structure});
 	}
 
 
 	/**
 	 *	poll build status for a specific build
 	 *	@param input
-	 *  @param messageHandler	IDE specific message handler callback object
 	 */
 	pollBuildStatus(input) {
 		let prevBuildOutput = [];
-		this.messageHandler.handleBuildProgressMessage(this.structure, "Building...", true);
+		let buildMessage = `Building ${this.useMakefile? this.makefilePath : this.fqn}...`;
+		this.messageHandler.handleInfo(buildMessage, { structure: this.structure });
 		return this.getBuildStatusObservable(input)
 			.pipe(
 				map((buildStatusResponse) => ({...input, ...buildStatusResponse.body})),
@@ -405,7 +462,7 @@ export class SplBuilder {
 							tap(s => {
 								if (this._pollHandleMessage % 3 === 0) {
 									const newOutput = this.getNewBuildOutput(s.output, prevBuildOutput);
-									this.messageHandler.handleBuildProgressMessage(this.structure, newOutput, true);
+									this.messageHandler.handleInfo(buildMessage, {detail: this.messageHandler.getLoggableMessage(newOutput), structure: this.structure});
 									prevBuildOutput = s.output;
 								}
 								this._pollHandleMessage++;
@@ -437,14 +494,16 @@ export class SplBuilder {
 
 	buildStatusIsComplete(input, prevBuildOutput) {
 		if (input.status === "failed") {
+			const failMessage = `Build failed - ${this.useMakefile ? this.makefilePath : this.fqn}`;
 			this.lintHandler.lint(input);
 			const newOutput = this.getNewBuildOutput(input.output, prevBuildOutput);
-			this.messageHandler.handleBuildFailure(this.structure, newOutput);
+			this.messageHandler.handleError(failMessage, {detail: this.messageHandler.getLoggableMessage(newOutput), structure: this.structure});
 			return true;
 		} else if (input.status === "built") {
+			const successMessage = `Build succeeded - ${this.useMakefile ? this.makefilePath : this.fqn}`;
 			this.lintHandler.lint(input);
 			const newOutput = this.getNewBuildOutput(input.output, prevBuildOutput);
-			this.messageHandler.handleBuildSuccess(this.structure, newOutput);
+			this.messageHandler.handleSuccess(successMessage, {detail: this.messageHandler.getLoggableMessage(newOutput), structure: this.structure});
 			return true;
 		} else {
 			return false;
@@ -454,14 +513,17 @@ export class SplBuilder {
 	checkKnownErrors(err) {
 		if (typeof(err) === "string") {
 			if (err.includes("CDISB4090E")) {
-				// additional notification with button to open bluemix dashboard so the user can verify their
+				// additional notification with button to open IBM Cloud dashboard so the user can verify their
 				// service is started.
-				this.messageHandler.handleError(
-					this.structure,
+				const n = this.messageHandler.handleError(
 					"Verify that the Streaming Analytics service is started and able to handle requests.",
-					[{label: "Open IBM Cloud Dashboard",
-						callbackFn: ()=>{this.openUrlHandler("https://console.bluemix.net/dashboard/apps")}
-					}]);
+					{ notificationButtons: [
+						{
+							label: "Open IBM Cloud Dashboard",
+							callbackFn: ()=>{this.openUrlHandler("https://console.bluemix.net/dashboard/apps")}
+						}
+					], structure: this.structure}
+				);
 			}
 		}
 	}
@@ -517,7 +579,7 @@ export class SplBuilder {
 				file: {
 					value: fs.createReadStream(input.filename),
 					options: {
-						filename: "___bundle.zip",
+						filename: input.filename.split(path.sep).pop(),
 						contentType: "application/zip"
 					}
 				}
@@ -644,7 +706,20 @@ export class SplBuilder {
 					fs.unlinkSync(outputFile);
 				}
 				fs.writeFileSync(outputFile, downloadOutput[index].body);
-				this.messageHandler.handleSuccess(this.structure, `Application ${artifact.name} bundle downloaded to output directory`, outputFile, true, true);
+				const notificationButtons = [
+					{
+						label: "Copy output path",
+						callbackFn: () => ncp.copy(outputDir)
+					}
+				];
+				this.messageHandler.handleSuccess(
+					`Application ${artifact.name} bundle downloaded to output directory`,
+					{
+						detail: outputFile,
+						notificationButtons: notificationButtons,
+						structure: this.structure
+					}
+				);
 				return of(outputDir);
 			} catch (err) {
 				throw new Error(`Error downloading application .sab bundle\n${err}`);

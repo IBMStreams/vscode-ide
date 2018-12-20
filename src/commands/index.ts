@@ -37,9 +37,6 @@ export function initialize(context: ExtensionContext) {
                     if (error && error.stack) {
                         SplLogger.error(null, error.stack);
                     }
-                    if (command.commandName.includes('ibm-streams.build')) {
-                        SplLogger.error(null, 'Build failed', true, true);
-                    }
                 });
             }
         }));

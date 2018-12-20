@@ -135,7 +135,8 @@ export class SplConfig {
                 if (changedSetting) {
                     const oldValue = SplConfig.getState(changedSetting) === '' ? '\"\"' : SplConfig.getState(changedSetting);
                     const newValue = SplConfig.getSetting(changedSetting) === '' ? '\"\"' : SplConfig.getSetting(changedSetting);
-                    SplLogger.debug(null, `The ${changedSetting} configuration setting was changed from: ${oldValue} to ${newValue}`);
+                    const formatValue = value => typeof value === 'object' ? JSON.stringify(value) : value;
+                    SplLogger.debug(null, `The ${changedSetting} configuration setting was changed from: ${formatValue(oldValue)} to ${formatValue(newValue)}`);
                     SplConfig.setState(changedSetting, newValue);
                 }
             }
