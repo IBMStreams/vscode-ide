@@ -7,8 +7,8 @@ import * as path from "path";
 import * as fs from "fs";
 import * as _ from "underscore";
 
-import { Observable, of, empty, forkJoin } from "rxjs";
-import { switchMap, map, expand, filter, tap, debounceTime, mergeMap } from "rxjs/operators";
+import { Observable, of, empty, forkJoin, interval } from "rxjs";
+import { switchMap, map, expand, filter, tap, debounceTime, mergeMap, takeUntil } from "rxjs/operators";
 import * as ncp from "copy-paste";
 
 const request = require("request");
@@ -230,7 +230,7 @@ export class SplBuilder {
 				} else {
 					errorNotification = this.messageHandler.handleError(err, { structure: this.structure });
 				}
-				this.checkKnownErrors(err);
+				this.checkKnownErrors(err, errorNotification, this.buildAndDownloadBundle.bind(this), input);
 			},
 			complete => {
 				console.log("buildAndDownloadBundle observable complete");
@@ -277,7 +277,7 @@ export class SplBuilder {
 				} else {
 					errorNotification = this.messageHandler.handleError(err, { structure: this.structure });
 				}
-				this.checkKnownErrors(err);
+				this.checkKnownErrors(err, errorNotification, this.buildAndSubmitJob.bind(this), input);
 			},
 			complete => {
 				console.log("buildAndSubmitJob observable complete");
@@ -328,7 +328,7 @@ export class SplBuilder {
 					} else {
 						errorNotification = this.messageHandler.handleError(err, { structure: this.structure });
 					}
-					this.checkKnownErrors(err);
+					this.checkKnownErrors(err, errorNotification, this.submit.bind(this), [streamingAnalyticsCredentials, input]);
 				},
 				complete => console.log("submit .sab observable complete"),
 			);
@@ -399,7 +399,7 @@ export class SplBuilder {
 								errorNotification = this.messageHandler.handleError(err, { structure: this.structure });
 							}
 							console.log("submitPrompt error caught, submissionObservableFunc:",submissionObservableFunc, "submissionObservableInput:",submissionObservableInput);
-							this.checkKnownErrors(err);
+							this.checkKnownErrors(err, errorNotification, this.submitJobPrompt.bind(this), [consoleUrl, outputDir, submissionObservableFunc, submissionObservableInput]);
 						},
 						complete => console.log("job submission observable complete"),
 					);
@@ -429,7 +429,7 @@ export class SplBuilder {
 								} else {
 									errorNotification = this.messageHandler.handleError(err, { structure: this.structure });
 								}
-								this.checkKnownErrors(err);
+								this.checkKnownErrors(err, errorNotification);
 							},
 							complete => this.openUrlHandler(consoleUrl)
 						);
@@ -510,7 +510,7 @@ export class SplBuilder {
 		}
 	}
 
-	checkKnownErrors(err) {
+	checkKnownErrors(err, errorNotification, retryCallbackFunction = null, retryInput = null) {
 		if (typeof(err) === "string") {
 			if (err.includes("CDISB4090E")) {
 				// additional notification with button to open IBM Cloud dashboard so the user can verify their
@@ -521,11 +521,65 @@ export class SplBuilder {
 						{
 							label: "Open IBM Cloud Dashboard",
 							callbackFn: ()=>{this.openUrlHandler("https://console.bluemix.net/dashboard/apps")}
+						},
+						{
+							label: "Start service and retry",
+							callbackFn: ()=> this.startServiceAndRetry(retryCallbackFunction, retryInput, [errorNotification, n])
 						}
 					], structure: this.structure}
 				);
 			}
 		}
+	}
+
+	startServiceAndRetry(retryCallbackFunction, retryInput, notifications) {
+		if (Array.isArray(notifications)) {
+			notifications.map(a => this.messageHandler.dismissNotification(a));
+		}
+
+		const startingNotification = this.messageHandler.handleInfo("Streaming Analytics service is starting...", {notificationAutoDismiss: false, structure: this.structure});
+		let startSuccessNotification = null;
+		let serviceState = null;
+		const poll = interval(8000);
+
+		poll.pipe(
+			takeUntil(this.startServiceObservable().pipe(
+				map(a => {
+					if (a && a.body && a.body.state){
+						serviceState = a.body.state
+					}
+				}))
+			),
+		).subscribe(
+		next => {},
+		err => {
+			let errorNotification = null;
+			if (err instanceof Error) {
+				errorNotification = this.messageHandler.handleError(err.name, {detail: err.message, stack: err.stack, structure: this.structure});
+			} else {
+				errorNotification = this.messageHandler.handleError(err, { structure: this.structure });
+			}
+			this.checkKnownErrors(err, errorNotification, retryCallbackFunction, retryInput);
+		},
+		startServiceResult => {
+			this.messageHandler.dismissNotification(startingNotification);
+			if (serviceState === "STARTED") {
+				console.log("serviceRestartedSuccess",arguments);
+				console.log("retryCallbackFunction:",retryCallbackFunction);
+				console.log("retryCallbackInput:",retryInput);
+				this.messageHandler.handleSuccess("Streaming Analytics service started", {detail: "Service has been started. Retrying build service request...", structure: this.structure});
+				if (typeof(retryCallbackFunction) === "function" && retryInput) {
+					if (Array.isArray(retryInput)) {
+						retryCallbackFunction.apply(this, retryInput);
+					} else {
+						retryCallbackFunction(retryInput);
+					}
+				}
+			} else {
+				this.messageHandler.handleError("Error starting service", { structure: this.structure });
+			}
+			console.log("startService observable complete");
+		});
 	}
 
 	getAccessTokenObservable() {
@@ -543,6 +597,24 @@ export class SplBuilder {
 			}
 		};
 		return SplBuilder.createObservableRequest(iamTokenRequestOptions);
+	}
+
+	startServiceObservable() {
+		console.log("startServiceObservable entry");
+		const startServiceRequestOptions = {
+			method: "PATCH",
+			url: this.serviceCredentials.v2_rest_url,
+			instance_id: `${this.serviceCredentials.v2_rest_url.split("/").pop()}`,
+			json: true,
+			headers: {
+				"Authorization": `Bearer ${this.accessToken}`,
+				"Content-Type": "application/json"
+			},
+			body: {
+				"state": "STARTED"
+			}
+		};
+		return SplBuilder.createObservableRequest(startServiceRequestOptions);
 	}
 
 	getBuildStatusObservable(input) {
