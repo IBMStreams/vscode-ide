@@ -36,7 +36,7 @@ const defaultIgnoreDirectories = [
 
 const buildConsoleUrl = (url, instanceId) => `${url}#application/dashboard/Application%20Dashboard?instance=${instanceId}`;
 
-const ibmCloudDashboardUrl = "https://console.bluemix.net/dashboard/apps";
+const ibmCloudDashboardUrl = "https://cloud.ibm.com/resources?groups=resource-instance";
 
 export class SplBuilder {
 	static BUILD_ACTION = {DOWNLOAD: 0, SUBMIT: 1};
@@ -73,7 +73,7 @@ export class SplBuilder {
 	 *										.fqn : fully qualified main composite name to build. ignored if useMakefile == true
 	 *
 	 */
-	async buildSourceArchive(appRoot: string, toolkitRootPath: string, options: {useMakefile: boolean, makefilePath: string, fqn: string} = {useMakefile: false}) {
+	async buildSourceArchive(appRoot, toolkitRootPath, options = {useMakefile: false}) {
 		const archiver = require("archiver");
 
 		this.useMakefile = options.useMakefile;
@@ -407,7 +407,7 @@ export class SplBuilder {
 				label: "Submit",
 				callbackFn: () => {
 					console.log("submitButtonCallback");
-					this.messageHandler.handleInfo("Submitting application to Streaming Analytics service...", { structure: this.structure };
+					this.messageHandler.handleInfo("Submitting application to Streaming Analytics service...", { structure: this.structure });
 					submissionObservableFunc(submissionObservableInput).pipe(
 						mergeMap(submitResult => {
 
@@ -627,7 +627,7 @@ export class SplBuilder {
 	getAccessTokenObservable() {
 		const iamTokenRequestOptions = {
 			method: "POST",
-			url: "https://iam.bluemix.net/identity/token",
+			url: "https://iam.cloud.ibm.com/identity/token",
 			json: true,
 			headers: {
 				Accept: "application/json",

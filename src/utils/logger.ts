@@ -331,6 +331,8 @@ export class MessageHandler {
         return this.joinMessageArray(messages.map(outputMsg => outputMsg.message_text));
     }
 
+    dismissNotification() {}
+
     /**
      * Retrieve an output channel
      * @param structure    The associated file path and application root
@@ -383,6 +385,4 @@ export class MessageHandler {
             }
         }
     }
-
-    private dismissNotification(notification) {}
 }
