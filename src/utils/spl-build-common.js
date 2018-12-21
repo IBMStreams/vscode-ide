@@ -34,6 +34,10 @@ const defaultIgnoreDirectories = [
 	"___bundle"
 ];
 
+const buildConsoleUrl = (url, instanceId) => `${url}#application/dashboard/Application%20Dashboard?instance=${instanceId}`;
+
+const ibmCloudDashboardUrl = "https://console.bluemix.net/dashboard/apps";
+
 export class SplBuilder {
 	static BUILD_ACTION = {DOWNLOAD: 0, SUBMIT: 1};
 	static SPL_MSG_REGEX = /^([\w.]+\/[\w.]+)\:(\d+)\:(\d+)\:\s+(\w{5}\d{4}[IWE])\s+((ERROR|WARN|INFO)\:.*)$/;
@@ -259,7 +263,7 @@ export class SplBuilder {
 				map(consoleResult => {
 					const [ artifacts, consoleResponse ] = consoleResult;
 					if (consoleResponse.body["streams_console"] && consoleResponse.body["id"]) {
-						const consoleUrl = `${consoleResponse.body["streams_console"]}#application/dashboard/Application%20Dashboard?instance=${consoleResponse.body["id"]}`;
+						const consoleUrl = buildConsoleUrl(consoleResponse.body["streams_console"], consoleResponse.body["id"]);
 
 						this.submitJobPrompt(consoleUrl, outputDir, this.submitAppObservable.bind(this), artifacts);
 
@@ -309,7 +313,7 @@ export class SplBuilder {
 					map(consoleResult => {
 						const [ submitInput, consoleResponse ] = consoleResult;
 						if (consoleResponse.body["streams_console"] && consoleResponse.body["id"]) {
-							const consoleUrl = `${consoleResponse.body["streams_console"]}#application/dashboard/Application%20Dashboard?instance=${consoleResponse.body["id"]}`;
+							const consoleUrl = buildConsoleUrl(consoleResponse.body["streams_console"], consoleResponse.body["id"]);
 
 							this.submitJobPrompt(consoleUrl, outputDir, this.submitSabObservable.bind(this), input);
 
@@ -337,6 +341,44 @@ export class SplBuilder {
 			this.messageHandler.handleCredentialsMissing(errorNotification);
 			throw new Error("Error parsing VCAP_SERVICES environment variable");
 		}
+	}
+
+	openStreamingAnalyticsConsole(streamingAnalyticsCredentials) {
+		this.serviceCredentials = SplBuilder.parseServiceCredentials(streamingAnalyticsCredentials);
+		if (this.serviceCredentials.apikey && this.serviceCredentials.v2_rest_url) {
+			this.getAccessTokenObservable().pipe(
+				mergeMap(response => {
+					this.accessToken = response.body.access_token;
+					return this.getConsoleUrlObservable();
+				}),
+				map(response => {
+					if (response.body["streams_console"] && response.body["id"]) {
+						const consoleUrl = buildConsoleUrl(response.body["streams_console"], response.body["id"]);
+						this.openUrlHandler(consoleUrl);
+					} else {
+						this.messageHandler.handleError("Cannot retrieve Streaming Analytics Console URL", { structure: this.structure });
+					}
+				})
+			).subscribe(
+				next => {},
+				err => {
+					let errorNotification = null;
+					if (err instanceof Error) {
+						errorNotification = this.messageHandler.handleError(err.name, {detail: err.message, stack: err.stack, structure: this.structure});
+					} else {
+						errorNotification = this.messageHandler.handleError(err, { structure: this.structure });
+					}
+					this.checkKnownErrors(err);
+				},
+				complete => {
+					console.log("open Console URL observable complete");
+				}
+			);
+		}
+	}
+
+	openCloudDashboard() {
+		this.openUrlHandler(ibmCloudDashboardUrl);
 	}
 
 	submitJobPrompt(consoleUrl, outputDir, submissionObservableFunc, submissionObservableInput) {
@@ -520,7 +562,7 @@ export class SplBuilder {
 					{ notificationButtons: [
 						{
 							label: "Open IBM Cloud Dashboard",
-							callbackFn: ()=>{this.openUrlHandler("https://console.bluemix.net/dashboard/apps")}
+							callbackFn: ()=>{this.openUrlHandler(ibmCloudDashboardUrl)}
 						},
 						{
 							label: "Start service and retry",

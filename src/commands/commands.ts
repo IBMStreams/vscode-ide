@@ -44,6 +44,16 @@ export namespace Commands {
     export const CREATE_APPLICATION = `${ID}.createApplication`;
 
     /**
+     * Open IBM Streaming Analytics Console
+     */
+    export const OPEN_STREAMING_ANALYTICS_CONSOLE = `${ID}.openStreamingAnalyticsConsole`;
+
+    /**
+     * Open IBM Cloud Dashboard
+     */
+    export const OPEN_CLOUD_DASHBOARD = `${ID}.openCloudDashboard`;
+
+    /**
      * Remove Build Output Channels
      */
     export const REMOVE_OUTPUT_CHANNELS = `${ID}.removeOutputChannels`;
