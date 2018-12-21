@@ -16,22 +16,25 @@ To install the extension, search for __IBM Streams__ in the VS Code [Extension M
 
 #### Build
 
-An [IBM Streaming Analytics](https://console.bluemix.net/docs/services/StreamingAnalytics/index.html#gettingstarted) service is required to build and run your Streams applications. You must provide your service credentials (in JSON format) in order for this extension to connect to your service. Execute the `Set IBM Streaming Analytics Service Credentials` command from the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface) and enter your credentials.
+A running [IBM Streaming Analytics](https://console.bluemix.net/docs/services/StreamingAnalytics/index.html#gettingstarted) service is required to build and run your Streams applications. You must provide your service credentials (in JSON format) in order for this extension to connect to your service. Execute the `Set IBM Streaming Analytics Service Credentials` command from the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface) and enter your credentials.
+
+If you need to create a service, start [here](https://console.bluemix.net/catalog/services/streaming-analytics) and follow the instructions to create an account. Then, navigate to your [Dashboard](https://console.bluemix.net/dashboard/apps) and select the Streaming Analytics service you want to use. Ensure that it is running and then create a new set of credentials. Select the __Service credentials__ tab on the left and click on the __New credential__ button. Once created, click on the __View credentials__ action and click on the __Copy__ button in the top-right corner of the credentials snippet to copy them to the clipboard.
 
 #### Toolkits
 
 The IBM Streams product toolkits are bundled with this package. If your Streams applications use additional toolkits, you must copy them to a folder on your workstation. Note that each toolkit must contain a `toolkit.xml` file in order in order to be included. Then, execute the `Set IBM Streams Toolkits Path` command from the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface) and enter your path.
 
-## Functionality
+## Features
 
-### SPL application build
+### Building and submitting SPL applications
 
 ![SPL application build](./images/build.gif)
 
-### General
+### Color themes
 
-* `Streams Light` and `Streams Dark` color themes
-  * *Note*: To set a default color theme for `.spl` files to one of the included themes, you may want to search for a VS Code extension that provides that capability.
+Two [color themes](https://code.visualstudio.com/docs/getstarted/themes) are provided for SPL files: `Streams Light` and `Streams Dark`.
+
+Note: To set a default color theme for `.spl` files to one of the included themes, you may want to search for a VS Code extension that provides that capability.
 
 ![Themes](./images/themes.png)
 
@@ -48,7 +51,7 @@ This language extension supports typical code editing features including:
 * [Find All References](https://code.visualstudio.com/docs/editor/editingevolved#_peek)
 * [Rename Symbol](https://code.visualstudio.com/docs/editor/editingevolved#_rename-symbol)
 
-### Commands
+## Commands
 
 The following commands can be executed via context menus or the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette).
 
@@ -68,7 +71,7 @@ Command | Title | Visibility | Description
 
 ![Commands](./images/commands.gif)
 
-### Settings
+## Settings
 
 The following [settings](https://code.visualstudio.com/docs/getstarted/settings) are supported:
 
