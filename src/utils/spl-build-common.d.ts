@@ -11,4 +11,6 @@ export class SplBuilder {
     buildSourceArchive(appRoot: string, toolkitRootPath: string, options: { useMakefile?: boolean, makefilePath?: string, fqn?: string }): Promise<string>;
     build(action: number, streamingAnalyticsCredentials: string, input: object): void;
     submit(streamingAnalyticsCredentials: string, input: object): void;
+    openStreamingAnalyticsConsole(streamingAnalyticsCredentials: string): void;
+    openCloudDashboard(): void;
 }

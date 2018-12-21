@@ -169,199 +169,166 @@ export class SplLogger {
 
 export class MessageHandler {
     /**
-     * Handle a build progress message
-     * @param structure           The associated file path and application root
-     * @param messageOutput       The build message(s)
-     * @param showNotification    Whether to show a notification to the user
-     */
-    handleBuildProgressMessage(structure: { filePath: string, appRoot: string }, messageOutput: Array<any>|string, showNotification?: boolean): void {
-        const outputChannel = this.getOutputChannel(structure);
-        if (Array.isArray(messageOutput)) {
-            this.detectCurrentComposite(messageOutput);
-            const message = this.getLoggableMessage(messageOutput);
-            if (message) {
-                SplLogger.debug(outputChannel, message, false, false, true);
-            }
-        } else if (typeof messageOutput === 'string') {
-            showNotification ? SplLogger.info(outputChannel, messageOutput, true) : SplLogger.info(outputChannel, messageOutput);
-        }
-    }
-
-    /**
-     * Handle a build success message
-     * @param structure        The associated file path and application root
-     * @param messageOutput    The build message(s)
-     */
-    handleBuildSuccess(structure: { filePath: string, appRoot: string }, messageOutput: Array<any>): void {
-        const outputChannel = this.getOutputChannel(structure);
-        this.detectCurrentComposite(messageOutput);
-        const message = this.getLoggableMessage(messageOutput);
-        if (message) {
-            SplLogger.debug(outputChannel, message, false, false, true);
-        }
-
-        SplLogger.success(outputChannel, 'Build succeeded', true);
-    }
-
-    /**
-     * Handle a build failure message
-     * @param structure        The associated file path and application root
-     * @param messageOutput    The build message(s)
-     */
-    handleBuildFailure(structure: { filePath: string, appRoot: string }, messageOutput: Array<any>): void {
-        const outputChannel = this.getOutputChannel(structure);
-        this.detectCurrentComposite(messageOutput);
-        const message = this.getLoggableMessage(messageOutput);
-        if (message) {
-            SplLogger.debug(outputChannel, message, false, false, true);
-        }
-
-        SplLogger.error(outputChannel, 'Build failed', true);
-    }
-
-    /**
-     * Handle a submit job progress message
-     * @param structure    The associated file path and application root
-     * @param message      The message
-     */
-    handleSubmitProgressMessage(structure: { filePath: string, appRoot: string }, message: any): void {
-        const outputChannel = this.getOutputChannel(structure);
-        if (typeof message === 'string') {
-            window.showInformationMessage(message);
-        }
-        SplLogger.info(outputChannel, message);
-    }
-
-    /**
-     * Handle a submit job success message
-     * @param structure              The associated file path and application root
-     * @param response               The submit response
+     * Handle an info message
+     * @param message                The message to display
+     * @param detail                 The message detail
+     * @param showNotification       Whether to show a notification to the user
+     * @param showConsoleMessage     Whether to log to the output channel
      * @param notificationButtons    The notification buttons to display
+     * @param structure              The associated file path and application root
      */
-    handleSubmitSuccess(structure: { filePath: string, appRoot: string }, response: any, notificationButtons: Array<any>): void {
-        const outputChannel = this.getOutputChannel(structure);
-        let labels = [];
-        if (Array.isArray(notificationButtons)) {
-            labels = _.map(notificationButtons, obj => obj.label);
+    handleInfo(
+        message: string,
+        {
+            detail = null,
+            showNotification = true,
+            showConsoleMessage = true,
+            notificationButtons = [],
+            structure = null
+        }: {
+            detail?: Array<string>,
+            showNotification?: boolean,
+            showConsoleMessage?: boolean,
+            notificationButtons?: Array<any>,
+            structure?: { filePath: string, appRoot: string }
+        } = {}
+    ): Thenable<void> {
+        if (showConsoleMessage) {
+            const outputChannel = this.getOutputChannel(structure);
+            const detailMessage = this.joinMessageArray(detail);
+            const logMessage = `${message}${detailMessage ? '\n' + detailMessage : ''}`;
+            SplLogger.debug(outputChannel, logMessage, false, false, true);
         }
-        window.showInformationMessage(`Job ${response.name} is ${response.health}`, ...labels)
-            .then(selection => {
-                if (selection) {
-                    const buttonObj = _.find(notificationButtons, obj => obj.label === selection );
-                    if (buttonObj && buttonObj.callbackFn) {
-                        buttonObj.callbackFn();
-                    }
-                }
+
+        if (showNotification && typeof message === 'string') {
+            const buttons = this.processButtons(notificationButtons);
+            return window.showInformationMessage(message, ...buttons).then(selection => {
+                this.handleNotificationButtonSelection(notificationButtons, selection);
             });
-
-        SplLogger.success(outputChannel, `Job ${response.name} is ${response.health}`);
-    }
-
-    /**
-     * Handle a submit job failure message
-     * @param structure    The associated file path and application root
-     * @param response     The submit response
-     */
-    handleSubmitFailure(structure: { filePath: string, appRoot: string }, response: any): void {
-        const outputChannel = this.getOutputChannel(structure);
-        const error = response.errors.map(err => err.message).join('\n');
-        SplLogger.error(outputChannel, 'Job submission failed');
-        SplLogger.error(outputChannel, error);
+        }
     }
 
     /**
      * Handle an error message
-     * @param structure              The associated file path and application root
-     * @param response               The response
+     * @param message                The message to display
+     * @param detail                 The error detail
+     * @param stack                  The error stack
+     * @param showNotification       Whether to show a notification to the user
+     * @param showConsoleMessage      Whether to log to the output channel
+     * @param consoleErrorLog        Whether to log to the console
      * @param notificationButtons    The notification buttons to display
+     * @param structure              The associated file path and application root
      */
-    handleError(structure: { filePath: string, appRoot: string }, response: any, notificationButtons: Array<any>): void {
-        const outputChannel = this.getOutputChannel(structure);
-        let labels = [];
-        if (Array.isArray(notificationButtons)) {
-            labels = _.map(notificationButtons, obj => obj.label);
-        }
-        if (typeof response === 'string') {
-            SplLogger.error(outputChannel, response);
-            if (labels.length) {
-                window.showErrorMessage(response, ...labels)
-                    .then(selection => {
-                        if (selection) {
-                            const buttonObj = _.find(notificationButtons, obj => obj.label === selection );
-                            if (buttonObj && buttonObj.callbackFn) {
-                                buttonObj.callbackFn();
-                            }
-                        }
-                    });
+    handleError(
+        message: string,
+        {
+            detail,
+            stack,
+            showNotification = true,
+            showConsoleMessage = true,
+            consoleErrorLog = true,
+            notificationButtons = [],
+            structure = null
+        }: {
+            detail?: Array<string>,
+            stack?: Array<string>,
+            showNotification?: boolean,
+            showConsoleMessage?: boolean,
+            consoleErrorLog?: boolean,
+            notificationButtons?: Array<any>,
+            structure?: { filePath: string, appRoot: string }
+        } = {}
+    ): Thenable<void> {
+        if (consoleErrorLog) {
+            if (stack) {
+                console.error(message, stack);
             } else {
-                window.showErrorMessage(response);
+                console.error(message);
             }
         }
-        if (response && response.message) {
-            SplLogger.error(outputChannel, response.message);
+
+        if (showConsoleMessage) {
+            const outputChannel = this.getOutputChannel(structure);
+            const detailMessage = this.joinMessageArray(detail);
+            const stackMessage = this.joinMessageArray(stack);
+            SplLogger.error(outputChannel, message);
+            if (typeof detailMessage === 'string' && detailMessage.length) {
+                SplLogger.error(outputChannel, detailMessage);
+            }
+            if (typeof stackMessage === 'string' && stackMessage.length) {
+                SplLogger.error(outputChannel, stackMessage);
+            }
         }
-        if (response && response.stack) {
-            SplLogger.error(outputChannel, response.stack);
+
+        if (showNotification && typeof message === 'string') {
+            const buttons = this.processButtons(notificationButtons);
+            return window.showErrorMessage(message, ...buttons).then(selection => {
+                this.handleNotificationButtonSelection(notificationButtons, selection);
+            });
         }
     }
 
     /**
      * Handle a success message
-     * @param structure           The associated file path and application root
-     * @param response            The response
-     * @param detail              The message details
-     * @param showNotification    Whether to show a notification to the user
-     * @param showConsoleMsg      Whether to log the message
-     * @param dialogButtons       The dialog buttons to display
+     * @param message                The message to display
+     * @param detail                 The message detail
+     * @param showNotification       Whether to show a notification to the user
+     * @param showConsoleMessage     Whether to log to the output channel
+     * @param notificationButtons    The notification buttons to display
+     * @param structure              The associated file path and application root
      */
-    handleSuccess(structure: { filePath: string, appRoot: string }, response: any, detail: string, showNotification?: boolean, showConsoleMsg?: boolean, dialogButtons?: Array<any>): void {
-        const outputChannel = this.getOutputChannel(structure);
-        if (showNotification && dialogButtons) {
-            this.showDialog(response, detail, dialogButtons);
+    handleSuccess (
+        message: string,
+        {
+            detail = null,
+            showNotification = true,
+            showConsoleMessage = true,
+            notificationButtons = [],
+            structure = null
+        }: {
+            detail?: Array<string>,
+            showNotification?: boolean,
+            showConsoleMessage?: boolean,
+            notificationButtons?: Array<any>,
+            structure?: { filePath: string, appRoot: string }
+        } = {}
+    ): Thenable<void> {
+        if (showConsoleMessage) {
+            const outputChannel = this.getOutputChannel(structure);
+            const detailMessage = this.joinMessageArray(detail);
+            const logMessage = `${message}${detailMessage ? '\n' + detailMessage : ''}`;
+            SplLogger.success(outputChannel, logMessage);
         }
 
-        if (showConsoleMsg) {
-            showNotification ? SplLogger.success(outputChannel, `${response}\n${detail}`, true) : SplLogger.success(outputChannel, `${response}\n${detail}`);
-        }
-    }
-
-    /**
-     * Show a dialog to the user
-     * @param message          The message to display
-     * @param detail           The detailed message to display
-     * @param dialogButtons    The dialog buttons to display
-     */
-    showDialog(message: string, detail: string, dialogButtons: Array<any>): void {
-        let labels = [];
-        if (Array.isArray(dialogButtons)) {
-            var hasCancelButton = dialogButtons.some(obj => obj.label === 'Cancel' || obj.label === 'Close');
-            if (!hasCancelButton) {
-                dialogButtons.push({ label: 'Cancel', callbackFn: null });
-            }
-            labels = _.map(dialogButtons, obj => ({
-                title: obj.label,
-                isCloseAffordance: obj.label === 'Cancel' || obj.label === 'Close' ? false : true
-            }));
-        }
-
-        const displayMessage = detail ? `${message}\n\n${detail}` : message;
-        window.showInformationMessage(displayMessage, { modal: true }, ...labels)
-            .then(selection => {
-                if (selection) {
-                    const labelObj = _.find(dialogButtons, obj => obj.label === selection.title );
-                    if (labelObj && labelObj.callbackFn) {
-                        labelObj.callbackFn();
-                    }
-                }
+        if (showNotification && typeof message === 'string') {
+            const buttons = this.processButtons(notificationButtons);
+            return window.showInformationMessage(message, ...buttons).then(selection => {
+                this.handleNotificationButtonSelection(notificationButtons, selection);
             });
+        }
     }
 
     /**
      * Handle the scenario where the Streaming Analytics service credentials are missing
      */
-    handleCredentialsMissing() {
-        const callbackFn = () => window.showInformationMessage('Please re-build your application(s)');
-        commands.executeCommand(Commands.SET_SERVICE_CREDENTIALS, callbackFn);
+    handleCredentialsMissing(): Thenable<void> {
+        const notificationButtons = [{
+            label: 'Set credentials',
+            callbackFn: () => commands.executeCommand(Commands.SET_SERVICE_CREDENTIALS)
+        }];
+        const buttons = this.processButtons(notificationButtons);
+        const message = 'Copy and paste your Streaming Analytics service credentials';
+        return window.showErrorMessage(message, ...buttons).then(selection => {
+            this.handleNotificationButtonSelection(notificationButtons, selection);
+        });
+    }
+
+    /**
+     * Converts messages to a loggable string
+     * @param messages    The messages
+     */
+    getLoggableMessage(messages: Array<any>): string {
+        return this.joinMessageArray(messages.map(outputMsg => outputMsg.message_text));
     }
 
     /**
@@ -381,30 +348,41 @@ export class MessageHandler {
     }
 
     /**
-     * Converts the build output into a loggable string
-     * @param messages    The build message output
+     * Retrieve the button labels to display
+     * @param notificationButtons    The notification buttons to display
      */
-    private getLoggableMessage(messages: Array<any>): string {
-        return messages
-            .map(outputMsg => outputMsg.message_text)
-            .join('\n')
-            .trimRight();
+    private processButtons(notificationButtons: Array<any>): string[] {
+        let labels = [];
+        if (Array.isArray(notificationButtons)) {
+            labels = _.map(notificationButtons, obj => obj.label);
+        }
+        return labels;
     }
 
     /**
-     * Parse the build output and show a notification for the
-     * composite that is currently being built.
-     * @param messages    The build message output
+     * Convert an array of messages to a string
+     * @param msgArray    The messages
      */
-    private detectCurrentComposite(messages: Array<any>): void {
-        const scCommandRegExp = /sc\s+.*\s([A-Za-z_.]+)::([A-Za-z_]+).*$/;
-        const composites = _.chain(messages)
-            .filter(obj => obj.message_text.match(scCommandRegExp))
-            .map(obj => {
-                const match = obj.message_text.match(scCommandRegExp);
-                return `${match[1]}::${match[2]}`;
-            })
-            .value();
-        _.each(composites, composite => window.showInformationMessage(`Building ${composite}...`));
+    private joinMessageArray(msgArray: Array<string>): string {
+        if (Array.isArray(msgArray)) {
+            return msgArray.join('\n').trimRight();
+        }
+        return msgArray;
     }
+
+    /**
+     * Handle a notification button selection
+     * @param notificationButtons    The notification buttons to display
+     * @param selection              The label of the button that the user clicked on
+     */
+    private handleNotificationButtonSelection(notificationButtons: Array<any>, selection: string): void {
+        if (selection) {
+            const buttonObj = _.find(notificationButtons, (obj: any) => obj.label === selection);
+            if (buttonObj && buttonObj.callbackFn) {
+                buttonObj.callbackFn();
+            }
+        }
+    }
+
+    private dismissNotification(notification) {}
 }

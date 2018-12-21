@@ -2,13 +2,14 @@
 
 import { commands, ExtensionContext } from 'vscode';
 
-import { BaseCommand, BuildCommand, Commands, CreateApplicationCommand, RemoveOutputChannelsCommand, SetConfigSettingCommand } from '.';
+import { BaseCommand, BuildCommand, Commands, CreateApplicationCommand, OpenLinkCommand, RemoveOutputChannelsCommand, SetConfigSettingCommand } from '.';
 import { SplLogger, SplBuilder } from '../utils'
 
 export * from './base';
 export * from './build';
 export * from './commands';
 export * from './createApplication';
+export * from './openLink';
 export * from './removeOutputChannels';
 export * from './setConfigSetting';
 
@@ -26,6 +27,8 @@ export function initialize(context: ExtensionContext) {
     streamsCommands.push(new BuildCommand(Commands.BUILD_MAKE_SUBMIT, SplBuilder.BUILD_ACTION.SUBMIT));
     streamsCommands.push(new BuildCommand(Commands.SUBMIT));
     streamsCommands.push(new CreateApplicationCommand());
+    streamsCommands.push(new OpenLinkCommand(Commands.OPEN_STREAMING_ANALYTICS_CONSOLE));
+    streamsCommands.push(new OpenLinkCommand(Commands.OPEN_CLOUD_DASHBOARD));
     streamsCommands.push(new RemoveOutputChannelsCommand());
 
     streamsCommands.forEach(command => {
@@ -36,9 +39,6 @@ export function initialize(context: ExtensionContext) {
                     SplLogger.error(null, `An error occurred while executing command: ${command.commandName}`);
                     if (error && error.stack) {
                         SplLogger.error(null, error.stack);
-                    }
-                    if (command.commandName.includes('ibm-streams.build')) {
-                        SplLogger.error(null, 'Build failed', true, true);
                     }
                 });
             }

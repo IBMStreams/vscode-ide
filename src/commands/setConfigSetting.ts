@@ -28,7 +28,7 @@ export class SetConfigSettingCommand implements BaseCommand {
      * @param callbackFn    The callback function to execute after setting the value
      */
     private async promptForConfigurationValue(callbackFn): Promise<void> {
-        SplLogger.info(null, `Received request to set the configuration setting: ${this.commandName}`, false, true);
+        SplLogger.info(null, `Received request to set the configuration setting: ${this.commandName}`);
 
         let config = null, prompt = null, placeHolder = null;
         switch(this.commandName) {

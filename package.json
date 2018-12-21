@@ -102,6 +102,16 @@
         "category": "IBM Streams"
       },
       {
+        "command": "ibm-streams.openStreamingAnalyticsConsole",
+        "title": "Open IBM Streaming Analytics Console",
+        "category": "IBM Streams"
+      },
+      {
+        "command": "ibm-streams.openCloudDashboard",
+        "title": "Open IBM Cloud Dashboard",
+        "category": "IBM Streams"
+      },
+      {
         "command": "ibm-streams.removeOutputChannels",
         "title": "Remove Build Output Channels",
         "category": "IBM Streams"
@@ -173,6 +183,12 @@
         },
         {
           "command": "ibm-streams.createApplication"
+        },
+        {
+          "command": "ibm-streams.openStreamingAnalyticsConsole"
+        },
+        {
+          "command": "ibm-streams.openCloudDashboard"
         },
         {
           "command": "ibm-streams.removeOutputChannels"

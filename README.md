@@ -24,6 +24,10 @@ The IBM Streams product toolkits are bundled with this package. If your Streams 
 
 ## Functionality
 
+### SPL application build
+
+![SPL application build](./images/build.gif)
+
 ### General
 
 * `Streams Light` and `Streams Dark` color themes
@@ -58,6 +62,8 @@ Command | Title | Visibility | Description
 `ibm-streams.`<br>`buildMakeSubmit` | Build and Submit Job(s) | `Makefile` | Builds applications defined in a Makefile and submits them to a [Streaming Analytics](https://console.bluemix.net/docs/services/StreamingAnalytics/index.html#gettingstarted) instance. There are two submission options: (1) submit with the default configuration; (2) use the Streaming Analytics Console to customize the submission-time configuration.
 `ibm-streams.`<br>`submit` | Submit Job | `*.sab` | Submits an application to a [Streaming Analytics](https://console.bluemix.net/docs/services/StreamingAnalytics/index.html#gettingstarted) instance. There are two submission options: (1) submit with the default configuration; (2) use the Streaming Analytics Console to customize the submission-time configuration.
 `ibm-streams.`<br>`createApplication` | Create an IBM Streams Application from Template | `*` | Creates a minimal application containing a source `.spl` file and an [`info.xml`](https://www.ibm.com/support/knowledgecenter/SSCRJU_4.3.0/com.ibm.streams.dev.doc/doc/toolkitartifacts.html) file.
+`ibm-streams.`<br>`openStreamingAnalyticsConsole` | Open IBM Streaming Analytics Console | `*` | Opens the [IBM Streaming Analytics](https://console.bluemix.net/docs/services/StreamingAnalytics/index.html#gettingstarted) Console in a web browser.
+`ibm-streams.`<br>`openCloudDashboard` | Open IBM Cloud Dashboard | `*` | Opens the [IBM Cloud Dashboard](https://console.bluemix.net/dashboard/apps) in a web browser.
 `ibm-streams.`<br>`removeOutputChannels` | Remove Build Output Channels | `*` | Remove build output channels that are automatically created after executing build commands. These channels appear in the Output view.
 
 ![Commands](./images/commands.gif)
@@ -66,9 +72,11 @@ Command | Title | Visibility | Description
 
 The following [settings](https://code.visualstudio.com/docs/getstarted/settings) are supported:
 
-* `ibm-streams.toolkitsPath`: Path to a directory containing IBM Streams toolkits
 * `ibm-streams.streamingAnalyticsCredentials`: Credentials for an IBM Streaming Analytics service
+* `ibm-streams.toolkitsPath`: Path to a directory containing IBM Streams toolkits
 * `spl.trace.server`: Traces the communication between VS Code and the SPL language server.
+
+![Settings](./images/settings.png)
 
 ## Known issues
 
