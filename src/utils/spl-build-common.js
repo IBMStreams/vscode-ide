@@ -407,7 +407,7 @@ export class SplBuilder {
 				label: "Submit",
 				callbackFn: () => {
 					console.log("submitButtonCallback");
-					this.messageHandler.handleInfo("Submitting application to Streaming Analytics service...", { structure: this.structure });
+					this.messageHandler.handleInfo(`Submitting ${this.useMakefile ? "application(s)" : "application"} to Streaming Analytics service...`, { structure: this.structure });
 					submissionObservableFunc(submissionObservableInput).pipe(
 						mergeMap(submitResult => {
 
@@ -458,7 +458,7 @@ export class SplBuilder {
 
 					} else {
 						// need to download bundles first
-						this.messageHandler.handleInfo("Downloading application bundles for submission via Streaming Analytics Console...", { structure: this.structure });
+						this.messageHandler.handleInfo(`Downloading application ${this.useMakefile ? "bundle(s)" : "bundle"} for submission via Streaming Analytics Console...`, { structure: this.structure });
 						this.downloadBundlesObservable(submissionObservableInput).pipe(
 							map(downloadOutput => ( [ submissionObservableInput, downloadOutput ])),
 							mergeMap(downloadResult => this.performBundleDownloads(downloadResult, null, outputDir)),
@@ -504,7 +504,7 @@ export class SplBuilder {
 							tap(s => {
 								if (this._pollHandleMessage % 3 === 0) {
 									const newOutput = this.getNewBuildOutput(s.output, prevBuildOutput);
-									this.messageHandler.handleInfo(buildMessage, {detail: this.messageHandler.getLoggableMessage(newOutput), structure: this.structure});
+									this.messageHandler.handleInfo(buildMessage, {detail: this.messageHandler.getLoggableMessage(newOutput), buildProgress: true, structure: this.structure});
 									prevBuildOutput = s.output;
 								}
 								this._pollHandleMessage++;

@@ -175,6 +175,7 @@ export class MessageHandler {
      * @param showNotification       Whether to show a notification to the user
      * @param showConsoleMessage     Whether to log to the output channel
      * @param notificationButtons    The notification buttons to display
+     * @param buildProgress          Whether this is a build progress notification
      * @param structure              The associated file path and application root
      */
     handleInfo(
@@ -184,20 +185,29 @@ export class MessageHandler {
             showNotification = true,
             showConsoleMessage = true,
             notificationButtons = [],
+            buildProgress = false,
             structure = null
         }: {
             detail?: Array<string>,
             showNotification?: boolean,
             showConsoleMessage?: boolean,
             notificationButtons?: Array<any>,
+            buildProgress?: boolean,
             structure?: { filePath: string, appRoot: string }
         } = {}
     ): Thenable<void> {
         if (showConsoleMessage) {
             const outputChannel = this.getOutputChannel(structure);
             const detailMessage = this.joinMessageArray(detail);
-            const logMessage = `${message}${detailMessage ? '\n' + detailMessage : ''}`;
-            SplLogger.debug(outputChannel, logMessage, false, false, true);
+            let logMessage = '';
+            if (buildProgress) {
+                logMessage = `${detailMessage !== '' ? detailMessage : ''}`;
+            } else {
+                logMessage = `${message}${detailMessage ? '\n' + detailMessage : ''}`;
+            }
+            if (logMessage !== '') {
+                SplLogger.debug(outputChannel, logMessage, false, false, true);
+            }
         }
 
         if (showNotification && typeof message === 'string') {
