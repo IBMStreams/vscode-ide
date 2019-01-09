@@ -40,7 +40,7 @@ const ibmCloudDashboardUrl = "https://cloud.ibm.com/resources?groups=resource-in
 
 export class SplBuilder {
 	static BUILD_ACTION = {DOWNLOAD: 0, SUBMIT: 1};
-	static SPL_MSG_REGEX = /^([\w.]+\/[\w.]+)\:(\d+)\:(\d+)\:\s+(\w{5}\d{4}[IWE])\s+((ERROR|WARN|INFO)\:.*)$/;
+	static SPL_MSG_REGEX = /^([\w.]+(?:\/[\w.]+)?)\:(\d+)\:(\d+)\:\s+(\w{5}\d{4}[IWE])\s+((ERROR|WARN|INFO)\:.*)$/;
 	static SPL_NAMESPACE_REGEX = /^\s*(?:\bnamespace\b)\s+([a-z|A-Z|0-9|\.|\_]+)\s*\;/gm;
 	static SPL_MAIN_COMPOSITE_REGEX = /.*?(?:\bcomposite\b)(?:\s*|\/\/.*?|\/\*.*?\*\/)+([a-z|A-Z|0-9|\.|\_]+)(?:\s*|\/\/.*?|\/\*.*?\*\/)*\{/gm;
 	static STATUS_POLL_FREQUENCY = 5000;
