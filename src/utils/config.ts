@@ -24,6 +24,9 @@ export class SplConfig {
         // Store initial settings
         const initialSettings = this.getCurrentSettings();
         this.setState(Settings.ID, initialSettings);
+        this.setState(Settings.SPL_ID, {
+            [Settings.TRACE_SERVER]: this.getSetting(Settings.TRACE_SERVER, Settings.SPL_ID)
+        });
 
         this.watchSettings();
     }
@@ -66,25 +69,28 @@ export class SplConfig {
     /**
      * Get the value for a global configuration setting
      * @param setting    The configuration setting
+     * @param id         The configuration setting parent
      */
-    public static getSetting(setting: string): any {
-        return this.getConfig().get(setting);
+    public static getSetting(setting: string, id?: string): any {
+        return this.getConfig(id).get(setting);
     }
 
     /**
      * Set the value for a global configuration setting
      * @param setting    The configuration setting
      * @param value      The new value
+     * @param id         The configuration setting parent
      */
-    public static setSetting(setting: string, value: any): Thenable<void> {
-        return this.getConfig().update(setting, value, ConfigurationTarget.Global);
+    public static setSetting(setting: string, value: any, id?: string): Thenable<void> {
+        return this.getConfig(id).update(setting, value, ConfigurationTarget.Global);
     }
 
     /**
      * Get the configuration
+     * @param id    The configuration setting parent
      */
-    private static getConfig(): WorkspaceConfiguration {
-        return workspace.getConfiguration(Settings.ID);
+    private static getConfig(id?: string): WorkspaceConfiguration {
+        return workspace.getConfiguration(id ? id : Settings.ID);
     }
 
     /**
@@ -116,7 +122,7 @@ export class SplConfig {
      */
     private static watchSettings(): void {
         this._context.subscriptions.push(workspace.onDidChangeConfiguration((event: ConfigurationChangeEvent) => {
-            if (event.affectsConfiguration(Settings.ID)) {
+            if (event.affectsConfiguration(Settings.ID) || event.affectsConfiguration(Settings.SPL_ID)) {
                 // Send all settings to the language server
                 this._client.sendNotification(DidChangeConfigurationNotification.type, {
                     settings: {
@@ -125,18 +131,23 @@ export class SplConfig {
                     }
                 });
 
+                let changedSettingId = Settings.ID;
                 let changedSetting = null;
                 if (event.affectsConfiguration(`${Settings.ID}.${Settings.TOOLKITS_PATH}`)) {
                     changedSetting = Settings.TOOLKITS_PATH;
                 } else if (event.affectsConfiguration(`${Settings.ID}.${Settings.STREAMING_ANALYTICS_CREDENTIALS}`)) {
                     changedSetting = Settings.STREAMING_ANALYTICS_CREDENTIALS;
+                } else if (event.affectsConfiguration(`${Settings.SPL_ID}.${Settings.TRACE_SERVER}`)) {
+                    changedSettingId = Settings.SPL_ID;
+                    changedSetting = Settings.TRACE_SERVER;
                 }
 
                 if (changedSetting) {
                     const oldValue = SplConfig.getState(changedSetting) === '' ? '\"\"' : SplConfig.getState(changedSetting);
-                    const newValue = SplConfig.getSetting(changedSetting) === '' ? '\"\"' : SplConfig.getSetting(changedSetting);
-                    const formatValue = value => typeof value === 'object' ? JSON.stringify(value) : value;
-                    SplLogger.debug(null, `The ${changedSetting} configuration setting was changed from: ${formatValue(oldValue)} to ${formatValue(newValue)}`);
+                    const newValue = SplConfig.getSetting(changedSetting, changedSettingId) === '' ? '\"\"' : SplConfig.getSetting(changedSetting, changedSettingId);
+                    const formatValue = (value: any) => typeof value === 'object' ? `\n${JSON.stringify(value, null, 4)}` : ` ${value}`;
+                    const whitespaceValue = typeof oldValue === 'object' ? '\n\n' : `\n`;
+                    SplLogger.debug(null, `The ${changedSettingId}.${changedSetting} configuration setting was changed:\n\nPrevious value:${formatValue(oldValue)}${whitespaceValue}Current value:${formatValue(newValue)}`);
                     SplConfig.setState(changedSetting, newValue);
                 }
             }
