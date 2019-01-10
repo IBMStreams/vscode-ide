@@ -10,7 +10,7 @@ export namespace Settings {
     export const STREAMING_ANALYTICS_CREDENTIALS = 'streamingAnalyticsCredentials';
 
     /**
-     * Path to a directory containing IBM Streams toolkits.
+     * Paths to directories, comma or semicolon separated, containing IBM Streams toolkits.
      */
     export const TOOLKITS_PATH = 'toolkitsPath';
 

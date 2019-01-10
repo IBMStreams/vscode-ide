@@ -42,7 +42,7 @@
         "ibm-streams.toolkitsPath": {
           "type": "string",
           "default": "",
-          "description": "Path to a directory containing IBM Streams toolkits."
+          "description": "Paths to directories, comma or semicolon separated, containing IBM Streams toolkits."
         },
         "ibm-streams.streamingAnalyticsCredentials": {
           "type": "object",

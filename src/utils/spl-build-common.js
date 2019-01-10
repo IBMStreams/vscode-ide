@@ -91,9 +91,9 @@ export class SplBuilder {
 		this.messageHandler.handleInfo(`Building application archive${buildTarget}...`, { structure: this.structure });
 
 		// temporary build archive filename is of format
-		// .build_[fqn].zip or .build_make_[parent_dir].zip for makefile build
-		// eg: .build_sample.Vwap.zip , .build_make_Vwap.zip
-		const outputFilePath = `${appRoot}${path.sep}.build_${options.useMakefile ? "make_"+appRoot.split(path.sep).pop() : options.fqn.replace("::",".")}.zip`;
+		// .build_[fqn]_[time].zip or .build_make_[parent_dir]_[time].zip for makefile build
+		// eg: .build_sample.Vwap_1547066810853.zip , .build_make_Vwap_1547066810853.zip
+		const outputFilePath = `${appRoot}${path.sep}.build_${options.useMakefile ? "make_"+appRoot.split(path.sep).pop() : options.fqn.replace("::",".")}_${Date.now()}.zip`;
 
 		// delete existing build archive file before creating new one
 		// TODO: handle if file is open better (windows file locks)
@@ -126,7 +126,7 @@ export class SplBuilder {
 
 			const toolkitPaths = SplBuilder.getToolkits(toolkitRootPath);
 			let tkPathString = "";
-			if (toolkitPaths) {
+			if (Array.isArray(toolkitPaths) && toolkitPaths.length > 0) {
 				const rootContents = fs.readdirSync(appRoot);
 				const newRoot = path.basename(appRoot);
 				let ignoreFiles = defaultIgnoreFiles;
@@ -861,15 +861,26 @@ export class SplBuilder {
 	 *
 	 */
 	static getToolkits(toolkitRootDir) {
-		let validToolkitPaths = null;
+		let validToolkitPaths = [];
 		if (toolkitRootDir && toolkitRootDir.trim() !==  "") {
-			if (fs.existsSync(toolkitRootDir)) {
-				let toolkitRootContents = fs.readdirSync(toolkitRootDir);
-				validToolkitPaths = toolkitRootContents
-					.filter(item => fs.lstatSync(`${toolkitRootDir}${path.sep}${item}`).isDirectory())
-					.filter(dir => fs.readdirSync(`${toolkitRootDir}${path.sep}${dir}`).filter(tkDirItem => tkDirItem === "toolkit.xml").length > 0)
-					.map(tk => ({ tk: tk, tkPath: `${toolkitRootDir}${path.sep}${tk}` }));
+			let toolkitRoots = [];
+
+			if (toolkitRootDir.includes(",") || toolkitRootDir.includes(";")) {
+				toolkitRoots.push(...toolkitRootDir.split(/[,;]/));
+			} else {
+				toolkitRoots.push(toolkitRootDir);
 			}
+
+			toolkitRoots.forEach(toolkitRoot => {
+				if (fs.existsSync(toolkitRoot)) {
+					let toolkitRootContents = fs.readdirSync(toolkitRoot);
+					validToolkitPaths.push(...toolkitRootContents
+						.filter(item => fs.lstatSync(`${toolkitRoot}${path.sep}${item}`).isDirectory())
+						.filter(dir => fs.readdirSync(`${toolkitRoot}${path.sep}${dir}`).filter(tkDirItem => tkDirItem === "toolkit.xml").length > 0)
+						.map(tk => ({ tk: tk, tkPath: `${toolkitRoot}${path.sep}${tk}` }))
+					);
+				}
+			});
 		}
 		return validToolkitPaths;
 	}

@@ -39,8 +39,8 @@ export class SetConfigSettingCommand implements BaseCommand {
                 break;
             case Commands.SET_TOOLKITS_PATH:
                 config = Settings.TOOLKITS_PATH;
-                prompt = 'Provide a path to a directory containing IBM Streams toolkits';
-                placeHolder = '/path/to/toolkits/directory';
+                prompt = 'Provide paths to directories, comma or semicolon separated, containing IBM Streams toolkits';
+                placeHolder = '/path/to/first/toolkit/directory;/path/to/second/toolkit/directory';
                 break;
         }
 

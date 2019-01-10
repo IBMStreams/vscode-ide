@@ -22,7 +22,7 @@ If you need to create a service, start [here](https://cloud.ibm.com/catalog/serv
 
 #### Toolkits
 
-The IBM Streams product toolkits are bundled with this package. If your Streams applications use additional toolkits, you must copy them to a folder on your workstation. Note that each toolkit must contain a `toolkit.xml` file in order in order to be included. Then, execute the `Set IBM Streams Toolkits Path` command from the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface) and enter your path.
+The IBM Streams product toolkits are bundled with this package. If your Streams applications use additional toolkits, you must copy them to a folder or multiple folders on your workstation. Note that each toolkit must contain a `toolkit.xml` file in order in order to be included. Then, execute the `Set IBM Streams Toolkits Path` command from the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface) and enter the paths to your directories, comma or semicolon separated, containing the toolkits.
 
 ## Features
 
@@ -58,7 +58,7 @@ The following commands can be executed via context menus or the [Command Palette
 Command | Title | Visibility | Description
 --- | --- | --- | ---
 `ibm-streams.`<br>`setServiceCredentials` | Set IBM Streaming Analytics Service Credentials | `*` | Sets the credentials for an [IBM Streaming Analytics](https://cloud.ibm.com/docs/services/StreamingAnalytics/index.html#gettingstarted) service. This is required to build applications.
-`ibm-streams.`<br>`setToolkitsPath` | Set IBM Streams Toolkits Path | `*` | Sets the path to a directory containing IBM Streams toolkits. This is required if your applications use toolkits that are not provided with the Streams product.
+`ibm-streams.`<br>`setToolkitsPath` | Set IBM Streams Toolkits Path | `*` | Sets paths to directories, comma or semicolon separated, containing IBM Streams toolkits. This is required if your applications use toolkits that are not provided with the Streams product.
 `ibm-streams.`<br>`buildDownload` | Build | `*.spl` | Builds an application from source and downloads the Streams application bundle (`.sab`) to the local file system in the project's `output/` directory.
 `ibm-streams.`<br>`buildSubmit` | Build and Submit Job | `*.spl` | Builds an application from source and submits it to an [IBM Streaming Analytics](https://cloud.ibm.com/docs/services/StreamingAnalytics/index.html#gettingstarted) service. There are two submission options: (1) submit with the default configuration; (2) use the Streaming Analytics Console to customize the submission-time configuration.
 `ibm-streams.`<br>`buildMakeDownload` | Build | `Makefile` | Builds applications defined in a Makefile and downloads the Streams application bundles (`.sab`) to the local file system in the project's `output/` directory.
@@ -76,7 +76,7 @@ Command | Title | Visibility | Description
 The following [settings](https://code.visualstudio.com/docs/getstarted/settings) are supported:
 
 * `ibm-streams.streamingAnalyticsCredentials`: Credentials for an [IBM Streaming Analytics](https://cloud.ibm.com/docs/services/StreamingAnalytics/index.html#gettingstarted) service.
-* `ibm-streams.toolkitsPath`: Path to a directory containing IBM Streams toolkits.
+* `ibm-streams.toolkitsPath`: Paths to directories, comma or semicolon separated, containing IBM Streams toolkits.
 * `spl.trace.server`: Traces the communication between VS Code and the [SPL language server](https://www.npmjs.com/package/@ibmstreams/spl-lsp).
 
 ![Settings](./images/settings.png)
