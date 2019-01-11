@@ -122,27 +122,27 @@ export class SplLinter {
         });
         this._errorDecorationType = createDecoration(context.asAbsolutePath('images/markers/error-light.svg'), context.asAbsolutePath('images/markers/error-dark.svg'));
 
-        const isSplFile = (editor: TextEditor) => editor.document.languageId === 'spl';
+        const isSplFile = () => this._activeEditor && this._activeEditor.document.languageId === 'spl';
 
-        if (this._activeEditor && isSplFile(this._activeEditor)) {
+        if (isSplFile()) {
             this.updateDecorations();
         }
 
         context.subscriptions.push(window.onDidChangeActiveTextEditor((editor: TextEditor) => {
             this._activeEditor = editor;
-            if (this._activeEditor) {
+            if (isSplFile()) {
                 this.updateDecorations();
             }
         }));
 
         context.subscriptions.push(workspace.onDidChangeTextDocument((event: TextDocumentChangeEvent) => {
-            if (this._activeEditor && event.document === this._activeEditor.document) {
+            if (isSplFile() && event.document === this._activeEditor.document) {
                 this.updateDecorations();
             }
         }));
 
         context.subscriptions.push(languages.onDidChangeDiagnostics((event: DiagnosticChangeEvent) => {
-            if (this._activeEditor) {
+            if (isSplFile()) {
                 const uri = this._activeEditor.document.uri;
                 const eventUris = event.uris;
                 if (eventUris.length) {
