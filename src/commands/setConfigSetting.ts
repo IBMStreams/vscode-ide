@@ -27,7 +27,7 @@ export class SetConfigSettingCommand implements BaseCommand {
      * Prompt the user to input a value for a configuration setting.
      * @param callbackFn    The callback function to execute after setting the value
      */
-    private async promptForConfigurationValue(callbackFn): Promise<void> {
+    private async promptForConfigurationValue(callbackFn: Function): Promise<void> {
         SplLogger.info(null, `Received request to set the configuration setting: ${this.commandName}`);
 
         let config = null, prompt = null, placeHolder = null;
@@ -59,11 +59,12 @@ export class SetConfigSettingCommand implements BaseCommand {
                         if (input === 'null') {
                             input = null;
                         }
-                        SplConfig.setSetting(config, input);
-
-                        if (callbackFn) {
-                            callbackFn();
-                        }
+                        SplConfig.setSetting(config, input).then(() => {
+                            if (callbackFn) {
+                                const setting = SplConfig.getSetting(config);
+                                callbackFn(setting);
+                            }
+                        });
                     } catch(error) {
                         throw error;
                     }

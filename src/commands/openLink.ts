@@ -1,6 +1,6 @@
 'use strict';
 
-import { commands, ExtensionContext, Uri } from 'vscode';
+import { commands, window, ExtensionContext, Uri } from 'vscode';
 
 import { BaseCommand } from './base';
 import { Commands } from './commands';
@@ -19,14 +19,27 @@ export class OpenLinkCommand implements BaseCommand {
      * @param args       Array of arguments
      */
     execute(context: ExtensionContext, ...args: any[]): void {
-        const openUrlHandler = url => commands.executeCommand('vscode.open', Uri.parse(url));
+        const openUrlHandler = (url: string) => commands.executeCommand('vscode.open', Uri.parse(url));
         const builder = new SplBuilder(null, null, null, openUrlHandler, null);
         switch(this.commandName) {
             case Commands.OPEN_STREAMING_ANALYTICS_CONSOLE:
+                const openConsole = (credentialsSetting: any) => {
+                    const streamingAnalyticsCredentials = credentialsSetting ? JSON.stringify(credentialsSetting) : null;
+                    builder.openStreamingAnalyticsConsole(streamingAnalyticsCredentials);
+                    SplLogger.info(null, 'Opened Streaming Analytics Console');
+                }
+
                 const credentialsSetting = SplConfig.getSetting(Settings.STREAMING_ANALYTICS_CREDENTIALS);
-                const streamingAnalyticsCredentials = credentialsSetting ? JSON.stringify(credentialsSetting) : null;
-                builder.openStreamingAnalyticsConsole(streamingAnalyticsCredentials);
-                SplLogger.info(null, 'Opened Streaming Analytics Console');
+                if (!credentialsSetting) {
+                    window.showWarningMessage('IBM Streaming Analytics service credentials are not set', 'Set credentials').then((selection: string) => {
+                        if (selection) {
+                            commands.executeCommand(Commands.SET_SERVICE_CREDENTIALS, openConsole);
+                        }
+                    });
+                } else {
+                    openConsole(credentialsSetting);
+                }
+
                 break;
             case Commands.OPEN_CLOUD_DASHBOARD: {
                 builder.openCloudDashboard();
