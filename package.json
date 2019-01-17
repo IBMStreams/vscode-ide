@@ -163,23 +163,23 @@
         },
         {
           "command": "ibm-streams.buildDownload",
-          "when": "resourceLangId == spl"
+          "when": "editorLangId == spl"
         },
         {
           "command": "ibm-streams.buildSubmit",
-          "when": "resourceLangId == spl"
+          "when": "editorLangId == spl"
         },
         {
           "command": "ibm-streams.buildMakeDownload",
-          "when": "resourceLangId == makefile"
+          "when": "editorLangId == makefile"
         },
         {
           "command": "ibm-streams.buildMakeSubmit",
-          "when": "resourceLangId == makefile"
+          "when": "editorLangId == makefile"
         },
         {
           "command": "ibm-streams.submit",
-          "when": "resourceFilename =~ /.*\\.sab/"
+          "when": "resourceExtname == .sab"
         },
         {
           "command": "ibm-streams.createApplication"
@@ -217,7 +217,7 @@
         },
         {
           "command": "ibm-streams.submit",
-          "when": "resourceFilename =~ /.*\\.sab/",
+          "when": "resourceExtname == .sab",
           "group": "STREAMS@3"
         },
         {
@@ -228,27 +228,27 @@
       "editor/context": [
         {
           "command": "ibm-streams.buildDownload",
-          "when": "resourceLangId == spl",
+          "when": "editorLangId == spl",
           "group": "STREAMS@1"
         },
         {
           "command": "ibm-streams.buildSubmit",
-          "when": "resourceLangId == spl",
+          "when": "editorLangId == spl",
           "group": "STREAMS@2"
         },
         {
           "command": "ibm-streams.buildMakeDownload",
-          "when": "resourceLangId == makefile",
+          "when": "editorLangId == makefile",
           "group": "STREAMS@1"
         },
         {
           "command": "ibm-streams.buildMakeSubmit",
-          "when": "resourceLangId == makefile",
+          "when": "editorLangId == makefile",
           "group": "STREAMS@2"
         },
         {
           "command": "ibm-streams.submit",
-          "when": "resourceFilename =~ /.*\\.sab/",
+          "when": "resourceExtname == .sab",
           "group": "STREAMS@3"
         },
         {
@@ -279,7 +279,7 @@
         },
         {
           "command": "ibm-streams.submit",
-          "when": "resourceFilename =~ /.*\\.sab/",
+          "when": "resourceExtname == .sab",
           "group": "STREAMS@3"
         },
         {
