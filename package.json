@@ -2,7 +2,7 @@
   "name": "ibm-streams",
   "displayName": "IBM Streams",
   "description": "IBM Streams Support for Visual Studio Code [Beta]",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "publisher": "IBM",
   "license": "Apache-2.0",
   "icon": "images/ibm-streams.png",
@@ -308,7 +308,7 @@
     "vscode": "^1.1.21"
   },
   "dependencies": {
-    "@ibmstreams/spl-lsp": "0.x.x",
+    "@ibmstreams/spl-lsp": "0.9.4",
     "@types/archiver": "^2.1.2",
     "@types/copy-paste": "^1.1.30",
     "@types/underscore": "^1.8.9",
