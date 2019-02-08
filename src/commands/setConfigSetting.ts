@@ -2,9 +2,9 @@
 
 import { window, ExtensionContext } from 'vscode';
 
-import { BaseCommand } from './command';
-import { SplConfig, Config } from '../config';
-import { SplLogger } from '../logger';
+import { BaseCommand } from './base';
+import { Commands } from './commands';
+import { Settings, SplConfig, SplLogger } from '../utils';
 
 export class SetConfigSettingCommand implements BaseCommand {
     /**
@@ -27,20 +27,20 @@ export class SetConfigSettingCommand implements BaseCommand {
      * Prompt the user to input a value for a configuration setting.
      * @param callbackFn    The callback function to execute after setting the value
      */
-    private async promptForConfigurationValue(callbackFn): Promise<void> {
-        SplLogger.info(null, `Received request to set the configuration setting: ${this.commandName}`, false, true);
+    private async promptForConfigurationValue(callbackFn: Function): Promise<void> {
+        SplLogger.info(null, `Received request to set the configuration setting: ${this.commandName}`);
 
         let config = null, prompt = null, placeHolder = null;
         switch(this.commandName) {
-            case 'ibm-streams.setServiceCredentials':
-                config = Config.STREAMING_ANALYTICS_CREDENTIALS;
+            case Commands.SET_SERVICE_CREDENTIALS:
+                config = Settings.STREAMING_ANALYTICS_CREDENTIALS;
                 prompt = 'Provide credentials for an IBM Streaming Analytics service';
                 placeHolder = '{ "apikey": ..., "v2_rest_url": ... }';
                 break;
-            case 'ibm-streams.setToolkitsPath':
-                config = Config.TOOLKITS_PATH;
-                prompt = 'Provide a path to a directory containing IBM Streams toolkits';
-                placeHolder = '/path/to/toolkits/directory';
+            case Commands.SET_TOOLKITS_PATH:
+                config = Settings.TOOLKITS_PATH;
+                prompt = 'Provide paths to directories, comma or semicolon separated, containing IBM Streams toolkits';
+                placeHolder = '/path/to/first/toolkit/directory;/path/to/second/toolkit/directory';
                 break;
         }
 
@@ -53,17 +53,18 @@ export class SetConfigSettingCommand implements BaseCommand {
                 if (typeof input === 'string') {
                     try {
                         input = input.trim();
-                        if (this.commandName === 'ibm-streams.setServiceCredentials') {
+                        if (this.commandName === Commands.SET_SERVICE_CREDENTIALS) {
                             input = JSON.parse(input);
                         }
                         if (input === 'null') {
                             input = null;
                         }
-                        SplConfig.setSetting(config, input);
-
-                        if (callbackFn) {
-                            callbackFn();
-                        }
+                        SplConfig.setSetting(config, input).then(() => {
+                            if (callbackFn) {
+                                const setting = SplConfig.getSetting(config);
+                                callbackFn(setting);
+                            }
+                        });
                     } catch(error) {
                         throw error;
                     }

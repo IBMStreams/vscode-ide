@@ -5,15 +5,14 @@ import * as _ from 'underscore';
 
 import { commands, window, workspace, OutputChannel, Uri } from 'vscode';
 
-import { SplBuilder } from './spl-build-common';
-import { SplConfig, Config } from './config';
-import { LintHandler } from './linter';
-import { SplLogger, MessageHandler } from './logger';
+import packageJson = require('../../package.json');
 
-export class Build {
+import { LintHandler, MessageHandler, Settings, SplBuilder, SplConfig, SplLogger } from '.';
+
+export class SplBuild {
     /**
-     * Perform a build
-     * @param uri       The file URI
+     * Perform a build of an SPL file and either download the bundle or submit the application
+     * @param uri       The .spl file URI
      * @param action    The build action to take
      */
     public static async build(uri: Uri, action: number): Promise<void> {
@@ -32,7 +31,7 @@ export class Build {
             SplLogger.info(outputChannel, statusMessage, false, true);
             SplLogger.debug(outputChannel, `Selected: ${filePath}`);
 
-            const credentialsSetting = SplConfig.getSetting(Config.STREAMING_ANALYTICS_CREDENTIALS);
+            const credentialsSetting = SplConfig.getSetting(Settings.STREAMING_ANALYTICS_CREDENTIALS);
             const streamingAnalyticsCredentials = credentialsSetting ? JSON.stringify(credentialsSetting) : null;
 
             const fileContents = await this.getFileContents(uri);
@@ -43,7 +42,8 @@ export class Build {
             const messageHandler = new MessageHandler();
             const lintHandler = new LintHandler(SplBuilder.SPL_MSG_REGEX, appRoot);
             const openUrlHandler = url => commands.executeCommand('vscode.open', Uri.parse(url));
-            const builder = new SplBuilder(filePath, messageHandler, lintHandler, openUrlHandler);
+            const originator = { originator: 'vscode', version: packageJson.version, type: 'spl' };
+            const builder = new SplBuilder({ filePath: filePath, appRoot: appRoot }, messageHandler, lintHandler, openUrlHandler, originator);
 
             const appArchivePath = await builder.buildSourceArchive(appRoot, toolkitsDir, { useMakefile: false, fqn: mainComposite });
             try {
@@ -57,8 +57,8 @@ export class Build {
     }
 
     /**
-     * Perform a build from a Makefile
-     * @param uri       The file URI
+     * Perform a build from a Makefile and either download the bundle(s) or submit the application(s)
+     * @param uri       The Makefile file URI
      * @param action    The build action to take
      */
     public static async buildMake(uri: Uri, action: number): Promise<void> {
@@ -77,14 +77,15 @@ export class Build {
             SplLogger.info(outputChannel, statusMessage, false, true);
             SplLogger.debug(outputChannel, `Selected: ${filePath}`);
 
-            const credentialsSetting = SplConfig.getSetting(Config.STREAMING_ANALYTICS_CREDENTIALS);
+            const credentialsSetting = SplConfig.getSetting(Settings.STREAMING_ANALYTICS_CREDENTIALS);
             const streamingAnalyticsCredentials = credentialsSetting ? JSON.stringify(credentialsSetting) : null;
             const toolkitsDir = await this.getToolkitsDir();
 
             const messageHandler = new MessageHandler();
             const lintHandler = new LintHandler(SplBuilder.SPL_MSG_REGEX, appRoot);
             const openUrlHandler = url => commands.executeCommand('vscode.open', Uri.parse(url));
-            const builder = new SplBuilder(filePath, messageHandler, lintHandler, openUrlHandler);
+            const originator = { originator: 'vscode', version: packageJson.version, type: 'make' };
+            const builder = new SplBuilder({ filePath: filePath, appRoot: appRoot }, messageHandler, lintHandler, openUrlHandler, originator);
 
             const appArchivePath = await builder.buildSourceArchive(appRoot, toolkitsDir, { useMakefile: true, makefilePath: filePath });
             try {
@@ -98,17 +99,17 @@ export class Build {
     }
 
     /**
-     * Submit an application
-     * @param uri    The file URI
+     * Submit an application bundle
+     * @param uri    The .sab file URI
      */
     public static async submit(uri: Uri): Promise<void> {
         const filePath = uri ? uri.fsPath : window.activeTextEditor.document.fileName;
         if (filePath) {
             let appRoot = path.dirname(filePath);
-            if (path.basename(appRoot) === "output") {
+            if (path.basename(appRoot) === 'output') {
                 appRoot = path.dirname(appRoot);
             }
-            
+
             const displayPath = `${path.basename(appRoot)}${path.sep}${path.relative(appRoot, filePath)}`;
             const outputChannel = SplLogger.registerOutputChannel(filePath, displayPath);
 
@@ -116,13 +117,13 @@ export class Build {
             SplLogger.info(outputChannel, statusMessage, false, true);
             SplLogger.debug(outputChannel, `Selected: ${filePath}`);
 
-            const credentialsSetting = SplConfig.getSetting(Config.STREAMING_ANALYTICS_CREDENTIALS);
+            const credentialsSetting = SplConfig.getSetting(Settings.STREAMING_ANALYTICS_CREDENTIALS);
             const streamingAnalyticsCredentials = credentialsSetting ? JSON.stringify(credentialsSetting) : null;
 
             const messageHandler = new MessageHandler();
             const lintHandler = new LintHandler(SplBuilder.SPL_MSG_REGEX, appRoot);
             const openUrlHandler = url => commands.executeCommand('vscode.open', Uri.parse(url));
-            const builder = new SplBuilder(filePath, messageHandler, lintHandler, openUrlHandler);
+            const builder = new SplBuilder({ filePath: filePath, appRoot: appRoot }, messageHandler, lintHandler, openUrlHandler);
 
             try {
                 builder.submit(streamingAnalyticsCredentials, { filename: filePath, buildPath: displayPath });
@@ -227,9 +228,8 @@ export class Build {
      * @param composites    The defined composites
      */
     private static async getCompositeToBuild(appRoot: string, namespace: string, composites: Array<string>): Promise<string> {
-      
         if (composites.length === 1) {
-            if (namespace == '') 
+            if (namespace == '')
                return composites[0];
             else
                 return `${namespace}::${composites[0]}`;
@@ -256,10 +256,10 @@ export class Build {
      * if there configuration setting is not defined.
      */
     private static async getToolkitsDir(): Promise<string> {
-        const setting = SplConfig.getSetting(Config.TOOLKITS_PATH);
+        const setting = SplConfig.getSetting(Settings.TOOLKITS_PATH);
         if (setting.trim() !== '') {
             return setting;
-        } 
+        }
         return null;
     }
 }

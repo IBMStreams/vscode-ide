@@ -2,7 +2,7 @@
   "name": "ibm-streams",
   "displayName": "IBM Streams",
   "description": "IBM Streams Support for Visual Studio Code [Beta]",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "publisher": "IBM",
   "license": "Apache-2.0",
   "icon": "images/ibm-streams.png",
@@ -33,7 +33,7 @@
   "activationEvents": [
     "*"
   ],
-  "main": "./out/extension",
+  "main": "./out/src/extension",
   "contributes": {
     "configuration": {
       "type": "object",
@@ -42,12 +42,21 @@
         "ibm-streams.toolkitsPath": {
           "type": "string",
           "default": "",
-          "description": "Path to a directory containing IBM Streams toolkits."
+          "description": "Paths to directories, comma or semicolon separated, containing IBM Streams toolkits."
         },
         "ibm-streams.streamingAnalyticsCredentials": {
           "type": "object",
           "default": null,
           "description": "Credentials for an IBM Streaming Analytics service."
+        },
+        "spl.trace.server": {
+          "type": "string",
+          "enum": [
+            "off",
+            "verbose"
+          ],
+          "default": "off",
+          "description": "Traces the communication between VS Code and the SPL language server."
         }
       }
     },
@@ -91,8 +100,28 @@
         "command": "ibm-streams.createApplication",
         "title": "Create an IBM Streams Application from Template",
         "category": "IBM Streams"
+      },
+      {
+        "command": "ibm-streams.openStreamingAnalyticsConsole",
+        "title": "Open IBM Streaming Analytics Console",
+        "category": "IBM Streams"
+      },
+      {
+        "command": "ibm-streams.openCloudDashboard",
+        "title": "Open IBM Cloud Dashboard",
+        "category": "IBM Streams"
+      },
+      {
+        "command": "ibm-streams.removeOutputChannels",
+        "title": "Remove Build Output Channels",
+        "category": "IBM Streams"
       }
     ],
+    "configurationDefaults": {
+      "[spl]": {
+        "editor.wordBasedSuggestions": false
+      }
+    },
     "grammars": [
       {
         "language": "spl",
@@ -134,26 +163,35 @@
         },
         {
           "command": "ibm-streams.buildDownload",
-          "when": "resourceLangId == spl"
+          "when": "editorLangId == spl"
         },
         {
           "command": "ibm-streams.buildSubmit",
-          "when": "resourceLangId == spl"
+          "when": "editorLangId == spl"
         },
         {
           "command": "ibm-streams.buildMakeDownload",
-          "when": "resourceLangId == makefile"
+          "when": "editorLangId == makefile"
         },
         {
           "command": "ibm-streams.buildMakeSubmit",
-          "when": "resourceLangId == makefile"
+          "when": "editorLangId == makefile"
         },
         {
           "command": "ibm-streams.submit",
-          "when": "resourceFilename =~ /.*\\.sab/"
+          "when": "resourceExtname == .sab"
         },
         {
           "command": "ibm-streams.createApplication"
+        },
+        {
+          "command": "ibm-streams.openStreamingAnalyticsConsole"
+        },
+        {
+          "command": "ibm-streams.openCloudDashboard"
+        },
+        {
+          "command": "ibm-streams.removeOutputChannels"
         }
       ],
       "explorer/context": [
@@ -179,7 +217,7 @@
         },
         {
           "command": "ibm-streams.submit",
-          "when": "resourceFilename =~ /.*\\.sab/",
+          "when": "resourceExtname == .sab",
           "group": "STREAMS@3"
         },
         {
@@ -190,27 +228,27 @@
       "editor/context": [
         {
           "command": "ibm-streams.buildDownload",
-          "when": "resourceLangId == spl",
+          "when": "editorLangId == spl",
           "group": "STREAMS@1"
         },
         {
           "command": "ibm-streams.buildSubmit",
-          "when": "resourceLangId == spl",
+          "when": "editorLangId == spl",
           "group": "STREAMS@2"
         },
         {
           "command": "ibm-streams.buildMakeDownload",
-          "when": "resourceLangId == makefile",
+          "when": "editorLangId == makefile",
           "group": "STREAMS@1"
         },
         {
           "command": "ibm-streams.buildMakeSubmit",
-          "when": "resourceLangId == makefile",
+          "when": "editorLangId == makefile",
           "group": "STREAMS@2"
         },
         {
           "command": "ibm-streams.submit",
-          "when": "resourceFilename =~ /.*\\.sab/",
+          "when": "resourceExtname == .sab",
           "group": "STREAMS@3"
         },
         {
@@ -241,7 +279,7 @@
         },
         {
           "command": "ibm-streams.submit",
-          "when": "resourceFilename =~ /.*\\.sab/",
+          "when": "resourceExtname == .sab",
           "group": "STREAMS@3"
         },
         {
@@ -270,7 +308,7 @@
     "vscode": "^1.1.21"
   },
   "dependencies": {
-    "@ibmstreams/spl-lsp": "0.x.x",
+    "@ibmstreams/spl-lsp": "0.9.4",
     "@types/archiver": "^2.1.2",
     "@types/copy-paste": "^1.1.30",
     "@types/underscore": "^1.8.9",

@@ -2,7 +2,7 @@
 
 export interface BaseCommand {
     commandName: string;
-    
+
     /**
      * Execute the command
      * @param args    Array of arguments
