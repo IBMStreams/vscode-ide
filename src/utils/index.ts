@@ -1,4 +1,4 @@
-import { ExtensionContext } from 'vscode';
+import { env, ExtensionContext } from 'vscode';
 import { LanguageClient } from 'vscode-languageclient';
 import { SplConfig, SplLinter, SplLogger } from '.';
 
@@ -18,4 +18,12 @@ export function initialize(context: ExtensionContext, client: LanguageClient) {
     SplConfig.configure(context);
     SplLinter.configure(context);
     SplLogger.configure();
+}
+
+/**
+ * Determine whether the extension is being debugged or not
+ */
+export function inDebugMode() {
+    const { sessionId, machineId } = env;
+    return sessionId === 'someValue.sessionId' || machineId === 'someValue.machineId';
 }

@@ -2,12 +2,12 @@ import * as fs from 'fs';
 import * as _ from 'lodash';
 import * as path from 'path';
 import { URL } from 'url';
-import { commands, ConfigurationChangeEvent, ExtensionContext, Uri, window, workspace, WorkspaceFolder } from 'vscode';
+import { commands, ConfigurationChangeEvent, Disposable, ExtensionContext, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import { DidChangeConfigurationNotification } from 'vscode-languageserver-protocol';
 import * as packageJson from '../../package.json';
 import { Commands } from '../commands';
 import { SplLanguageClient } from '../languageClient';
-import { Constants, Keychain, Settings, SplConfig, SplLogger } from '../utils';
+import { Constants, inDebugMode, Keychain, Settings, SplConfig, SplLogger } from '../utils';
 import LintHandlerRegistry from './lint-handler-registry';
 import LintHandler from './LintHandler';
 import MessageHandlerRegistry from './message-handler-registry';
@@ -51,6 +51,7 @@ export class SplBuild {
     private static _toolkitsPath: string;
     private static _apiVersion: string;
     private static _originator: object;
+    private static _storeSubscription: any;
     private static _openUrlHandler: (url: string, callback?: () => void) => void;
     private static _sendLspNotificationHandler: (param: object) => void;
 
@@ -79,6 +80,15 @@ export class SplBuild {
         this._apiVersion = SplConfig.getSetting(Settings.TARGET_VERSION);
 
         this._originator = { originator: 'vscode', version: packageJson.version, type: 'spl' };
+
+        this._storeSubscription = getStore().subscribe(() => {
+            if (inDebugMode()) {
+                console.log('Store subscription updated state: ', getStore().getState());
+            }
+        });
+        context.subscriptions.push(new Disposable(() => {
+            this._storeSubscription();
+        }));
 
         if (!MessageHandlerRegistry.getDefault()) {
             MessageHandlerRegistry.setDefault(new MessageHandler(null));

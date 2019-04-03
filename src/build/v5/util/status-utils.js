@@ -14,13 +14,11 @@ import StreamsUtils from './streams-utils';
 import LintHandlerRegistry from '../../lint-handler-registry';
 
 function buildStatusUpdate(action, state) {
-  console.log('buildStatusUpdate func input,', action, state);
   const { buildId } = action;
   const buildStatus = StateSelector.getBuildStatus(state, buildId);
   const logMessages = StateSelector.getBuildLogMessages(state, buildId);
   const displayIdentifier = StateSelector.getBuildDisplayIdentifier(state, buildId);
   const messageHandler = getMessageHandlerForBuildId(state, buildId);
-  console.log(buildStatus, logMessages, messageHandler);
   if (buildStatus === 'built') {
     messageHandler.handleSuccess(`Build succeeded - ${displayIdentifier}`, {
 
@@ -52,7 +50,6 @@ function appBundleDownloaded(state, buildId, artifactName, artifactOutputPath) {
 }
 
 function downloadOrSubmit(state, buildId) {
-  console.log('downloadOrSubmit', state, buildId);
   const buildStatus = StateSelector.getBuildStatus(state, buildId);
   if (buildStatus === 'built') {
     const artifacts = StateSelector.getBuildArtifacts(state, buildId);
@@ -70,14 +67,12 @@ function downloadOrSubmit(state, buildId) {
             {
               label: 'Submit',
               callbackFn: () => {
-                console.log('submitCallback');
                 getStore().dispatch(submitApplications(buildId, true));
               }
             },
             {
               label: 'Submit via Streams Console',
               callbackFn: () => {
-                console.log('download and open console');
                 messageHandler.handleInfo('Downloading application bundle(s) for submission via Streams Console...');
                 getStore().dispatch(downloadAppBundles(buildId));
                 getStore().dispatch(openStreamingAnalyticsConsole());
@@ -93,7 +88,6 @@ function downloadOrSubmit(state, buildId) {
 }
 
 function submitJobStart(state, artifactName, buildId) {
-  console.log('job submit start');
   const messageHandler = buildId ? getMessageHandlerForBuildId(state, buildId) : MessageHandlerRegistry.getDefault();
   if (messageHandler) {
     messageHandler.handleInfo(`Submitting application ${artifactName} to the Streams Instance...`);
@@ -101,7 +95,6 @@ function submitJobStart(state, artifactName, buildId) {
 }
 
 function jobSubmitted(state, submitInfo, buildId) {
-  console.log('job submitted:', state, buildId, submitInfo);
   const messageHandler = buildId ? getMessageHandlerForBuildId(state, buildId) : MessageHandlerRegistry.getDefault();
   if (submitInfo.status === 'running') {
     messageHandler.handleSuccess(

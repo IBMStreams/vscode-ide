@@ -78,7 +78,6 @@ async function buildSourceArchive(
       zlib: { level: 9 } // compression level
     });
     output.on('close', () => {
-      console.log('Application source archive built');
       messageHandler.handleInfo('Application archive created, submitting to build service...');
     });
     archive.on('warning', (err) => {

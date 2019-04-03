@@ -164,7 +164,6 @@ const buildStatusEpic = (action, state) => action.pipe(
       catchError(error => of(handleError(a, error)))
     ),
     StreamsRestUtils.build.getLogMessages(s, a.buildId).pipe(
-      tap(r => console.log('log response: ', r)),
       map(response => getBuildLogMessagesFulfilled({ buildId: a.buildId, logMessages: response.body.split('\n') })),
       catchError(error => of(handleError(a, error)))
     )
@@ -277,12 +276,8 @@ const submitApplicationsEpic = (action, state) => action.pipe(
         tap(submitResponse => {
           const submitInfo = ResponseSelector.getSubmitInfo(submitResponse);
           StatusUtils.jobSubmitted(s, submitInfo, buildId);
-          console.log('submitResponse:', submitResponse);
         })
       )),
-      tap(a1 => {
-        console.log('downloadArtifacts post-tap', a1);
-      }),
       map(() => ({ type: 'APPLICATION_SUBMITTED' })),
       catchError(error => of(handleError(a, error)))
     );
@@ -304,7 +299,6 @@ const submitApplicationsFromBundleFilesEpic = (action, state) => action.pipe(
             tap(submitResponse => {
               const submitInfo = ResponseSelector.getSubmitInfo(submitResponse);
               StatusUtils.jobSubmitted(s, submitInfo);
-              console.log('submitResponse:', submitResponse);
             }),
             map(() => ({ type: 'APPLICATION_SUBMITTED' }))
           );
@@ -328,7 +322,6 @@ const icp4dAuthEpic = (action, state) => action.pipe(
   ofType(actions.AUTHENTICATE_ICP4D),
   withLatestFrom(state),
   mergeMap(([a, s]) => StreamsRestUtils.icp4d.getIcp4dToken(s, a.username, a.password).pipe(
-    tap(a1 => console.log('icp4d auth response: ', a1)),
     mergeMap(authTokenResponse => {
       const statusCode = ResponseSelector.getStatusCode(authTokenResponse);
       if (statusCode === 200) {
@@ -365,9 +358,6 @@ const streamsAuthEpic = (action, state) => action.pipe(
   ofType(actions.AUTHENTICATE_STREAMS_INSTANCE),
   withLatestFrom(state),
   mergeMap(([authAction, s]) => StreamsRestUtils.icp4d.getStreamsAuthToken(s, authAction.instanceName).pipe(
-    tap(() => {
-      console.log('Queued action:', StateSelector.getQueuedAction(s));
-    }),
     mergeMap(authTokenResponse => {
       const statusCode = ResponseSelector.getStatusCode(authTokenResponse);
       if (statusCode === 200) {
@@ -415,11 +405,8 @@ const refreshToolkitsEpic = (action, state) => action.pipe(
     tap(() => MessageHandlerRegistry.getDefault().handleInfo('Initializing toolkit index cache')),
     map(toolkitsResponse => ResponseSelector.getToolkits(toolkitsResponse)),
     map(toolkits => StreamsToolkitUtils.getToolkitsToCache(s, toolkits)),
-    tap(a1 => console.log('refreshTK,a', a1)),
     mergeMap(toolkitsToCache => forkJoin(from(toolkitsToCache).pipe(
-      tap(a1 => console.log('refreshTK,b', a1)),
       mergeMap(toolkitToCache => StreamsRestUtils.toolkit.getToolkitIndex(s, toolkitToCache.id).pipe(
-        tap(a1 => console.log('refreshTK,c', a1)),
         map(toolkitIndexResponse => StreamsToolkitUtils.cacheToolkitIndex(s, toolkitToCache, toolkitIndexResponse.body))
       )),
       defaultIfEmpty('empty')

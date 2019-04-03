@@ -1,10 +1,13 @@
 import * as _ from 'lodash';
 import { combineReducers } from 'redux';
 import { actions } from '../actions';
+import { inDebugMode } from '../../../utils';
 
 const streamsV5Build = (state = [], action) => {
-  console.log('buildV5Reducer Action: ', action);
-  console.log('buildV5Reducer State before modification: ', state);
+  if (inDebugMode()) {
+    console.log('buildV5Reducer Action: ', action);
+    console.log('buildV5Reducer State before modification: ', state);
+  }
 
   switch (action.type) {
     case actions.SET_BUILD_ORIGINATOR:

@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import { Observable } from 'rxjs';
 
 import StateSelector from './state-selectors';
+import { inDebugMode } from '../../../utils';
 
 const request = require('request');
 
@@ -363,7 +364,9 @@ function getStreamsAuthToken(state, instanceName) {
 }
 
 function observableRequest(requestInst, options) {
-  console.log('request options: ', options);
+  if (inDebugMode()) {
+    console.log('request options: ', options);
+  }
   return Observable.create((req) => {
     requestInst(options, (err, resp, body) => {
       if (err) {

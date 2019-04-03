@@ -175,7 +175,7 @@ const getMessageHandlerIdentifier = (state, buildId) => {
 
 const getToolkitsCacheDir = createSelector(
   getBase,
-  base => { console.log(base); return base.getIn(['toolkitsCacheDir']); }
+  base => base.getIn(['toolkitsCacheDir'])
 );
 
 const getToolkitsPathSetting = createSelector(

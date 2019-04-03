@@ -51,7 +51,6 @@ function parseV4ServiceCredentials(streamingAnalyticsCredentials) {
       if (fs.existsSync(vcapServicesPath)) {
         const vcapServices = JSON.parse(fs.readFileSync(vcapServicesPath, 'utf8'));
         if (vcapServices.apikey && vcapServices.v2_rest_url) {
-          console.log('vcap:', vcapServices);
           return { apikey: vcapServices.apikey, v2_rest_url: vcapServices.v2_rest_url };
         }
         const streamingAnalytics = vcapServices['streaming-analytics'];

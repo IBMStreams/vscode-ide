@@ -1,7 +1,6 @@
 import * as _ from 'lodash';
 
 const getBody = (response) => {
-  console.log('getBody response:', response);
   const body = _.get(response, 'body', {});
   if (body instanceof Buffer) {
     return JSON.parse(body.toString('utf8'));
@@ -15,9 +14,6 @@ const getBody = (response) => {
     }
   }
   if (body.messages && Array.isArray(body.messages)) {
-    console.log('response error, body:', body);
-    console.log('response error, messages:', body.messages);
-
     throw new Error(body.messages.map(entry => entry.message).join('\n'));
   }
   return body;

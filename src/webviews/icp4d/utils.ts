@@ -29,27 +29,26 @@ const enum MessageId {
 function receiveMessage(panel: WebviewPanel, disposables: Disposable[]): void {
     panel.webview.onDidReceiveMessage(({ id, value }: { id: string, value: any }) => {
         const state = getStore().getState();
-        console.log(state);
         switch (id) {
             case MessageId.CURRENT_STEP:
                 sendMessage(panel, {
                     id: MessageId.CURRENT_STEP,
                     value: {
-                        currentStep: StateSelector.getCurrentLoginStep(getStore().getState()) || 1
+                        currentStep: StateSelector.getCurrentLoginStep(state) || 1
                     }
                 });
                 break;
             case MessageId.PREVIOUS_STEP:
-                const currentStep = StateSelector.getCurrentLoginStep(getStore().getState());
+                const currentStep = StateSelector.getCurrentLoginStep(state);
                 getStore().dispatch(setCurrentLoginStep(currentStep - 1));
                 break;
             case MessageId.INIT_STEP1:
                 sendMessage(panel, {
                     id: MessageId.INIT_STEP1,
                     value: {
-                        username: StateSelector.getFormUsername(getStore().getState()) || '',
-                        password: StateSelector.getFormPassword(getStore().getState()) || '',
-                        rememberPassword: StateSelector.getFormRememberPassword(getStore().getState()) || true
+                        username: StateSelector.getFormUsername(state) || '',
+                        password: StateSelector.getFormPassword(state) || '',
+                        rememberPassword: StateSelector.getFormRememberPassword(state) || true
                     }
                 });
                 break;
@@ -62,8 +61,8 @@ function receiveMessage(panel: WebviewPanel, disposables: Disposable[]): void {
                 getStore().dispatch(authenticateIcp4d(username, password, rememberPassword));
                 break;
             case MessageId.PERSIST_AUTH:
-                const formUsername = StateSelector.getUsername(getStore().getState());
-                const formRememberPassword = StateSelector.getRememberPassword(getStore().getState());
+                const formUsername = StateSelector.getUsername(state);
+                const formRememberPassword = StateSelector.getRememberPassword(state);
                 SplConfig.setState(`${Constants.EXTENSION_NAME}.username`, formUsername);
                 SplConfig.setState(`${Constants.EXTENSION_NAME}.rememberPassword`, formRememberPassword);
                 break;

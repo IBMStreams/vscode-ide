@@ -155,7 +155,6 @@ function cacheToolkitIndex(state, toolkit, index) {
   if (!cacheDir) {
     throw new Error('Toolkit cache directory does not exist');
   }
-  console.log('in cacheToolkitIndex:', state, toolkit, cacheDir);
   try {
     fs.writeFileSync(`${cacheDir}${path.sep}${name}-${version}.xml`, index);
   } catch (err) {
