@@ -1,22 +1,18 @@
-'use strict';
-
 import * as fs from 'fs';
-
-import { commands, window, workspace, ExtensionContext, Uri } from 'vscode';
-
-import { BaseCommand } from './base';
-import { Commands } from './commands';
+import { commands, ExtensionContext, Uri, window, workspace } from 'vscode';
 import { SplLogger } from '../utils';
+import { IBaseCommand } from './base';
+import { Commands } from './commands';
 
-export class CreateApplicationCommand implements BaseCommand {
-    commandName: string = Commands.CREATE_APPLICATION;
+export class CreateApplicationCommand implements IBaseCommand {
+    public commandName: string = Commands.CREATE_APPLICATION;
 
     /**
      * Execute the command
      * @param context    The extension context
      * @param args       Array of arguments
      */
-    execute(context: ExtensionContext, ...args: any[]): any {
+    public execute(context: ExtensionContext, ...args: any[]): any {
         return this.createApplication();
     }
 
@@ -62,10 +58,10 @@ export class CreateApplicationCommand implements BaseCommand {
      */
     private async promptForRootFolder(): Promise<Uri> {
         return window.showOpenDialog({
-            'canSelectFiles': false,
-            'canSelectFolders': true,
-            'canSelectMany': false,
-            'openLabel': 'Set as root folder'
+            canSelectFiles: false,
+            canSelectFolders: true,
+            canSelectMany: false,
+            openLabel: 'Set as root folder'
         }).then((selected: Uri[]) => {
             if (selected && selected.length === 1) {
                 return selected[0];

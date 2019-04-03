@@ -1,0 +1,3 @@
+#root .btn-toolbar .btn-toolbar.justify-content-start button:first-of-type {
+    margin-right: 10px;
+}

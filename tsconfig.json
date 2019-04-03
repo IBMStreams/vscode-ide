@@ -1,14 +1,16 @@
 {
     "compilerOptions": {
-        "module": "commonjs",
-        "target": "es6",
         "allowJs": true,
-        "outDir": "out",
-        "sourceMap": true,
-        "rootDir": ".",
-        "strict": false,
+        "alwaysStrict": true,
+        "forceConsistentCasingInFileNames": true,
+        "jsx": "react",
+        "module": "commonjs",
         "noUnusedLocals": true,
-        "resolveJsonModule": true
+        "outDir": "out",
+        "resolveJsonModule": true,
+        "rootDir": ".",
+        "sourceMap": true,
+        "target": "es6"
     },
     "exclude": [
         "node_modules",

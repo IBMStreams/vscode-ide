@@ -1,37 +1,29 @@
-'use strict';
-
-import { workspace, ConfigurationChangeEvent, ConfigurationTarget, ExtensionContext, Memento, WorkspaceConfiguration } from 'vscode';
-import { LanguageClient } from 'vscode-languageclient';
-import { DidChangeConfigurationNotification } from 'vscode-languageserver-protocol';
-
-import { Settings, SplLogger } from '.';
+import { ConfigurationChangeEvent, ConfigurationTarget, ExtensionContext, Memento, workspace, WorkspaceConfiguration } from 'vscode';
+import { Constants, Settings, SplLogger } from '.';
 
 export class SplConfig {
     private static _context: ExtensionContext;
-    private static _client: LanguageClient;
 
     /**
      * Perform initial configuration
      * @param context    The extension context
-     * @param client     The language client
      */
-    public static configure(context: ExtensionContext, client: LanguageClient): void {
+    public static configure(context: ExtensionContext): void {
         this._context = context;
-        this._client = client;
 
         this.customizeWorkbench();
 
         // Store initial settings
         const initialSettings = this.getCurrentSettings();
-        this.setState(Settings.ID, initialSettings);
-        this.setState(Settings.SPL_ID, {
-            [Settings.TRACE_SERVER]: this.getSetting(Settings.TRACE_SERVER, Settings.SPL_ID)
-        });
+        Object.keys(initialSettings).forEach((key: string) => this.setState(key, initialSettings[key]));
 
         this.watchSettings();
     }
 
-    private static customizeWorkbench() {
+    /**
+     * Customize global configuration settings for Streams color themes
+     */
+    private static customizeWorkbench(): void {
         workspace.getConfiguration('workbench').update('colorCustomizations', {
             '[Streams Light]': {
                 'editor.selectionBackground': '#E2F5FF',
@@ -47,27 +39,29 @@ export class SplConfig {
     }
 
     /**
-     * Get all current global configuration settings
+     * Get all current configuration settings
      */
     public static getCurrentSettings(): object {
         return {
-            [Settings.TOOLKITS_PATH]: this.getSetting(Settings.TOOLKITS_PATH),
-            [Settings.STREAMING_ANALYTICS_CREDENTIALS]: this.getSetting(Settings.STREAMING_ANALYTICS_CREDENTIALS)
+            [`${Constants.EXTENSION_NAME}.${Settings.ICP4D_URL}`]: this.getSetting(Settings.ICP4D_URL),
+            [`${Constants.EXTENSION_NAME}.${Settings.STREAMING_ANALYTICS_CREDENTIALS}`]: this.getSetting(Settings.STREAMING_ANALYTICS_CREDENTIALS),
+            [`${Constants.EXTENSION_NAME}.${Settings.TARGET_VERSION}`]: this.getSetting(Settings.TARGET_VERSION),
+            [`${Constants.EXTENSION_NAME}.${Settings.TOOLKITS_PATH}`]: this.getSetting(Settings.TOOLKITS_PATH),
+            [`${Constants.EXTENSION_NAME}.${Settings.USE_ICP4D_MASTER_NODE_HOST}`]: this.getSetting(Settings.USE_ICP4D_MASTER_NODE_HOST),
+            [`${Constants.SPL}.${Settings.TRACE_SERVER}`]: this.getSetting(Settings.TRACE_SERVER, Constants.SPL)
         };
     }
 
     /**
-     * Get all old global configuration settings
+     * Get the configuration
+     * @param id    The configuration setting parent
      */
-    private static getOldSettings(): object {
-        return {
-            [Settings.TOOLKITS_PATH]: this.getState(Settings.TOOLKITS_PATH),
-            [Settings.STREAMING_ANALYTICS_CREDENTIALS]: this.getState(Settings.STREAMING_ANALYTICS_CREDENTIALS)
-        };
+    private static getConfig(id?: string): WorkspaceConfiguration {
+        return workspace.getConfiguration(id ? id : Constants.EXTENSION_NAME);
     }
 
     /**
-     * Get the value for a global configuration setting
+     * Get the value for a configuration setting
      * @param setting    The configuration setting
      * @param id         The configuration setting parent
      */
@@ -76,21 +70,53 @@ export class SplConfig {
     }
 
     /**
-     * Set the value for a global configuration setting
+     * Inspect a configuration setting
+     * @param setting    The configuration setting
+     * @param id         The configuration setting parent
+     */
+    public static inspectSetting(setting: string, id?: string): any {
+        return this.getConfig(id).inspect(setting);
+    }
+
+    /**
+     * Set the value for a configuration setting
      * @param setting    The configuration setting
      * @param value      The new value
      * @param id         The configuration setting parent
      */
-    public static setSetting(setting: string, value: any, id?: string): Thenable<void> {
-        return this.getConfig(id).update(setting, value, ConfigurationTarget.Global);
+    public static setSetting(setting: string, value: any, id?: string): Thenable<any> {
+        const config = this.getConfig(id);
+        const inspect = this.inspectSetting(setting);
+        const { defaultValue, globalValue, workspaceValue, workspaceFolderValue } = inspect;
+
+        if (workspaceFolderValue !== undefined) {
+            if (value === workspaceFolderValue) {
+                return Promise.resolve();
+            }
+
+            return config.update(setting, value, ConfigurationTarget.WorkspaceFolder);
+        }
+
+        if (workspaceValue !== undefined) {
+            if (value === workspaceValue) {
+                return Promise.resolve();
+            }
+
+            return config.update(setting, value, ConfigurationTarget.Workspace);
+        }
+
+        if (globalValue === value || (globalValue === undefined && value === defaultValue)) {
+            return Promise.resolve();
+        }
+
+        return config.update(setting, value, ConfigurationTarget.Global);
     }
 
     /**
-     * Get the configuration
-     * @param id    The configuration setting parent
+     * Get the storage
      */
-    private static getConfig(id?: string): WorkspaceConfiguration {
-        return workspace.getConfiguration(id ? id : Settings.ID);
+    private static getStorage(): Memento {
+        return this._context.globalState;
     }
 
     /**
@@ -111,45 +137,39 @@ export class SplConfig {
     }
 
     /**
-     * Get the storage
-     */
-    private static getStorage(): Memento {
-        return this._context.globalState;
-    }
-
-    /**
      * Create an event listener to detect when the user modifies configuration settings
      */
     private static watchSettings(): void {
         this._context.subscriptions.push(workspace.onDidChangeConfiguration((event: ConfigurationChangeEvent) => {
-            if (event.affectsConfiguration(Settings.ID) || event.affectsConfiguration(Settings.SPL_ID)) {
-                // Send all settings to the language server
-                this._client.sendNotification(DidChangeConfigurationNotification.type, {
-                    settings: {
-                        oldValue: this.getOldSettings(),
-                        newValue: this.getCurrentSettings()
-                    }
-                });
+            if (!event.affectsConfiguration(Constants.EXTENSION_NAME) && !event.affectsConfiguration(Constants.SPL)) {
+                return;
+            }
 
-                let changedSettingId = Settings.ID;
-                let changedSetting = null;
-                if (event.affectsConfiguration(`${Settings.ID}.${Settings.TOOLKITS_PATH}`)) {
-                    changedSetting = Settings.TOOLKITS_PATH;
-                } else if (event.affectsConfiguration(`${Settings.ID}.${Settings.STREAMING_ANALYTICS_CREDENTIALS}`)) {
-                    changedSetting = Settings.STREAMING_ANALYTICS_CREDENTIALS;
-                } else if (event.affectsConfiguration(`${Settings.SPL_ID}.${Settings.TRACE_SERVER}`)) {
-                    changedSettingId = Settings.SPL_ID;
-                    changedSetting = Settings.TRACE_SERVER;
-                }
+            let changedSettingId = Constants.EXTENSION_NAME;
+            let changedSettingName = null;
+            if (event.affectsConfiguration(`${Constants.EXTENSION_NAME}.${Settings.ICP4D_URL}`)) {
+                changedSettingName = Settings.ICP4D_URL;
+            } else if (event.affectsConfiguration(`${Constants.EXTENSION_NAME}.${Settings.STREAMING_ANALYTICS_CREDENTIALS}`)) {
+                changedSettingName = Settings.STREAMING_ANALYTICS_CREDENTIALS;
+            } else if (event.affectsConfiguration(`${Constants.EXTENSION_NAME}.${Settings.TARGET_VERSION}`)) {
+                changedSettingName = Settings.TARGET_VERSION;
+            } else if (event.affectsConfiguration(`${Constants.EXTENSION_NAME}.${Settings.TOOLKITS_PATH}`)) {
+                changedSettingName = Settings.TOOLKITS_PATH;
+            } else if (event.affectsConfiguration(`${Constants.EXTENSION_NAME}.${Settings.USE_ICP4D_MASTER_NODE_HOST}`)) {
+                changedSettingName = Settings.USE_ICP4D_MASTER_NODE_HOST;
+            } else if (event.affectsConfiguration(`${Constants.SPL}.${Settings.TRACE_SERVER}`)) {
+                changedSettingId = Constants.SPL;
+                changedSettingName = Settings.TRACE_SERVER;
+            }
 
-                if (changedSetting) {
-                    const oldValue = SplConfig.getState(changedSetting) === '' ? '\"\"' : SplConfig.getState(changedSetting);
-                    const newValue = SplConfig.getSetting(changedSetting, changedSettingId) === '' ? '\"\"' : SplConfig.getSetting(changedSetting, changedSettingId);
-                    const formatValue = (value: any) => typeof value === 'object' ? `\n${JSON.stringify(value, null, 4)}` : ` ${value}`;
-                    const whitespaceValue = typeof oldValue === 'object' ? '\n\n' : `\n`;
-                    SplLogger.debug(null, `The ${changedSettingId}.${changedSetting} configuration setting was changed:\n\nPrevious value:${formatValue(oldValue)}${whitespaceValue}Current value:${formatValue(newValue)}`);
-                    SplConfig.setState(changedSetting, newValue);
-                }
+            if (changedSettingName) {
+                const changedSettingFull = `${changedSettingId}.${changedSettingName}`;
+                const oldValue = SplConfig.getState(changedSettingFull) === '' ? '\"\"' : SplConfig.getState(changedSettingFull);
+                const newValue = SplConfig.getSetting(changedSettingName, changedSettingId) === '' ? '\"\"' : SplConfig.getSetting(changedSettingName, changedSettingId);
+                const formatValue = (value: any) => typeof value === 'object' ? `\n${JSON.stringify(value, null, 4)}` : ` ${value}`;
+                const whitespaceValue = typeof oldValue === 'object' ? '\n\n' : `\n`;
+                SplLogger.info(null, `The ${changedSettingFull} configuration setting was changed:\nPrevious value:${formatValue(oldValue)}${whitespaceValue}Current value: ${formatValue(newValue)}`);
+                SplConfig.setState(changedSettingFull, newValue);
             }
         }));
     }

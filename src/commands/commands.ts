@@ -1,12 +1,57 @@
-'use strict';
+import { Constants } from '../utils';
 
 export namespace Commands {
-    export const ID = 'ibm-streams';
+    export const ID = Constants.EXTENSION_NAME;
+
+    /**
+     * Create an IBM Streams Application from Template
+     */
+    export const CREATE_APPLICATION = `${ID}.createApplication`;
+
+    /**
+     * Open IBM Cloud Dashboard
+     */
+    export const OPEN_CLOUD_DASHBOARD = `${ID}.openCloudDashboard`;
+
+    /**
+     * Open IBM Cloud Private for Data Dashboard
+     */
+    export const OPEN_ICP4D_DASHBOARD = `${ID}.openIcp4dDashboard`;
+
+    /**
+     * Open IBM Streaming Analytics Console
+     */
+    export const OPEN_STREAMING_ANALYTICS_CONSOLE = `${ID}.openStreamingAnalyticsConsole`;
+
+    /**
+     * Open IBM Streams Console
+     */
+    export const OPEN_STREAMS_CONSOLE = `${ID}.openStreamsConsole`;
+
+    /**
+     * Refresh IBM Streams toolkits
+     */
+    export const REFRESH_TOOLKITS = `${ID}.refreshToolkits`;
+
+    /**
+     * Remove Build Output Channels
+     */
+    export const REMOVE_OUTPUT_CHANNELS = `${ID}.removeOutputChannels`;
+
+    /**
+     * Set IBM Cloud Private for Data URL
+     */
+    export const SET_ICP4D_URL = `${ID}.setIcp4dUrl`;
 
     /**
      * Set IBM Streaming Analytics Service Credentials
      */
     export const SET_SERVICE_CREDENTIALS = `${ID}.setServiceCredentials`;
+
+    /**
+     * Set IBM Streams Target Version
+     */
+    export const SET_TARGET_VERSION = `${ID}.setTargetVersion`;
 
     /**
      * Set IBM Streams Toolkits Path
@@ -16,12 +61,12 @@ export namespace Commands {
     /**
      * Build
      */
-    export const BUILD_DOWNLOAD = `${ID}.buildDownload`;
+    export const BUILD_APP_DOWNLOAD = `${ID}.buildAppDownload`;
 
     /**
      * Build and Submit Job
      */
-    export const BUILD_SUBMIT = `${ID}.buildSubmit`;
+    export const BUILD_APP_SUBMIT = `${ID}.buildAppSubmit`;
 
     /**
      * Build
@@ -39,22 +84,7 @@ export namespace Commands {
     export const SUBMIT = `${ID}.submit`;
 
     /**
-     * Create an IBM Streams Application from Template
+     * Show ICP4D Settings Webview Panel
      */
-    export const CREATE_APPLICATION = `${ID}.createApplication`;
-
-    /**
-     * Open IBM Streaming Analytics Console
-     */
-    export const OPEN_STREAMING_ANALYTICS_CONSOLE = `${ID}.openStreamingAnalyticsConsole`;
-
-    /**
-     * Open IBM Cloud Dashboard
-     */
-    export const OPEN_CLOUD_DASHBOARD = `${ID}.openCloudDashboard`;
-
-    /**
-     * Remove Build Output Channels
-     */
-    export const REMOVE_OUTPUT_CHANNELS = `${ID}.removeOutputChannels`;
+    export const SHOW_ICP4D_SETTINGS_WEBVIEW_PANEL = `${ID}.showICP4DSettingsWebviewPanel`;
 }

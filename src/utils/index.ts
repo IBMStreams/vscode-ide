@@ -1,16 +1,13 @@
-'use strict';
-
 import { ExtensionContext } from 'vscode';
 import { LanguageClient } from 'vscode-languageclient';
-
 import { SplConfig, SplLinter, SplLogger } from '.';
 
-export * from './build';
 export * from './config';
+export * from './constants';
+export * from './keychain';
 export * from './linter';
 export * from './logger';
 export * from './settings';
-export * from './spl-build-common';
 
 /**
  * Initialize utilities
@@ -18,7 +15,7 @@ export * from './spl-build-common';
  * @param client     The language client
  */
 export function initialize(context: ExtensionContext, client: LanguageClient) {
-    SplConfig.configure(context, client);
+    SplConfig.configure(context);
     SplLinter.configure(context);
-    SplLogger.configure(context);
+    SplLogger.configure();
 }

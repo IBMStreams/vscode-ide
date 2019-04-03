@@ -1,8 +1,8 @@
 'use strict';
 
-import * as _ from 'underscore';
-
-import { languages, window, workspace, Diagnostic, DiagnosticChangeEvent, DiagnosticCollection, DiagnosticSeverity, ExtensionContext, Range, TextDocument, TextDocumentChangeEvent, TextEditor, TextEditorDecorationType, Uri } from 'vscode';
+import * as _ from 'lodash';
+import * as path from 'path';
+import { Diagnostic, DiagnosticChangeEvent, DiagnosticCollection, DiagnosticSeverity, ExtensionContext, languages, Range, TextDocument, TextDocumentChangeEvent, TextEditor, TextEditorDecorationType, Uri, window, workspace } from 'vscode';
 
 export class SplLinter {
     private static _diagnosticCollection: DiagnosticCollection;
@@ -36,16 +36,16 @@ export class SplLinter {
      * @param appRoot     The application root path
      * @param messages    The build messages to use for matching
      */
-    public static lintFiles(regExp: RegExp, appRoot: string, messages: Array<string>): void {
+    public static lintFiles(regExp: RegExp, appRoot: string, messages: string[]): void {
         const diagnosticMap = new Map<Uri, Diagnostic[]>();
 
         const messageObjs = this.parseMessages(regExp, messages);
         _.each(messageObjs, (obj: any) => {
             const document = _.find(workspace.textDocuments, (doc: TextDocument) => {
-                return doc.fileName.includes(obj.path);
+                return doc.fileName === `${appRoot}${path.sep}${obj.path}`;
             });
-            let diagnostics = [];
             if (document) {
+                let diagnostics = [];
                 if (!_.some(Array.from(diagnosticMap.keys()), (uri: Uri) => uri.fsPath === document.uri.fsPath)) {
                     diagnosticMap.set(document.uri, diagnostics);
                 } else {
@@ -53,7 +53,7 @@ export class SplLinter {
                 }
 
                 let severity = null;
-                switch(obj.type) {
+                switch (obj.type) {
                     case 'ERROR':
                         severity = DiagnosticSeverity.Error;
                         break;
@@ -66,7 +66,7 @@ export class SplLinter {
                 }
 
                 const diagnostic: Diagnostic = {
-                    severity: severity,
+                    severity,
                     range: new Range(obj.line - 1, obj.column - 1, obj.line - 1, obj.column - 1),
                     message: `${obj.code} ${obj.message}`,
                     source: 'IBM Streams'
@@ -75,7 +75,7 @@ export class SplLinter {
             }
         });
 
-        for (var uri of diagnosticMap.keys()) {
+        for (const uri of diagnosticMap.keys()) {
             this._diagnosticCollection.delete(uri);
             this._diagnosticCollection.set(uri, diagnosticMap.get(uri));
         }
@@ -86,16 +86,16 @@ export class SplLinter {
      * @param regExp      The regular expression to use for matching
      * @param messages    The build messages to use for matching
      */
-    private static parseMessages(regExp: RegExp, messages: Array<string>): Array<object> {
+    private static parseMessages(regExp: RegExp, messages: string[]): object[] {
         let match = null;
-        let messageObjs = [];
+        const messageObjs = [];
         _.each(messages, (message: string) => {
             match = regExp.exec(message);
             if (match) {
                 messageObjs.push({
                     path: match[1],
-                    line: parseInt(match[2]),
-                    column: parseInt(match[3]),
+                    line: parseInt(match[2], 10),
+                    column: parseInt(match[3], 10),
                     code: match[4],
                     message: match[5],
                     type: match[6]
@@ -146,7 +146,7 @@ export class SplLinter {
                 const uri = this._activeEditor.document.uri;
                 const eventUris = event.uris;
                 if (eventUris.length) {
-                    const eventUriFsPaths = eventUris.map(uri => uri.fsPath);
+                    const eventUriFsPaths = eventUris.map((eventUri: Uri) => eventUri.fsPath);
                     if (eventUriFsPaths.indexOf(uri.fsPath) > -1) {
                         this.updateDecorations();
                     }
@@ -171,37 +171,5 @@ export class SplLinter {
             .map((diagnostic: Diagnostic) => diagnostic.range);
 
         this._activeEditor.setDecorations(this._errorDecorationType, getDiagnosticRanges(DiagnosticSeverity.Error));
-    }
-}
-
-export class LintHandler {
-    private	_msgRegex = null;
-    private _appRoot = null;
-
-    /**
-     * @param msgRegex    The regular expression to use for matching
-     * @param appRoot     The application root path
-     */
-    constructor(msgRegex: RegExp, appRoot: string) {
-        this._msgRegex = msgRegex;
-        this._appRoot = appRoot;
-    }
-
-    /**
-     * Parse a build response and lint source file(s)
-     * @param response    The build response
-     */
-    public lint(response: any): void {
-        if (!response) {
-            return;
-        }
-
-        if (response.output && Array.isArray(response.output)) {
-            const messages = response.output
-                .map((message: any) => message.message_text)
-                .filter((message: string) => message.match(this._msgRegex));
-
-            SplLinter.lintFiles(this._msgRegex, this._appRoot, messages);
-        }
     }
 }

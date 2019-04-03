@@ -1,4 +1,5 @@
 .gitignore
-.gradle/**
-build/**
-*.gradle
+.vscode
+tsconfig.json
+webpack.config.json
+toolkitsCache/
