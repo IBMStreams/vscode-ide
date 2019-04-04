@@ -16,7 +16,9 @@ import { SplBuilder } from './v4/spl-build-common';
 import {
   executeCallbackFn,
   newBuild,
+  packageActivated,
   queueAction,
+  refreshToolkits,
   resetAuth,
   setBuildOriginator,
   setFormDataField,
@@ -151,7 +153,7 @@ export class SplBuild {
             }
         }));
 
-        getStore().dispatch({ type: 'PACKAGE_ACTIVATED' });
+        getStore().dispatch(packageActivated());
     }
 
     /**
@@ -535,6 +537,29 @@ export class SplBuild {
             } else {
                 this.handleIcp4dUrlNotSet(handleOpenIcp4dDashboard);
             }
+        }
+    }
+
+    /**
+     * Refresh toolkits on the LSP server
+     */
+    public static refreshLspToolkits() {
+        if (this._apiVersion === Settings.TARGET_VERSION_OPTION.V5) {
+            const handleRefresh = () => {
+                if (!StateSelector.hasAuthenticatedToStreamsInstance(getStore().getState()) || !StateSelector.hasAuthenticatedToStreamsInstance(getStore().getState())) {
+                    // Authenticating automatically refreshes the toolkits
+                    this.showIcp4dAuthPanel();
+                } else {
+                    getStore().dispatch(refreshToolkits());
+                }
+            };
+            if (StateSelector.getIcp4dUrl(getStore().getState())) {
+                handleRefresh();
+            } else {
+                this.handleIcp4dUrlNotSet(handleRefresh);
+            }
+        } else {
+            StreamsToolkitsUtils.refreshLspToolkits(getStore().getState(), this._sendLspNotificationHandler);
         }
     }
 

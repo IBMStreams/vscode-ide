@@ -62,15 +62,14 @@ export class SetConfigSettingCommand implements IBaseCommand {
                 return window.showQuickPick(options, {
                     ignoreFocusOut: true,
                     placeHolder
-                }).then((selection: string) => {
+                }).then(async (selection: string) => {
                     if (typeof selection === 'string') {
                         try {
-                            SplConfig.setSetting(config, selection).then(() => {
-                                if (callbackFn) {
-                                    const setting = SplConfig.getSetting(config);
-                                    callbackFn(setting);
-                                }
-                            });
+                            await SplConfig.setSetting(config, selection);
+                            if (callbackFn) {
+                                const setting = SplConfig.getSetting(config);
+                                callbackFn(setting);
+                            }
                         } catch (error) {
                             throw error;
                         }
@@ -81,7 +80,7 @@ export class SetConfigSettingCommand implements IBaseCommand {
                     ignoreFocusOut: true,
                     prompt,
                     placeHolder
-                }).then((input: string) => {
+                }).then(async (input: string) => {
                     if (typeof input === 'string') {
                         try {
                             input = input.trim();
@@ -91,12 +90,11 @@ export class SetConfigSettingCommand implements IBaseCommand {
                             if (input === 'null') {
                                 input = null;
                             }
-                            SplConfig.setSetting(config, input).then(() => {
-                                if (callbackFn) {
-                                    const setting = SplConfig.getSetting(config);
-                                    callbackFn(setting);
-                                }
-                            });
+                            await SplConfig.setSetting(config, input);
+                            if (callbackFn) {
+                                const setting = SplConfig.getSetting(config);
+                                callbackFn(setting);
+                            }
                         } catch (error) {
                             throw error;
                         }

@@ -67,14 +67,6 @@ const streamsV5Build = (state = [], action) => {
           [action.key]: action.value
         }
       };
-    case actions.LOGIN_FORM_INITIALIZED:
-      return {
-        ...state,
-        formData: {
-          ...state.formData,
-          loginFormInitialized: true
-        }
-      };
     case actions.QUEUE_ACTION:
       return {
         ...state,
@@ -141,7 +133,8 @@ const streamsV5Build = (state = [], action) => {
         'icp4dAuthError',
         'streamsInstances',
         'selectedInstance',
-        'streamsAuthError'
+        'streamsAuthError',
+        'username'
       ]);
     case actions.NEW_BUILD:
       return {

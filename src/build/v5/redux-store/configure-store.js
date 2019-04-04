@@ -10,7 +10,7 @@ const epicMiddleware = createEpicMiddleware();
 
 let store;
 
-const composeEnhancers = composeWithDevTools ? composeWithDevTools({ hostname: 'localhost', port: 8000, realtime: true }) : compose;
+const composeEnhancers = inDebugMode() && composeWithDevTools ? composeWithDevTools({ hostname: 'localhost', port: 8000, realtime: true }) : compose;
 
 const addLoggingToDispatch = (s) => {
   const rawDispatch = s.dispatch;

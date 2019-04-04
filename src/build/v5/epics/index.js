@@ -225,7 +225,7 @@ const getBuildArtifactsFulfilledEpic = (action, state) => action.pipe(
     const { buildId } = a;
     StatusUtils.downloadOrSubmit(s, buildId);
   }),
-  map(() => ({ type: 'dummy_action' }))
+  map(() => ({ type: actions.POST_GET_BUILD_ARTIFACTS_FULFILLED }))
 );
 
 const downloadArtifactsEpic = (action, state) => action.pipe(
@@ -254,7 +254,7 @@ const downloadArtifactsEpic = (action, state) => action.pipe(
           }
         })
       )),
-      map(() => ({ type: 'BUILD_ARTIFACT_DOWNLOADED' })),
+      map(() => ({ type: actions.POST_DOWNLOAD_ARTIFACTS })),
       catchError(error => of(handleError(a, error)))
     );
   })
@@ -278,7 +278,7 @@ const submitApplicationsEpic = (action, state) => action.pipe(
           StatusUtils.jobSubmitted(s, submitInfo, buildId);
         })
       )),
-      map(() => ({ type: 'APPLICATION_SUBMITTED' })),
+      map(() => ({ type: actions.POST_SUBMIT_APPLICATIONS })),
       catchError(error => of(handleError(a, error)))
     );
   })
@@ -300,7 +300,7 @@ const submitApplicationsFromBundleFilesEpic = (action, state) => action.pipe(
               const submitInfo = ResponseSelector.getSubmitInfo(submitResponse);
               StatusUtils.jobSubmitted(s, submitInfo);
             }),
-            map(() => ({ type: 'APPLICATION_SUBMITTED' }))
+            map(() => ({ type: actions.POST_SUBMIT_APPLICATIONS_FROM_BUNDLE_FILES }))
           );
         })
       )),
@@ -315,7 +315,7 @@ const openStreamsConsoleEpic = (action, state) => action.pipe(
   tap(([a, s]) => {
     MessageHandlerRegistry.openUrl(StateSelector.getStreamsConsoleUrl(s));
   }),
-  map(() => ({ type: 'STREAMS_CONSOLE_OPENED' }))
+  map(() => ({ type: actions.POST_OPEN_STREAMS_CONSOLE }))
 );
 
 const icp4dAuthEpic = (action, state) => action.pipe(
@@ -361,12 +361,15 @@ const streamsAuthEpic = (action, state) => action.pipe(
     mergeMap(authTokenResponse => {
       const statusCode = ResponseSelector.getStatusCode(authTokenResponse);
       if (statusCode === 200) {
+        const queuedActionObservable = StateSelector.getQueuedAction(s) ? merge(
+          of(StateSelector.getQueuedAction(s)), // if there was a queued action, run it now...
+          of(clearQueuedAction())
+        ) : of();
         return merge(
           of(setStreamsAuthToken(ResponseSelector.getStreamsAuthToken(authTokenResponse))),
           of(setStreamsAuthError(false)),
           of(refreshToolkits()),
-          of(StateSelector.getQueuedAction(s)), // if there was a queued action, run it now...
-          of(clearQueuedAction()),
+          queuedActionObservable,
           authDelayObservable().pipe(
             tap(() => {
               console.log('reauthenticating to streams instance');
@@ -412,7 +415,7 @@ const refreshToolkitsEpic = (action, state) => action.pipe(
       defaultIfEmpty('empty')
     ))),
     tap(() => StreamsToolkitUtils.refreshLspToolkits(s, MessageHandlerRegistry.sendLspNotification)),
-    map(() => ({ type: 'TOOLKITS_CACHED' })),
+    map(() => ({ type: actions.POST_REFRESH_TOOLKITS })),
     tap(() => MessageHandlerRegistry.getDefault().handleSuccess('Toolkit indexes cached successfully', { notificationAutoDismiss: true })),
     catchError(error => of(handleError(a, error)))
   ))
@@ -430,7 +433,7 @@ const packageActivatedEpic = (action, state) => action.pipe(
         return setFormDataField('password', password);
       }
     }
-    return { type: 'DUMMY_PACKAGE_ACTIVATED_END' };
+    return { type: actions.POST_PACKAGE_ACTIVATED };
   })
 );
 
@@ -445,7 +448,7 @@ const errorHandlingEpic = (action, state) => action.pipe(
       MessageHandlerRegistry.getDefault().handleError(a.error.message, { detail: `${a.sourceAction.type}\n\n${a.error.stack}` });
     }
   }),
-  map(() => ({ type: 'ERROR_HANDLED' }))
+  map(() => ({ type: actions.POST_ERROR }))
 );
 
 const executeCallbackEpic = (action, state) => action.pipe(
@@ -457,7 +460,7 @@ const executeCallbackEpic = (action, state) => action.pipe(
       queuedAction.callbackFn();
     }
   }),
-  map(() => ({ type: 'CALLBACK_EXECUTED' }))
+  map(() => ({ type: actions.POST_CALLBACK }))
 );
 
 const rootEpic = combineEpics(
