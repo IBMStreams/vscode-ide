@@ -8,27 +8,29 @@ import * as packageJson from '../../package.json';
 import { Commands } from '../commands';
 import { SplLanguageClient } from '../languageClient';
 import { Constants, inDebugMode, Keychain, Settings, SplConfig, SplLogger } from '../utils';
+import { ICP4DWebviewPanel } from '../webviews';
 import LintHandlerRegistry from './lint-handler-registry';
 import LintHandler from './LintHandler';
 import MessageHandlerRegistry from './message-handler-registry';
 import MessageHandler from './MessageHandler';
 import { SplBuilder } from './v4/spl-build-common';
 import {
-  executeCallbackFn,
-  newBuild,
-  packageActivated,
-  queueAction,
-  refreshToolkits,
-  resetAuth,
-  setBuildOriginator,
-  setFormDataField,
-  setIcp4dUrl,
-  setRememberPassword,
-  setToolkitsCacheDir,
-  setToolkitsPathSetting,
-  setUseIcp4dMasterNodeHost,
-  setUsername,
-  submitApplicationsFromBundleFiles
+    checkIcp4dUrlExists,
+    executeCallbackFn,
+    newBuild,
+    packageActivated,
+    queueAction,
+    refreshToolkits,
+    resetAuth,
+    setBuildOriginator,
+    setFormDataField,
+    setIcp4dUrl,
+    setRememberPassword,
+    setToolkitsCacheDir,
+    setToolkitsPathSetting,
+    setUseIcp4dMasterNodeHost,
+    setUsername,
+    submitApplicationsFromBundleFiles
 } from './v5/actions';
 import getStore from './v5/redux-store/configure-store';
 import SourceArchiveUtils from './v5/util/source-archive-utils';
@@ -118,6 +120,7 @@ export class SplBuild {
             if (event.affectsConfiguration(`${Constants.EXTENSION_NAME}.${Settings.ICP4D_URL}`)) {
                 this.updateIcp4dUrl(SplConfig.getSetting(Settings.ICP4D_URL));
                 getStore().dispatch(resetAuth());
+                ICP4DWebviewPanel.close();
             }
 
             if (event.affectsConfiguration(`${Constants.EXTENSION_NAME}.${Settings.STREAMING_ANALYTICS_CREDENTIALS}`)) {
@@ -166,7 +169,7 @@ export class SplBuild {
             const workspaceFolders = _.map(workspace.workspaceFolders, (folder: WorkspaceFolder) => folder.uri.fsPath);
             const appRoot = SourceArchiveUtils.getApplicationRoot(workspaceFolders, filePath);
             const { namespace, mainComposites }: any = StreamsUtils.getFqnMainComposites(filePath);
-            const compositeToBuild = await this.getCompositeToBuild(appRoot, namespace, mainComposites);
+            const compositeToBuild = await this.getCompositeToBuild(namespace, mainComposites);
 
             let lintHandler = LintHandlerRegistry.get(appRoot);
             if (!lintHandler) {
@@ -188,12 +191,8 @@ export class SplBuild {
             SplLogger.debug(outputChannel, `Selected: ${filePath}`);
 
             if (this._apiVersion === Settings.TARGET_VERSION_OPTION.V5) {
-                const handleBuildAppV5 = () => this.buildAppV5(appRoot, compositeToBuild, action);
-                if (StateSelector.getIcp4dUrl(getStore().getState())) {
-                    handleBuildAppV5();
-                } else {
-                    this.handleIcp4dUrlNotSet(handleBuildAppV5);
-                }
+                const build = () => this.buildAppV5(appRoot, compositeToBuild, action);
+                this.handleV5Action(build);
             } else {
                 this.buildAppV4(appRoot, compositeToBuild, action, messageHandler);
             }
@@ -283,12 +282,8 @@ export class SplBuild {
             SplLogger.debug(outputChannel, `Selected: ${filePath}`);
 
             if (this._apiVersion === Settings.TARGET_VERSION_OPTION.V5) {
-                const handleBuildMakeV5 = () => this.buildMakeV5(appRoot, filePath, action);
-                if (StateSelector.getIcp4dUrl(getStore().getState())) {
-                    handleBuildMakeV5();
-                  } else {
-                    this.handleIcp4dUrlNotSet(handleBuildMakeV5);
-                  }
+                const build = () => this.buildMakeV5(appRoot, filePath, action);
+                this.handleV5Action(build);
             } else {
                 this.buildMakeV4(appRoot, filePath, action, messageHandler);
             }
@@ -355,12 +350,8 @@ export class SplBuild {
     public static async submit(filePaths: string[]): Promise<void> {
         if (filePaths) {
             if (this._apiVersion === Settings.TARGET_VERSION_OPTION.V5) {
-                const handleSubmitV5 = () => this.submitV5(filePaths);
-                if (StateSelector.getIcp4dUrl(getStore().getState())) {
-                    handleSubmitV5();
-                } else {
-                    this.handleIcp4dUrlNotSet(handleSubmitV5);
-                }
+                const submit = () => this.submitV5(filePaths);
+                this.handleV5Action(submit);
             } else {
                 this.submitV4(filePaths[0]);
             }
@@ -479,7 +470,7 @@ export class SplBuild {
      */
     public static openStreamsConsole() {
         if (this._apiVersion === Settings.TARGET_VERSION_OPTION.V5) {
-            const handleOpenStreamsConsole = () => {
+            const openConsole = () => {
                 try {
                     const openUrl = () => {
                         const consoleUrl = StateSelector.getStreamsConsoleUrl(getStore().getState());
@@ -502,12 +493,7 @@ export class SplBuild {
                     }
                 }
             };
-
-            if (StateSelector.getIcp4dUrl(getStore().getState())) {
-                handleOpenStreamsConsole();
-            } else {
-                this.handleIcp4dUrlNotSet(handleOpenStreamsConsole);
-            }
+            this.handleV5Action(openConsole);
         }
     }
 
@@ -516,7 +502,7 @@ export class SplBuild {
      */
     public static openIcp4dDashboard() {
         if (this._apiVersion === Settings.TARGET_VERSION_OPTION.V5) {
-            const handleOpenIcp4dDashboard = () => {
+            const openDashboard = () => {
                 try {
                     const icp4dUrl = StateSelector.getIcp4dUrl(getStore().getState());
                     const icp4dDashboard = `${icp4dUrl}/zen/#/homepage`;
@@ -531,12 +517,7 @@ export class SplBuild {
                     }
                 }
             };
-
-            if (StateSelector.getIcp4dUrl(getStore().getState())) {
-                handleOpenIcp4dDashboard();
-            } else {
-                this.handleIcp4dUrlNotSet(handleOpenIcp4dDashboard);
-            }
+            this.handleV5Action(openDashboard);
         }
     }
 
@@ -545,7 +526,7 @@ export class SplBuild {
      */
     public static refreshLspToolkits() {
         if (this._apiVersion === Settings.TARGET_VERSION_OPTION.V5) {
-            const handleRefresh = () => {
+            const refresh = () => {
                 if (!StateSelector.hasAuthenticatedToStreamsInstance(getStore().getState()) || !StateSelector.hasAuthenticatedToStreamsInstance(getStore().getState())) {
                     // Authenticating automatically refreshes the toolkits
                     this.showIcp4dAuthPanel();
@@ -553,11 +534,7 @@ export class SplBuild {
                     getStore().dispatch(refreshToolkits());
                 }
             };
-            if (StateSelector.getIcp4dUrl(getStore().getState())) {
-                handleRefresh();
-            } else {
-                this.handleIcp4dUrlNotSet(handleRefresh);
-            }
+            this.handleV5Action(refresh);
         } else {
             StreamsToolkitsUtils.refreshLspToolkits(getStore().getState(), this._sendLspNotificationHandler);
         }
@@ -566,11 +543,10 @@ export class SplBuild {
     /**
      * Get the main composite to build. Prompt the user to select if
      * there are multiple composites defined and there is no Makefile.
-     * @param appRoot       The application root path
      * @param namespace     The defined namespace
      * @param composites    The defined composites
      */
-    private static async getCompositeToBuild(appRoot: string, namespace: string, composites: string[]): Promise<string> {
+    private static async getCompositeToBuild(namespace: string, composites: string[]): Promise<string> {
         if (composites.length === 1) {
             if (namespace === '') {
                return composites[0];
@@ -596,6 +572,21 @@ export class SplBuild {
     }
 
     /**
+     * Handle a build or submission
+     * @param callbackFn    The callback function to execute
+     */
+    private static async handleV5Action(callbackFn: () => void) {
+        const icp4dUrl = StateSelector.getIcp4dUrl(getStore().getState());
+        if (icp4dUrl) {
+            const successFn = callbackFn;
+            const errorFn = () => this.handleIcp4dUrlNotSet(this.handleV5Action.bind(this, callbackFn));
+            getStore().dispatch(checkIcp4dUrlExists(successFn, errorFn));
+        } else {
+            this.handleIcp4dUrlNotSet(this.handleV5Action.bind(this, callbackFn));
+        }
+    }
+
+    /**
      * Update ICP4D URL in the Redux store
      * @param urlString    The ICP4D URL
      */
@@ -611,6 +602,7 @@ export class SplBuild {
 
     /**
      * Handle the scenario where the IBM Cloud Private for Data URL is not specified
+     * @param callbackFn    The callback function to execute
      */
     private static handleIcp4dUrlNotSet(callbackFn: () => void) {
         MessageHandlerRegistry.getDefault().handleIcp4dUrlNotSet(callbackFn);

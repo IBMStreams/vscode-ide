@@ -318,6 +318,19 @@ const openStreamsConsoleEpic = (action, state) => action.pipe(
   map(() => ({ type: actions.POST_OPEN_STREAMS_CONSOLE }))
 );
 
+const icp4dUrlExistsEpic = (action, state) => action.pipe(
+  ofType(actions.CHECK_ICP4D_URL_EXISTS),
+  withLatestFrom(state),
+  mergeMap(([a, s]) => StreamsRestUtils.icp4d.icp4dUrlExists(s).pipe(
+    tap((response) => a.successFn()),
+    catchError(error => {
+      a.errorFn();
+      return of(handleError(a, error));
+    })
+  )),
+  map(() => ({ type: actions.POST_CHECK_ICP4D_URL_EXISTS }))
+);
+
 const icp4dAuthEpic = (action, state) => action.pipe(
   ofType(actions.AUTHENTICATE_ICP4D),
   withLatestFrom(state),
@@ -482,6 +495,7 @@ const rootEpic = combineEpics(
   openStreamsConsoleEpic,
 
   instanceSelectedEpic,
+  icp4dUrlExistsEpic,
   icp4dAuthEpic,
   streamsAuthEpic,
   getStreamsInstancesEpic,

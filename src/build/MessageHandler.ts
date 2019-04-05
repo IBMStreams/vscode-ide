@@ -177,11 +177,11 @@ export default class MessageHandler {
     }
 
     /**
-     * Handle the scenario where the IBM Cloud Private for Data URL is not specified
+     * Handle the scenario where the IBM Cloud Private for Data URL is not specified, is invalid, or is unreachable
      * @param callbackFn    The callback function to execute after the user sets their URL
      */
     public handleIcp4dUrlNotSet(callbackFn: () => void) {
-        return this.handleError('IBM Cloud Private for Data URL not specified', {
+        return this.handleError('IBM Cloud Private for Data URL is not specified, is invalid, or is unreachable', {
             detail: 'Specify the IBM Cloud Private for Data URL or build with IBM Cloud Streaming Analytics in the extension settings.',
             notificationButtons: [{
                 callbackFn: () => commands.executeCommand(Commands.SET_ICP4D_URL, callbackFn),

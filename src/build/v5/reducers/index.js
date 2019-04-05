@@ -128,7 +128,8 @@ const streamsV5Build = (state = [], action) => {
         streamsAuthError: action.authError
       };
     case actions.RESET_AUTH:
-      return _.omit(state, [
+      const newState = _.omit(state, [
+        'currentLoginStep',
         'icp4dAuthToken',
         'icp4dAuthError',
         'streamsInstances',
@@ -136,6 +137,10 @@ const streamsV5Build = (state = [], action) => {
         'streamsAuthError',
         'username'
       ]);
+      return {
+        ...newState,
+        currentLoginStep: 1
+      };
     case actions.NEW_BUILD:
       return {
         ...state,

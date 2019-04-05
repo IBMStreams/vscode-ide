@@ -330,6 +330,15 @@ function getToolkitIndex(state, toolkitId) {
  *  Helper functions
  */
 
+function icp4dUrlExists(state) {
+  const options = {
+    method: 'HEAD',
+    url: StateSelector.getIcp4dUrl(state),
+    timeout: 2000
+  };
+  return observableRequest(baseRequest, options);
+}
+
 function getIcp4dToken(state, username, password) {
   const options = {
     method: 'POST',
@@ -428,6 +437,7 @@ const toolkit = {
 };
 
 const icp4d = {
+  icp4dUrlExists,
   getServiceInstances,
   getIcp4dToken,
   getStreamsAuthToken
