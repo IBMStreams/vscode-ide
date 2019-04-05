@@ -27,7 +27,7 @@ const baseRequestOptions = {
 const baseRequest = request.defaults(baseRequestOptions);
 
 /**
- *  StreamsRestUtil.build
+ *  StreamsRestUtils.build
  */
 
 function getAll(state) {
@@ -170,7 +170,7 @@ function getSnapshots(state) {
 }
 
 /**
- *  StreamsRestUtil.artifact
+ *  StreamsRestUtils.artifact
  */
 
 function getArtifacts(state, buildId) {
@@ -266,7 +266,7 @@ function submitJob(
 }
 
 /**
- *  StreamsRestUtil.toolkit
+ *  StreamsRestUtils.toolkit
  */
 
 function getToolkits(state) {
@@ -330,7 +330,7 @@ function getToolkitIndex(state, toolkitId) {
  *  Helper functions
  */
 
-function icp4dUrlExists(state) {
+function icp4dHostExists(state) {
   const options = {
     method: 'HEAD',
     url: StateSelector.getIcp4dUrl(state),
@@ -437,17 +437,17 @@ const toolkit = {
 };
 
 const icp4d = {
-  icp4dUrlExists,
+  icp4dHostExists,
   getServiceInstances,
   getIcp4dToken,
   getStreamsAuthToken
 };
 
-const StreamsRestUtil = {
+const StreamsRestUtils = {
   build,
   artifact,
   toolkit,
   icp4d
 };
 
-export default StreamsRestUtil;
+export default StreamsRestUtils;

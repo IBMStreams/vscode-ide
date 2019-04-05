@@ -9,15 +9,11 @@ const MessageId = {
     AUTHENTICATE_ICP4D: 'authenticateIcp4d',
     CLOSE: 'close',
     CURRENT_STEP: 'currentStep',
-    HAS_AUTHENTICATED_ICP4D: 'hasAuthenticatedIcp4d',
-    ICP4D_AUTH_ERROR: 'icp4dAuthError',
     INIT_STEP1: 'initStep1',
     PERSIST_AUTH: 'persistAuth',
-    POST_STREAMS_INSTANCE_AUTH: 'postStreamsInstanceAuth',
     PREVIOUS_STEP: 'previousStep',
     REDUX_STATE_CHANGE: 'reduxStateChange',
     SET_INSTANCE: 'setInstance',
-    STREAMS_INSTANCES: 'streamsInstances',
     UPDATE_FORM_DATA_FIELD: 'updateFormDataField'
 };
 

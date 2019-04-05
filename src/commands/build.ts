@@ -1,8 +1,10 @@
 import { ExtensionContext, Uri, window } from 'vscode';
-import { SplBuild } from '../build';
-import { IBaseCommand } from './base';
-import { Commands } from './commands';
+import { Commands, IBaseCommand } from '.';
+import StreamsBuild from '../build';
 
+/**
+ * Command that allows a user to build or submit Streams application(s)
+ */
 export class BuildCommand implements IBaseCommand {
     private _buildType: number;
 
@@ -31,14 +33,14 @@ export class BuildCommand implements IBaseCommand {
         switch (this.commandName) {
             case Commands.BUILD_APP_DOWNLOAD:
             case Commands.BUILD_APP_SUBMIT:
-                return SplBuild.buildApp(filePaths[0], this._buildType)
+                return StreamsBuild.buildApp(filePaths[0], this._buildType)
                     .catch((error) => { throw error; });
             case Commands.BUILD_MAKE_DOWNLOAD:
             case Commands.BUILD_MAKE_SUBMIT:
-                return SplBuild.buildMake(filePaths[0], this._buildType)
+                return StreamsBuild.buildMake(filePaths[0], this._buildType)
                     .catch((error) => { throw error; });
             case Commands.SUBMIT:
-                return SplBuild.submit(filePaths)
+                return StreamsBuild.submit(filePaths)
                     .catch((error) => { throw error; });
             default:
                 return null;

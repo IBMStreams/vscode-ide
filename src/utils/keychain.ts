@@ -44,7 +44,10 @@ const systemKeychain = getNodeModule<Keytar>('keytar') || failingKeytar;
 
 const SERVICE_ID = 'ibm-icp4d-streams';
 
-export class Keychain {
+/**
+ * Manages credentials in the system keychain
+ */
+export default class Keychain {
     /**
      * Get the stored credentials from the keychain
      * @param username    The username

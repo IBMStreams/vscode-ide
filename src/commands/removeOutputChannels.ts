@@ -1,8 +1,10 @@
 import { ExtensionContext, window } from 'vscode';
-import { SplLogger } from '../utils';
-import { IBaseCommand } from './base';
-import { Commands } from './commands';
+import { Commands, IBaseCommand } from '.';
+import { Constants, Logger } from '../utils';
 
+/**
+ * Command that allows a user to remove build output channels
+ */
 export class RemoveOutputChannelsCommand implements IBaseCommand {
     public commandName: string = Commands.REMOVE_OUTPUT_CHANNELS;
 
@@ -12,12 +14,12 @@ export class RemoveOutputChannelsCommand implements IBaseCommand {
      * @param args       Array of arguments
      */
     public execute(context: ExtensionContext, ...args: any[]): any {
-        SplLogger.info(null, 'Received request to remove build output channels');
-        const channels = SplLogger._outputChannels;
+        Logger.info(null, 'Received request to remove build output channels');
+        const channels = Logger._outputChannels;
         const channelObjs = Object.keys(channels).map((key) => channels[key]);
-        const channelNames = channelObjs.filter((channel) => channel.displayName !== 'IBM Streams').map((channel) => channel.displayName);
+        const channelNames = channelObjs.filter((channel) => channel.displayName !== Constants.IBM_STREAMS).map((channel) => channel.displayName);
         if (!channelNames.length) {
-            SplLogger.info(null, 'There are no channels to remove', true, true);
+            Logger.info(null, 'There are no channels to remove', true, true);
         } else {
             return window.showQuickPick(channelNames, {
                 canPickMany: true,
@@ -33,7 +35,7 @@ export class RemoveOutputChannelsCommand implements IBaseCommand {
                             delete channels[channelName];
                         }
                     });
-                    SplLogger.info(null, `Removed build output channels: ${JSON.stringify(selected)}`);
+                    Logger.info(null, `Removed build output channels: ${JSON.stringify(selected)}`);
                 }
             });
         }

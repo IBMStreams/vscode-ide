@@ -68,6 +68,8 @@ export default class Step2 extends React.Component {
                         <Form.Group controlId='formInstanceSelection'>
                             <Form.Label>Streams instance</Form.Label>
                             <Select
+                                className='react-select-container'
+                                classNamePrefix='react-select'
                                 isSearchable
                                 options={streamsInstances.map(streamsInstance => ({ value: streamsInstance, label: streamsInstance.ServiceInstanceDisplayName }))}
                                 onChange={this.onInstanceSelectionChange}

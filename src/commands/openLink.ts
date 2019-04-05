@@ -1,8 +1,10 @@
 import { ExtensionContext } from 'vscode';
-import { SplBuild } from '../build';
-import { IBaseCommand } from './base';
-import { Commands } from './commands';
+import { Commands, IBaseCommand } from '.';
+import StreamsBuild from '../build';
 
+/**
+ * Command that opens a link in a web browser
+ */
 export class OpenLinkCommand implements IBaseCommand {
     /**
      * Initialize the command
@@ -18,16 +20,16 @@ export class OpenLinkCommand implements IBaseCommand {
     public execute(context: ExtensionContext, ...args: any[]): void {
         switch (this.commandName) {
             case Commands.OPEN_STREAMING_ANALYTICS_CONSOLE:
-                SplBuild.openStreamingAnalyticsConsole();
+                StreamsBuild.openStreamingAnalyticsConsole();
                 break;
             case Commands.OPEN_CLOUD_DASHBOARD:
-                SplBuild.openCloudDashboard();
+                StreamsBuild.openCloudDashboard();
                 break;
             case Commands.OPEN_STREAMS_CONSOLE:
-                SplBuild.openStreamsConsole();
+                StreamsBuild.openStreamsConsole();
                 break;
             case Commands.OPEN_ICP4D_DASHBOARD:
-                SplBuild.openIcp4dDashboard();
+                StreamsBuild.openIcp4dDashboard();
                 break;
         }
     }

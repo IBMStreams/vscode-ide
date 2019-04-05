@@ -2,23 +2,26 @@ import * as _ from 'lodash';
 import * as path from 'path';
 import { commands, OutputChannel, window } from 'vscode';
 import { Commands } from '../commands';
-import { SplLogger } from '../utils';
+import { Logger } from '../utils';
 
 interface INotificationButton {
     label: string;
     callbackFn: () => any;
 }
 
+/**
+ * Handles build and submission messages
+ */
 export default class MessageHandler {
-    private info: { appRoot: string, filePath: string };
-    private timestampRegex: RegExp;
+    private _info: { appRoot: string, filePath: string };
+    private _timestampRegex: RegExp;
 
     /**
      * @param info    Information that identifies the build target
      */
     constructor(info: { appRoot: string, filePath: string }) {
-        this.info = info;
-        this.timestampRegex = /^[0-9][\w-:.]+\s/;
+        this._info = info;
+        this._timestampRegex = /^[0-9][\w-:.]+\s/;
     }
 
     /**
@@ -45,18 +48,18 @@ export default class MessageHandler {
         } = {}
     ): Thenable<void> {
         if (showConsoleMessage) {
-            const outputChannel = this.getOutputChannel();
+            const outputChannel = this._getOutputChannel();
             const detailMessage = this.joinMessageArray(detail);
             const logMessage = `${message}${detailMessage ? `\n${detailMessage}` : ''}`;
             if (logMessage !== '') {
-                SplLogger.info(outputChannel, logMessage, false, true);
+                Logger.info(outputChannel, logMessage, false, true);
             }
         }
 
         if (showNotification && typeof message === 'string') {
-            const buttons = this.processButtons(notificationButtons);
+            const buttons = this._processButtons(notificationButtons);
             return window.showInformationMessage(message, ...buttons).then((selection: string) => {
-                this.handleNotificationButtonSelection(notificationButtons, selection);
+                this._handleNotificationButtonSelection(notificationButtons, selection);
             });
         }
 
@@ -99,22 +102,22 @@ export default class MessageHandler {
         }
 
         if (showConsoleMessage) {
-            const outputChannel = this.getOutputChannel();
+            const outputChannel = this._getOutputChannel();
             const detailMessage = this.joinMessageArray(detail);
             const stackMessage = this.joinMessageArray(stack);
-            SplLogger.error(outputChannel, message);
+            Logger.error(outputChannel, message);
             if (typeof detailMessage === 'string' && detailMessage.length) {
-                SplLogger.error(outputChannel, detailMessage);
+                Logger.error(outputChannel, detailMessage);
             }
             if (typeof stackMessage === 'string' && stackMessage.length) {
-                SplLogger.error(outputChannel, stackMessage);
+                Logger.error(outputChannel, stackMessage);
             }
         }
 
         if (showNotification && typeof message === 'string') {
-            const buttons = this.processButtons(notificationButtons);
+            const buttons = this._processButtons(notificationButtons);
             return window.showErrorMessage(message, ...buttons).then((selection: string) => {
-                this.handleNotificationButtonSelection(notificationButtons, selection);
+                this._handleNotificationButtonSelection(notificationButtons, selection);
             });
         }
 
@@ -145,16 +148,16 @@ export default class MessageHandler {
         } = {}
     ): Thenable<void> {
         if (showConsoleMessage) {
-            const outputChannel = this.getOutputChannel();
+            const outputChannel = this._getOutputChannel();
             const detailMessage = this.joinMessageArray(detail);
             const logMessage = `${message}${detailMessage ? `\n${detailMessage}` : ''}`;
-            SplLogger.success(outputChannel, logMessage);
+            Logger.success(outputChannel, logMessage);
         }
 
         if (showNotification && typeof message === 'string') {
-            const buttons = this.processButtons(notificationButtons);
+            const buttons = this._processButtons(notificationButtons);
             return window.showInformationMessage(message, ...buttons).then((selection: string) => {
-                this.handleNotificationButtonSelection(notificationButtons, selection);
+                this._handleNotificationButtonSelection(notificationButtons, selection);
             });
         }
 
@@ -169,10 +172,10 @@ export default class MessageHandler {
             callbackFn: () => commands.executeCommand(Commands.SET_SERVICE_CREDENTIALS),
             label: 'Set credentials'
         }];
-        const buttons = this.processButtons(notificationButtons);
+        const buttons = this._processButtons(notificationButtons);
         const message = 'Copy and paste your Streaming Analytics service credentials';
         return window.showErrorMessage(message, ...buttons).then((selection: string) => {
-            this.handleNotificationButtonSelection(notificationButtons, selection);
+            this._handleNotificationButtonSelection(notificationButtons, selection);
         });
     }
 
@@ -194,7 +197,7 @@ export default class MessageHandler {
      * Retrieve the button labels to display
      * @param buttons    The notification buttons to display
      */
-    private processButtons(buttons: INotificationButton[]): string[] {
+    private _processButtons(buttons: INotificationButton[]): string[] {
         let labels = [];
         if (Array.isArray(buttons)) {
             labels = _.map(buttons, (obj: INotificationButton) => obj.label);
@@ -209,7 +212,7 @@ export default class MessageHandler {
     public joinMessageArray(msgArray: string | string[]): string {
         if (Array.isArray(msgArray)) {
             return msgArray
-                .map((msg: string) => msg.replace(this.timestampRegex, ''))
+                .map((msg: string) => msg.replace(this._timestampRegex, ''))
                 .join('\n').trimRight();
         }
         return msgArray;
@@ -235,7 +238,7 @@ export default class MessageHandler {
      * @param buttons      The notification buttons to display
      * @param selection    The label of the button that the user clicked on
      */
-    private handleNotificationButtonSelection(buttons: INotificationButton[], selection: string): void {
+    private _handleNotificationButtonSelection(buttons: INotificationButton[], selection: string): void {
         if (selection) {
             const buttonObj = _.find(buttons, (obj: INotificationButton) => obj.label === selection);
             if (buttonObj && buttonObj.callbackFn) {
@@ -247,16 +250,16 @@ export default class MessageHandler {
     /**
      * Retrieve an output channel
      */
-    private getOutputChannel(): OutputChannel {
-        if (!this.info) {
-            return SplLogger._mainOutputChannel;
+    private _getOutputChannel(): OutputChannel {
+        if (!this._info) {
+            return Logger._mainOutputChannel;
         }
 
-        const { appRoot, filePath } = this.info;
-        const channelObj = SplLogger._outputChannels[filePath];
+        const { appRoot, filePath } = this._info;
+        const channelObj = Logger._outputChannels[filePath];
         if (!channelObj) {
             const displayPath = `${path.basename(appRoot)}${path.sep}${path.relative(appRoot, filePath)}`;
-            const outputChannel = SplLogger.registerOutputChannel(filePath, displayPath);
+            const outputChannel = Logger.registerOutputChannel(filePath, displayPath);
             outputChannel.show();
             return outputChannel;
         } else {

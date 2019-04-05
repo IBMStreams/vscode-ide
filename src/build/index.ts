@@ -6,8 +6,8 @@ import { commands, ConfigurationChangeEvent, Disposable, ExtensionContext, Uri, 
 import { DidChangeConfigurationNotification } from 'vscode-languageserver-protocol';
 import * as packageJson from '../../package.json';
 import { Commands } from '../commands';
-import { SplLanguageClient } from '../languageClient';
-import { Constants, inDebugMode, Keychain, Settings, SplConfig, SplLogger } from '../utils';
+import SplLanguageClient from '../languageClient';
+import { Configuration, Constants, inDebugMode, Keychain, Logger, Settings } from '../utils';
 import { ICP4DWebviewPanel } from '../webviews';
 import LintHandlerRegistry from './lint-handler-registry';
 import LintHandler from './LintHandler';
@@ -15,7 +15,7 @@ import MessageHandlerRegistry from './message-handler-registry';
 import MessageHandler from './MessageHandler';
 import { SplBuilder } from './v4/spl-build-common';
 import {
-    checkIcp4dUrlExists,
+    checkIcp4dHostExists,
     executeCallbackFn,
     newBuild,
     packageActivated,
@@ -33,23 +33,12 @@ import {
     submitApplicationsFromBundleFiles
 } from './v5/actions';
 import getStore from './v5/redux-store/configure-store';
-import SourceArchiveUtils from './v5/util/source-archive-utils';
-import StateSelector from './v5/util/state-selectors';
-import StreamsToolkitsUtils from './v5/util/streams-toolkits-utils';
-import StreamsUtils from './v5/util/streams-utils';
+import { SourceArchiveUtils, StateSelector, StreamsToolkitsUtils, StreamsUtils } from './v5/util';
 
-export function initialize() {
-    const username = SplConfig.getState(`${Constants.EXTENSION_NAME}.username`);
-    const rememberPassword = SplConfig.getState(`${Constants.EXTENSION_NAME}.rememberPassword`);
-    if (username) {
-        getStore().dispatch(setUsername(username));
-    }
-    if (rememberPassword) {
-        getStore().dispatch(setRememberPassword(rememberPassword));
-    }
-}
-
-export class SplBuild {
+/**
+ * Handles Streams builds and submissions
+ */
+export default class StreamsBuild {
     private static _context: ExtensionContext;
     private static _streamingAnalyticsCredentials: string;
     private static _toolkitsPath: string;
@@ -66,22 +55,14 @@ export class SplBuild {
     public static configure(context: ExtensionContext): void {
         this._context = context;
 
-        const credentialsSetting = SplConfig.getSetting(Settings.STREAMING_ANALYTICS_CREDENTIALS);
+        const credentialsSetting = Configuration.getSetting(Settings.STREAMING_ANALYTICS_CREDENTIALS);
         this._streamingAnalyticsCredentials = credentialsSetting ? JSON.stringify(credentialsSetting) : null;
 
-        const toolkitsPathSetting = SplConfig.getSetting(Settings.TOOLKITS_PATH);
+        const toolkitsPathSetting = Configuration.getSetting(Settings.TOOLKITS_PATH);
         this._toolkitsPath = toolkitsPathSetting !== '' ? toolkitsPathSetting : null;
         getStore().dispatch(setToolkitsPathSetting(this._toolkitsPath));
 
-        if (!StateSelector.getIcp4dUrl(getStore().getState())) {
-            this.updateIcp4dUrl(SplConfig.getSetting(Settings.ICP4D_URL));
-        }
-
-        if (!StateSelector.getUseIcp4dMasterNodeHost(getStore().getState())) {
-            getStore().dispatch(setUseIcp4dMasterNodeHost(SplConfig.getSetting(Settings.USE_ICP4D_MASTER_NODE_HOST)));
-        }
-
-        this._apiVersion = SplConfig.getSetting(Settings.TARGET_VERSION);
+        this._apiVersion = Configuration.getSetting(Settings.TARGET_VERSION);
 
         this._originator = { originator: 'vscode', version: packageJson.version, type: 'spl' };
 
@@ -93,6 +74,23 @@ export class SplBuild {
         context.subscriptions.push(new Disposable(() => {
             this._storeSubscription();
         }));
+
+        if (!StateSelector.getIcp4dUrl(getStore().getState())) {
+            this.updateIcp4dUrl(Configuration.getSetting(Settings.ICP4D_URL));
+        }
+
+        if (!StateSelector.getUseIcp4dMasterNodeHost(getStore().getState())) {
+            getStore().dispatch(setUseIcp4dMasterNodeHost(Configuration.getSetting(Settings.USE_ICP4D_MASTER_NODE_HOST)));
+        }
+
+        const username = Configuration.getState(`${Constants.EXTENSION_NAME}.username`);
+        const rememberPassword = Configuration.getState(`${Constants.EXTENSION_NAME}.rememberPassword`);
+        if (username) {
+            getStore().dispatch(setUsername(username));
+        }
+        if (rememberPassword) {
+            getStore().dispatch(setRememberPassword(rememberPassword));
+        }
 
         if (!MessageHandlerRegistry.getDefault()) {
             MessageHandlerRegistry.setDefault(new MessageHandler(null));
@@ -113,45 +111,34 @@ export class SplBuild {
 
         // Monitor changes to configuration settings
         this._context.subscriptions.push(workspace.onDidChangeConfiguration((event: ConfigurationChangeEvent) => {
-            if (!event.affectsConfiguration(Constants.EXTENSION_NAME)) {
+            const affectStreamsConfiguration = _.some(Settings.SECTION_IDS, (id: string) => event.affectsConfiguration(id));
+            if (!affectStreamsConfiguration) {
                 return;
             }
 
-            if (event.affectsConfiguration(`${Constants.EXTENSION_NAME}.${Settings.ICP4D_URL}`)) {
-                this.updateIcp4dUrl(SplConfig.getSetting(Settings.ICP4D_URL));
+            if (event.affectsConfiguration(Settings.ICP4D_URL)) {
+                this.updateIcp4dUrl(Configuration.getSetting(Settings.ICP4D_URL));
                 getStore().dispatch(resetAuth());
                 ICP4DWebviewPanel.close();
             }
 
-            if (event.affectsConfiguration(`${Constants.EXTENSION_NAME}.${Settings.STREAMING_ANALYTICS_CREDENTIALS}`)) {
-                const currentCredentialsSetting = SplConfig.getSetting(Settings.STREAMING_ANALYTICS_CREDENTIALS);
+            if (event.affectsConfiguration(Settings.STREAMING_ANALYTICS_CREDENTIALS)) {
+                const currentCredentialsSetting = Configuration.getSetting(Settings.STREAMING_ANALYTICS_CREDENTIALS);
                 this._streamingAnalyticsCredentials = currentCredentialsSetting ? JSON.stringify(currentCredentialsSetting) : null;
             }
 
-            if (event.affectsConfiguration(`${Constants.EXTENSION_NAME}.${Settings.TARGET_VERSION}`)) {
-                this._apiVersion = SplConfig.getSetting(Settings.TARGET_VERSION);
+            if (event.affectsConfiguration(Settings.TARGET_VERSION)) {
+                this._apiVersion = Configuration.getSetting(Settings.TARGET_VERSION);
             }
 
-            if (event.affectsConfiguration(`${Constants.EXTENSION_NAME}.${Settings.TOOLKITS_PATH}`)) {
-                const currentToolkitsPathSetting = SplConfig.getSetting(Settings.TOOLKITS_PATH);
+            if (event.affectsConfiguration(Settings.TOOLKITS_PATH)) {
+                const currentToolkitsPathSetting = Configuration.getSetting(Settings.TOOLKITS_PATH);
                 this._toolkitsPath = currentToolkitsPathSetting !== '' ? currentToolkitsPathSetting : null;
                 getStore().dispatch(setToolkitsPathSetting(this._toolkitsPath));
-
-                // Send added and removed toolkits to the LSP server
-                const previousToolkitsPathSetting = SplConfig.getState(`${Constants.EXTENSION_NAME}.${Settings.TOOLKITS_PATH}`);
-                const { addedToolkitPaths, removedToolkitNames } = StreamsToolkitsUtils.getChangedLocalToolkits(previousToolkitsPathSetting, currentToolkitsPathSetting);
-                if (addedToolkitPaths && addedToolkitPaths.length) {
-                    const addParam = StreamsToolkitsUtils.getLangServerParamForAddToolkits(addedToolkitPaths);
-                    SplLanguageClient.getClient().sendNotification(DidChangeConfigurationNotification.type, addParam);
-                }
-                if (removedToolkitNames && removedToolkitNames.length) {
-                    const removeParam = StreamsToolkitsUtils.getLangServerParamForRemoveToolkits(removedToolkitNames);
-                    SplLanguageClient.getClient().sendNotification(DidChangeConfigurationNotification.type, removeParam);
-                }
             }
 
-            if (event.affectsConfiguration(`${Constants.EXTENSION_NAME}.${Settings.USE_ICP4D_MASTER_NODE_HOST}`)) {
-                const useHostSetting = SplConfig.getSetting(Settings.USE_ICP4D_MASTER_NODE_HOST);
+            if (event.affectsConfiguration(Settings.USE_ICP4D_MASTER_NODE_HOST)) {
+                const useHostSetting = Configuration.getSetting(Settings.USE_ICP4D_MASTER_NODE_HOST);
                 getStore().dispatch(setUseIcp4dMasterNodeHost(useHostSetting));
             }
         }));
@@ -184,11 +171,11 @@ export class SplBuild {
             }
 
             const displayPath = `${path.basename(appRoot)}${path.sep}${path.relative(appRoot, filePath)}`;
-            const outputChannel = SplLogger.registerOutputChannel(filePath, displayPath);
+            const outputChannel = Logger.registerOutputChannel(filePath, displayPath);
 
             const statusMessage = `Received request to build${action === SplBuilder.BUILD_ACTION.SUBMIT ? ' and submit' : ''}`;
-            SplLogger.info(outputChannel, statusMessage, false, true);
-            SplLogger.debug(outputChannel, `Selected: ${filePath}`);
+            Logger.info(outputChannel, statusMessage, false, true);
+            Logger.debug(outputChannel, `Selected: ${filePath}`);
 
             if (this._apiVersion === Settings.TARGET_VERSION_OPTION.V5) {
                 const build = () => this.buildAppV5(appRoot, compositeToBuild, action);
@@ -208,7 +195,7 @@ export class SplBuild {
      * @param action              The build action to take
      * @param messageHandler      The message handler object
      */
-    public static async buildAppV4(appRoot: string, compositeToBuild: string, action: number, messageHandler: MessageHandler): Promise<void> {
+    private static async buildAppV4(appRoot: string, compositeToBuild: string, action: number, messageHandler: MessageHandler): Promise<void> {
         try {
             return SourceArchiveUtils.buildSourceArchive({
                 appRoot,
@@ -235,7 +222,7 @@ export class SplBuild {
      * @param compositeToBuild    The composite to build
      * @param action              The build action to take
      */
-    public static async buildAppV5(appRoot: string, compositeToBuild: string, action: number): Promise<void> {
+    private static async buildAppV5(appRoot: string, compositeToBuild: string, action: number): Promise<void> {
         const newBuildAction = newBuild({
             appRoot,
             fqn: compositeToBuild,
@@ -275,11 +262,11 @@ export class SplBuild {
             }
 
             const displayPath = `${path.basename(appRoot)}${path.sep}${path.relative(appRoot, filePath)}`;
-            const outputChannel = SplLogger.registerOutputChannel(filePath, displayPath);
+            const outputChannel = Logger.registerOutputChannel(filePath, displayPath);
 
             const statusMessage = `Received request to build from a Makefile${action === SplBuilder.BUILD_ACTION.SUBMIT ? ' and submit' : ''}`;
-            SplLogger.info(outputChannel, statusMessage, false, true);
-            SplLogger.debug(outputChannel, `Selected: ${filePath}`);
+            Logger.info(outputChannel, statusMessage, false, true);
+            Logger.debug(outputChannel, `Selected: ${filePath}`);
 
             if (this._apiVersion === Settings.TARGET_VERSION_OPTION.V5) {
                 const build = () => this.buildMakeV5(appRoot, filePath, action);
@@ -299,7 +286,7 @@ export class SplBuild {
      * @param action            The build action to take
      * @param messageHandler    The message handler object
      */
-    public static async buildMakeV4(appRoot: string, filePath: string, action: number, messageHandler: MessageHandler): Promise<void> {
+    private static async buildMakeV4(appRoot: string, filePath: string, action: number, messageHandler: MessageHandler): Promise<void> {
         try {
             return SourceArchiveUtils.buildSourceArchive({
                 appRoot,
@@ -326,7 +313,7 @@ export class SplBuild {
      * @param filePath    The path to the Makefile
      * @param action      The build action to take
      */
-    public static async buildMakeV5(appRoot: string, filePath: string, action: number): Promise<void> {
+    private static async buildMakeV5(appRoot: string, filePath: string, action: number): Promise<void> {
         const newBuildAction = newBuild({
             appRoot,
             fqn: null,
@@ -364,7 +351,7 @@ export class SplBuild {
      * Handle a submission of an application bundle to Streams V4
      * @param filePath    The path to the application bundle
      */
-    public static async submitV4(filePath: string): Promise<void> {
+    private static async submitV4(filePath: string): Promise<void> {
         if (!filePath || !filePath.toLowerCase().endsWith('.sab')) {
             return;
         }
@@ -380,11 +367,11 @@ export class SplBuild {
             }
 
             const displayPath = `${path.basename(appRoot)}${path.sep}${path.relative(appRoot, filePath)}`;
-            const outputChannel = SplLogger.registerOutputChannel(filePath, displayPath);
+            const outputChannel = Logger.registerOutputChannel(filePath, displayPath);
 
             const statusMessage = 'Received request to submit an application';
-            SplLogger.info(outputChannel, statusMessage, false, true);
-            SplLogger.debug(outputChannel, `Selected: ${filePath}`);
+            Logger.info(outputChannel, statusMessage, false, true);
+            Logger.debug(outputChannel, `Selected: ${filePath}`);
 
             const lintHandler = new LintHandler(appRoot);
             const builder = new SplBuilder(messageHandler, lintHandler, this._openUrlHandler, this._originator);
@@ -398,7 +385,7 @@ export class SplBuild {
      * Handle a submission of application bundle(s) to Streams V5
      * @param filePaths    The paths to the application bundle(s)
      */
-    public static async submitV5(filePaths: string[]): Promise<void> {
+    private static async submitV5(filePaths: string[]): Promise<void> {
         const bundles = filePaths
             .filter((filePath: string) => filePath.toLowerCase().endsWith('.sab'))
             .map((filePath: string) => ({
@@ -426,10 +413,10 @@ export class SplBuild {
                 const builder = new SplBuilder(null, null, this._openUrlHandler, null);
                 const openConsole = (setting: any) => {
                     const streamingAnalyticsCredentials = setting ? JSON.stringify(setting) : null;
-                    builder.openStreamingAnalyticsConsole(streamingAnalyticsCredentials, (url: string) => SplLogger.info(null, `Streaming Analytics Console: ${url}`));
+                    builder.openStreamingAnalyticsConsole(streamingAnalyticsCredentials, (url: string) => Logger.info(null, `Streaming Analytics Console: ${url}`));
                 };
 
-                const credentialsSetting = SplConfig.getSetting(Settings.STREAMING_ANALYTICS_CREDENTIALS);
+                const credentialsSetting = Configuration.getSetting(Settings.STREAMING_ANALYTICS_CREDENTIALS);
                 if (!credentialsSetting) {
                     window.showWarningMessage('IBM Streaming Analytics service credentials are not set', 'Set credentials').then((selection: string) => {
                         if (selection) {
@@ -440,9 +427,9 @@ export class SplBuild {
                     openConsole(credentialsSetting);
                 }
             } catch (error) {
-                SplLogger.error(null, 'Error opening IBM Streaming Analytics Console', true);
+                Logger.error(null, 'Error opening IBM Streaming Analytics Console', true);
                 if (error.stack) {
-                    SplLogger.error(null, error.stack);
+                    Logger.error(null, error.stack);
                 }
             }
         }
@@ -455,11 +442,11 @@ export class SplBuild {
         if (this._apiVersion === Settings.TARGET_VERSION_OPTION.V4) {
             try {
                 const builder = new SplBuilder(null, null, this._openUrlHandler, null);
-                builder.openCloudDashboard((url: string) => SplLogger.info(null, `Opened IBM Cloud Dashboard: ${url}`));
+                builder.openCloudDashboard((url: string) => Logger.info(null, `Opened IBM Cloud Dashboard: ${url}`));
             } catch (error) {
-                SplLogger.error(null, 'Error opening IBM Cloud Dashboard', true);
+                Logger.error(null, 'Error opening IBM Cloud Dashboard', true);
                 if (error.stack) {
-                    SplLogger.error(null, error.stack);
+                    Logger.error(null, error.stack);
                 }
             }
         }
@@ -476,7 +463,7 @@ export class SplBuild {
                         const consoleUrl = StateSelector.getStreamsConsoleUrl(getStore().getState());
                         this._openUrlHandler(
                             consoleUrl,
-                            () => SplLogger.info(null, `Opened IBM Streams Console: ${consoleUrl}`)
+                            () => Logger.info(null, `Opened IBM Streams Console: ${consoleUrl}`)
                         );
                     };
                     if (!StateSelector.hasAuthenticatedToStreamsInstance(getStore().getState())) {
@@ -487,9 +474,9 @@ export class SplBuild {
                         openUrl();
                     }
                 } catch (error) {
-                    SplLogger.error(null, 'Error opening IBM Streams Console', true);
+                    Logger.error(null, 'Error opening IBM Streams Console', true);
                     if (error.stack) {
-                        SplLogger.error(null, error.stack);
+                        Logger.error(null, error.stack);
                     }
                 }
             };
@@ -508,12 +495,12 @@ export class SplBuild {
                     const icp4dDashboard = `${icp4dUrl}/zen/#/homepage`;
                     this._openUrlHandler(
                         icp4dDashboard,
-                        () => SplLogger.info(null, `Opened IBM Cloud Private for Data Dashboard: ${icp4dDashboard}`)
+                        () => Logger.info(null, `Opened IBM Cloud Private for Data Dashboard: ${icp4dDashboard}`)
                     );
                 } catch (error) {
-                    SplLogger.error(null, 'Error opening IBM Cloud Private for Data Dashboard', true);
+                    Logger.error(null, 'Error opening IBM Cloud Private for Data Dashboard', true);
                     if (error.stack) {
-                        SplLogger.error(null, error.stack);
+                        Logger.error(null, error.stack);
                     }
                 }
             };
@@ -527,7 +514,7 @@ export class SplBuild {
     public static refreshLspToolkits() {
         if (this._apiVersion === Settings.TARGET_VERSION_OPTION.V5) {
             const refresh = () => {
-                if (!StateSelector.hasAuthenticatedToStreamsInstance(getStore().getState()) || !StateSelector.hasAuthenticatedToStreamsInstance(getStore().getState())) {
+                if (!StateSelector.hasAuthenticatedToStreamsInstance(getStore().getState())) {
                     // Authenticating automatically refreshes the toolkits
                     this.showIcp4dAuthPanel();
                 } else {
@@ -580,7 +567,7 @@ export class SplBuild {
         if (icp4dUrl) {
             const successFn = callbackFn;
             const errorFn = () => this.handleIcp4dUrlNotSet(this.handleV5Action.bind(this, callbackFn));
-            getStore().dispatch(checkIcp4dUrlExists(successFn, errorFn));
+            getStore().dispatch(checkIcp4dHostExists(successFn, errorFn));
         } else {
             this.handleIcp4dUrlNotSet(this.handleV5Action.bind(this, callbackFn));
         }

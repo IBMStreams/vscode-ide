@@ -2,7 +2,7 @@
 
 This extension provides support for Streams Processing Language (SPL), a distributed data flow composition language that is used in [IBM Streams](https://www.ibm.com/cloud/streaming-analytics). Powered by the [IBM Streams SPL language server](https://www.npmjs.com/package/@ibmstreams/spl-lsp).
 
-Requires [Visual Studio Code 1.28.0](https://code.visualstudio.com/updates/v1_28) or later.
+Requires [Visual Studio Code 1.28.2](https://code.visualstudio.com/updates/v1_28) or later.
 
 ## Beta
 

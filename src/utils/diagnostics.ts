@@ -3,19 +3,23 @@
 import * as _ from 'lodash';
 import * as path from 'path';
 import { Diagnostic, DiagnosticChangeEvent, DiagnosticCollection, DiagnosticSeverity, ExtensionContext, languages, Range, TextDocument, TextDocumentChangeEvent, TextEditor, TextEditorDecorationType, Uri, window, workspace } from 'vscode';
+import { Constants } from '.';
 
-export class SplLinter {
-    private static _diagnosticCollection: DiagnosticCollection;
-    private static _activeEditor: TextEditor;
-    private static _errorDecorationType: TextEditorDecorationType;
+/**
+ * Manages diagnostics for code errors
+ */
+export default class Diagnostics {
+    private static diagnosticCollection: DiagnosticCollection;
+    private static activeEditor: TextEditor;
+    private static errorDecorationType: TextEditorDecorationType;
 
     /**
      * Perform initial configuration
      * @param context    The extension context
      */
     public static configure(context: ExtensionContext): void {
-        this._diagnosticCollection = languages.createDiagnosticCollection('spl');
-        context.subscriptions.push(this._diagnosticCollection);
+        this.diagnosticCollection = languages.createDiagnosticCollection('spl');
+        context.subscriptions.push(this.diagnosticCollection);
 
         this.handleEditorDecorations(context);
 
@@ -23,8 +27,8 @@ export class SplLinter {
         context.subscriptions.push(workspace.onDidChangeTextDocument((event: TextDocumentChangeEvent) => {
             if (event.contentChanges.length) {
                 const uri = event.document.uri;
-                if (this._diagnosticCollection.get(uri)) {
-                    this._diagnosticCollection.delete(uri);
+                if (this.diagnosticCollection.get(uri)) {
+                    this.diagnosticCollection.delete(uri);
                 }
             }
         }));
@@ -69,15 +73,15 @@ export class SplLinter {
                     severity,
                     range: new Range(obj.line - 1, obj.column - 1, obj.line - 1, obj.column - 1),
                     message: `${obj.code} ${obj.message}`,
-                    source: 'IBM Streams'
+                    source: Constants.IBM_STREAMS
                 };
                 diagnostics.push(diagnostic);
             }
         });
 
         for (const uri of diagnosticMap.keys()) {
-            this._diagnosticCollection.delete(uri);
-            this._diagnosticCollection.set(uri, diagnosticMap.get(uri));
+            this.diagnosticCollection.delete(uri);
+            this.diagnosticCollection.set(uri, diagnosticMap.get(uri));
         }
     }
 
@@ -110,7 +114,7 @@ export class SplLinter {
      * @param context    The extension context
      */
     private static handleEditorDecorations(context: ExtensionContext) {
-        this._activeEditor = window.activeTextEditor;
+        this.activeEditor = window.activeTextEditor;
 
         const createDecoration = (iconPathLight: string, iconPathDark: string) => window.createTextEditorDecorationType({
             light: {
@@ -120,30 +124,30 @@ export class SplLinter {
                 gutterIconPath: iconPathDark
             }
         });
-        this._errorDecorationType = createDecoration(context.asAbsolutePath('images/markers/error-light.svg'), context.asAbsolutePath('images/markers/error-dark.svg'));
+        this.errorDecorationType = createDecoration(context.asAbsolutePath('images/markers/error-light.svg'), context.asAbsolutePath('images/markers/error-dark.svg'));
 
-        const isSplFile = () => this._activeEditor && this._activeEditor.document.languageId === 'spl';
+        const isSplFile = () => this.activeEditor && this.activeEditor.document.languageId === 'spl';
 
         if (isSplFile()) {
             this.updateDecorations();
         }
 
         context.subscriptions.push(window.onDidChangeActiveTextEditor((editor: TextEditor) => {
-            this._activeEditor = editor;
+            this.activeEditor = editor;
             if (isSplFile()) {
                 this.updateDecorations();
             }
         }));
 
         context.subscriptions.push(workspace.onDidChangeTextDocument((event: TextDocumentChangeEvent) => {
-            if (isSplFile() && event.document === this._activeEditor.document) {
+            if (isSplFile() && event.document === this.activeEditor.document) {
                 this.updateDecorations();
             }
         }));
 
         context.subscriptions.push(languages.onDidChangeDiagnostics((event: DiagnosticChangeEvent) => {
             if (isSplFile()) {
-                const uri = this._activeEditor.document.uri;
+                const uri = this.activeEditor.document.uri;
                 const eventUris = event.uris;
                 if (eventUris.length) {
                     const eventUriFsPaths = eventUris.map((eventUri: Uri) => eventUri.fsPath);
@@ -159,17 +163,17 @@ export class SplLinter {
      * Set decorations in the active text editor
      */
     private static updateDecorations() {
-        if (!this._activeEditor) {
+        if (!this.activeEditor) {
             return;
         }
 
-        const uri = this._activeEditor.document.uri;
+        const uri = this.activeEditor.document.uri;
         const diagnostics = languages.getDiagnostics(uri);
 
         const getDiagnosticRanges = (severity: DiagnosticSeverity) => diagnostics
             .filter((diagnostic: Diagnostic) => diagnostic.severity === severity)
             .map((diagnostic: Diagnostic) => diagnostic.range);
 
-        this._activeEditor.setDecorations(this._errorDecorationType, getDiagnosticRanges(DiagnosticSeverity.Error));
+        this.activeEditor.setDecorations(this.errorDecorationType, getDiagnosticRanges(DiagnosticSeverity.Error));
     }
 }

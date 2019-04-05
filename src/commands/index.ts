@@ -1,16 +1,25 @@
 import { commands, ExtensionContext } from 'vscode';
-import { BuildCommand, Commands, CreateApplicationCommand, IBaseCommand, OpenLinkCommand, RefreshToolkitsCommand, RemoveOutputChannelsCommand, SetConfigSettingCommand } from '.';
-import StreamsUtils from '../build/v5/util/streams-utils';
-import { SplLogger } from '../utils';
+import {
+    BuildCommand,
+    CreateApplicationCommand,
+    IBaseCommand,
+    OpenLinkCommand,
+    RefreshToolkitsCommand,
+    RemoveOutputChannelsCommand,
+    SetConfigSettingCommand
+} from '.';
+import { StreamsUtils } from '../build/v5/util';
+import { Logger } from '../utils';
+import * as Commands from './commands';
 
-export * from './base';
+export { default as IBaseCommand } from './base';
 export * from './build';
-export * from './commands';
 export * from './createApplication';
 export * from './openLink';
 export * from './refreshToolkits';
 export * from './removeOutputChannels';
 export * from './setConfigSetting';
+export { Commands };
 
 /**
  * Register commands
@@ -40,9 +49,9 @@ export function initialize(context: ExtensionContext) {
             const executionResult = command.execute(context, args);
             if (executionResult && executionResult.catch) {
                 executionResult.catch((error) => {
-                    SplLogger.error(null, `An error occurred while executing command: ${command.commandName}`);
+                    Logger.error(null, `An error occurred while executing command: ${command.commandName}`);
                     if (error && error.stack) {
-                        SplLogger.error(null, error.stack);
+                        Logger.error(null, error.stack);
                     }
                 });
             }

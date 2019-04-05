@@ -1,9 +1,11 @@
 import { ExtensionContext } from 'vscode';
-import { SplBuild } from '../build';
-import { SplLogger } from '../utils';
-import { IBaseCommand } from './base';
-import { Commands } from './commands';
+import { Commands, IBaseCommand } from '.';
+import StreamsBuild from '../build';
+import { Logger } from '../utils';
 
+/**
+ * Command that allows a user to refresh the toolkits on the SPL LSP server
+ */
 export class RefreshToolkitsCommand implements IBaseCommand {
     public commandName: string = Commands.REFRESH_TOOLKITS;
 
@@ -13,7 +15,7 @@ export class RefreshToolkitsCommand implements IBaseCommand {
      * @param args       Array of arguments
      */
     public execute(context: ExtensionContext, ...args: any[]): any {
-        SplLogger.info(null, 'Received request to refresh IBM Streams toolkits', false, true);
-        SplBuild.refreshLspToolkits();
+        Logger.info(null, 'Received request to refresh IBM Streams toolkits', false, true);
+        StreamsBuild.refreshLspToolkits();
     }
 }

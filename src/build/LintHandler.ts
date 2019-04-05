@@ -1,17 +1,20 @@
 
-import { SplLinter } from '../utils';
-import StreamsUtils from './v5/util/streams-utils';
+import { Diagnostics } from '../utils';
+import { StreamsUtils } from './v5/util';
 
+/**
+ * Handles linting of source files
+ */
 export default class LintHandler {
-    private msgRegex: RegExp;
-    private appRoot: string;
+    private _msgRegex: RegExp;
+    private _appRoot: string;
 
     /**
      * @param appRoot    The application root path
      */
     constructor(appRoot: string) {
-        this.msgRegex = StreamsUtils.SPL_MSG_REGEX;
-        this.appRoot = appRoot;
+        this._msgRegex = StreamsUtils.SPL_MSG_REGEX;
+        this._appRoot = appRoot;
     }
 
     /**
@@ -26,11 +29,11 @@ export default class LintHandler {
         if (response.output && Array.isArray(response.output)) {
             const messages = response.output
                 .map((message: any) => message.message_text)
-                .filter((message: string) => message.match(this.msgRegex));
+                .filter((message: string) => message.match(this._msgRegex));
 
-            SplLinter.lintFiles(this.msgRegex, this.appRoot, messages);
+            Diagnostics.lintFiles(this._msgRegex, this._appRoot, messages);
         } else if (Array.isArray(response) && response.every((message: any) => typeof message === 'string')) {
-            SplLinter.lintFiles(this.msgRegex, this.appRoot, response);
+            Diagnostics.lintFiles(this._msgRegex, this._appRoot, response);
         }
     }
 }

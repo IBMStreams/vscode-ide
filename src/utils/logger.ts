@@ -1,10 +1,14 @@
 import * as moment from 'moment';
 import * as util from 'util';
 import { OutputChannel, window } from 'vscode';
+import { Constants } from '.';
 
-export enum Level { DEBUG, ERROR, INFO, SUCCESS, WARN }
+enum Level { DEBUG, ERROR, INFO, SUCCESS, WARN }
 
-export class SplLogger {
+/**
+ * Manages message logging to output channels
+ */
+export default class Logger {
     public static _mainOutputChannel: OutputChannel;
     public static _outputChannels: object;
 
@@ -16,7 +20,7 @@ export class SplLogger {
         this._outputChannels = {};
 
         // Set up main output channel for logging
-        this._mainOutputChannel = this.registerOutputChannel('IBM Streams', 'IBM Streams');
+        this._mainOutputChannel = this.registerOutputChannel(Constants.IBM_STREAMS, Constants.IBM_STREAMS);
     }
 
     /**
@@ -29,7 +33,7 @@ export class SplLogger {
         if (this._outputChannels[name]) {
             outputChannel = this._outputChannels[name].outputChannel;
         } else {
-            const channelName = displayName === 'IBM Streams' ? displayName : `IBM Streams: ${displayName}`;
+            const channelName = displayName === Constants.IBM_STREAMS ? displayName : `${Constants.IBM_STREAMS}: ${displayName}`;
             outputChannel = window.createOutputChannel(channelName);
             this._outputChannels[name] = {
                 displayName,

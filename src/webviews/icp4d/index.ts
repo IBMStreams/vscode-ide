@@ -3,8 +3,8 @@ import * as path from 'path';
 import { Disposable, ExtensionContext, Uri, ViewColumn, WebviewPanel, window } from 'vscode';
 import { authenticateIcp4d, setCurrentLoginStep, setFormDataField, setSelectedInstance } from '../../build/v5/actions';
 import getStore from '../../build/v5/redux-store/configure-store';
-import StateSelector from '../../build/v5/util/state-selectors';
-import { Constants, SplConfig } from '../../utils';
+import { StateSelector } from '../../build/v5/util';
+import { Configuration, Constants } from '../../utils';
 import { getNonce } from '../../webviews';
 
 /**
@@ -14,16 +14,11 @@ const enum MessageId {
     AUTHENTICATE_ICP4D = 'authenticateIcp4d',
     CLOSE = 'close',
     CURRENT_STEP = 'currentStep',
-    HAS_AUTHENTICATED_ICP4D = 'hasAuthenticatedIcp4d',
-    ICP4D_AUTH_ERROR = 'icp4dAuthError',
     INIT_STEP1 = 'initStep1',
     PERSIST_AUTH = 'persistAuth',
-    POST_STREAMS_INSTANCE_AUTH = 'postStreamsInstanceAuth',
     PREVIOUS_STEP = 'previousStep',
     REDUX_STATE_CHANGE = 'reduxStateChange',
     SET_INSTANCE = 'setInstance',
-    STREAMS_AUTH_ERROR = 'streamsAuthError',
-    STREAMS_INSTANCES = 'streamsInstances',
     UPDATE_FORM_DATA_FIELD = 'updateFormDataField'
 }
 
@@ -31,9 +26,9 @@ const enum MessageId {
  * Manages webview panel for IBM Cloud Private for Data authentication
  */
 export default class ICP4DWebviewPanel {
-    public static currentPanel: ICP4DWebviewPanel | undefined;
+    private static currentPanel: ICP4DWebviewPanel | undefined;
 
-    public static readonly viewType = 'icp4d';
+    private static readonly viewType = 'icp4d';
 
     private readonly _panel: WebviewPanel;
     private readonly _context: ExtensionContext;
@@ -81,6 +76,8 @@ export default class ICP4DWebviewPanel {
                 x.dispose();
             }
         }
+
+        getStore().dispatch(setCurrentLoginStep(1));
     }
 
     /**
@@ -178,16 +175,15 @@ export default class ICP4DWebviewPanel {
                 case MessageId.PERSIST_AUTH:
                     const formUsername = StateSelector.getUsername(state);
                     const formRememberPassword = StateSelector.getRememberPassword(state);
-                    SplConfig.setState(`${Constants.EXTENSION_NAME}.username`, formUsername);
-                    SplConfig.setState(`${Constants.EXTENSION_NAME}.rememberPassword`, formRememberPassword);
+                    Configuration.setState(`${Constants.EXTENSION_NAME}.username`, formUsername);
+                    Configuration.setState(`${Constants.EXTENSION_NAME}.rememberPassword`, formRememberPassword);
                     break;
                 case MessageId.SET_INSTANCE:
                     const { instance } = value;
                     getStore().dispatch(setSelectedInstance(instance));
                     break;
                 case MessageId.CLOSE:
-                    panel.dispose();
-                    getStore().dispatch(setCurrentLoginStep(1));
+                    ICP4DWebviewPanel.close();
                     break;
             }
         }, null, disposables);

@@ -1,3 +1,7 @@
 #root .btn-toolbar .btn-toolbar.justify-content-start button:first-of-type {
     margin-right: 10px;
 }
+
+#root .react-select-container .react-select__option {
+    color: #000000;
+}

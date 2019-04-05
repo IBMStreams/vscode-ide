@@ -1,12 +1,15 @@
 import * as os from 'os';
 import * as path from 'path';
-import { ExtensionContext, workspace } from 'vscode';
+import { ExtensionContext, ProgressLocation, window, workspace } from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-languageclient';
-import StreamsToolkitsUtils from '../build/v5/util/streams-toolkits-utils';
-import { Constants, Settings, SplConfig } from '../utils';
+import { StreamsToolkitsUtils } from '../build/v5/util';
+import { Configuration, Constants, Settings } from '../utils';
 
-export class SplLanguageClient {
-    private static _client: LanguageClient;
+/**
+ * Language client that connects to the SPL LSP server
+ */
+export default class SplLanguageClient {
+    private static client: LanguageClient;
 
     /**
      * Create and start a language client
@@ -23,7 +26,7 @@ export class SplLanguageClient {
             debug: { command, args: ['-Xdebug', '-Xrunjdwp:transport=dt_socket,address=8998,server=y,suspend=n'], options: { cwd } }
         };
 
-        const toolkitsOption = StreamsToolkitsUtils.getLangServerOptionForInitToolkits(Constants.TOOLKITS_CACHE_DIR, SplConfig.getSetting(Settings.TOOLKITS_PATH));
+        const toolkitsOption = StreamsToolkitsUtils.getLangServerOptionForInitToolkits(Constants.TOOLKITS_CACHE_DIR, Configuration.getSetting(Settings.TOOLKITS_PATH));
         const initOptions = { ...toolkitsOption };
         const clientOptions: LanguageClientOptions = {
             outputChannelName: 'IBM Streams SPL Language Server',
@@ -35,8 +38,19 @@ export class SplLanguageClient {
         };
 
         // Create the language client and start the client
-        const client = new LanguageClient('spl', 'IBM Streams', serverOptions, clientOptions);
-        this._client = client;
+        const client = new LanguageClient('spl', Constants.IBM_STREAMS, serverOptions, clientOptions);
+        this.client = client;
+
+        // Show progress in the status bar
+        window.withProgress({
+            location: ProgressLocation.Window,
+            title: 'Initializing SPL language features'
+        }, () => new Promise((resolve, reject) => {
+            client.onReady().then(
+                () => resolve(),
+                () => reject()
+            );
+        }));
 
         // Push the disposable to the context's subscriptions so that the
         // client can be deactivated on extension deactivation
@@ -46,6 +60,6 @@ export class SplLanguageClient {
     }
 
     public static getClient(): LanguageClient {
-        return this._client;
+        return this.client;
     }
 }

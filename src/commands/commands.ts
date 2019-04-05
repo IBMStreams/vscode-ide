@@ -1,90 +1,84 @@
-import { Constants } from '../utils';
+/**
+ * Build
+ */
+export const BUILD_APP_DOWNLOAD = 'ibm-streams.buildAppDownload';
 
-export namespace Commands {
-    export const ID = Constants.EXTENSION_NAME;
+/**
+ * Build and Submit Job
+ */
+export const BUILD_APP_SUBMIT = 'ibm-streams.buildAppSubmit';
 
-    /**
-     * Create an IBM Streams Application from Template
-     */
-    export const CREATE_APPLICATION = `${ID}.createApplication`;
+/**
+ * Build
+ */
+export const BUILD_MAKE_DOWNLOAD = 'ibm-streams.buildMakeDownload';
 
-    /**
-     * Open IBM Cloud Dashboard
-     */
-    export const OPEN_CLOUD_DASHBOARD = `${ID}.openCloudDashboard`;
+/**
+ * Build and Submit Job(s)
+ */
+export const BUILD_MAKE_SUBMIT = 'ibm-streams.buildMakeSubmit';
 
-    /**
-     * Open IBM Cloud Private for Data Dashboard
-     */
-    export const OPEN_ICP4D_DASHBOARD = `${ID}.openIcp4dDashboard`;
+/**
+ * Create an IBM Streams Application from Template
+ */
+export const CREATE_APPLICATION = 'ibm-streams.createApplication';
 
-    /**
-     * Open IBM Streaming Analytics Console
-     */
-    export const OPEN_STREAMING_ANALYTICS_CONSOLE = `${ID}.openStreamingAnalyticsConsole`;
+/**
+ * Open IBM Cloud Dashboard
+ */
+export const OPEN_CLOUD_DASHBOARD = 'ibm-streams.openCloudDashboard';
 
-    /**
-     * Open IBM Streams Console
-     */
-    export const OPEN_STREAMS_CONSOLE = `${ID}.openStreamsConsole`;
+/**
+ * Open IBM Cloud Private for Data Dashboard
+ */
+export const OPEN_ICP4D_DASHBOARD = 'ibm-streams.openIcp4dDashboard';
 
-    /**
-     * Refresh IBM Streams toolkits
-     */
-    export const REFRESH_TOOLKITS = `${ID}.refreshToolkits`;
+/**
+ * Open IBM Streaming Analytics Console
+ */
+export const OPEN_STREAMING_ANALYTICS_CONSOLE = 'ibm-streams.openStreamingAnalyticsConsole';
 
-    /**
-     * Remove Build Output Channels
-     */
-    export const REMOVE_OUTPUT_CHANNELS = `${ID}.removeOutputChannels`;
+/**
+ * Open IBM Streams Console
+ */
+export const OPEN_STREAMS_CONSOLE = 'ibm-streams.openStreamsConsole';
 
-    /**
-     * Set IBM Cloud Private for Data URL
-     */
-    export const SET_ICP4D_URL = `${ID}.setIcp4dUrl`;
+/**
+ * Refresh IBM Streams toolkits
+ */
+export const REFRESH_TOOLKITS = 'ibm-streams.refreshToolkits';
 
-    /**
-     * Set IBM Streaming Analytics Service Credentials
-     */
-    export const SET_SERVICE_CREDENTIALS = `${ID}.setServiceCredentials`;
+/**
+ * Remove Build Output Channels
+ */
+export const REMOVE_OUTPUT_CHANNELS = 'ibm-streams.removeOutputChannels';
 
-    /**
-     * Set IBM Streams Target Version
-     */
-    export const SET_TARGET_VERSION = `${ID}.setTargetVersion`;
+/**
+ * Set IBM Cloud Private for Data URL
+ */
+export const SET_ICP4D_URL = 'ibm-streams.setIcp4dUrl';
 
-    /**
-     * Set IBM Streams Toolkits Path
-     */
-    export const SET_TOOLKITS_PATH = `${ID}.setToolkitsPath`;
+/**
+ * Set IBM Streaming Analytics Service Credentials
+ */
+export const SET_SERVICE_CREDENTIALS = 'ibm-streams.setServiceCredentials';
 
-    /**
-     * Build
-     */
-    export const BUILD_APP_DOWNLOAD = `${ID}.buildAppDownload`;
+/**
+ * Set IBM Streams Target Version
+ */
+export const SET_TARGET_VERSION = 'ibm-streams.setTargetVersion';
 
-    /**
-     * Build and Submit Job
-     */
-    export const BUILD_APP_SUBMIT = `${ID}.buildAppSubmit`;
+/**
+ * Set IBM Streams Toolkits Path
+ */
+export const SET_TOOLKITS_PATH = 'ibm-streams.setToolkitsPath';
 
-    /**
-     * Build
-     */
-    export const BUILD_MAKE_DOWNLOAD = `${ID}.buildMakeDownload`;
+/**
+ * Show ICP4D Settings Webview Panel
+ */
+export const SHOW_ICP4D_SETTINGS_WEBVIEW_PANEL = 'ibm-streams.showICP4DSettingsWebviewPanel';
 
-    /**
-     * Build and Submit Job(s)
-     */
-    export const BUILD_MAKE_SUBMIT = `${ID}.buildMakeSubmit`;
-
-    /**
-     * Submit Job
-     */
-    export const SUBMIT = `${ID}.submit`;
-
-    /**
-     * Show ICP4D Settings Webview Panel
-     */
-    export const SHOW_ICP4D_SETTINGS_WEBVIEW_PANEL = `${ID}.showICP4DSettingsWebviewPanel`;
-}
+/**
+ * Submit Job
+ */
+export const SUBMIT = 'ibm-streams.submit';

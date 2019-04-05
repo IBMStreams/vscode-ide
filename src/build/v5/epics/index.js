@@ -48,12 +48,7 @@ import {
   refreshToolkits,
   setFormDataField
 } from '../actions';
-import StateSelector from '../util/state-selectors';
-import ResponseSelector from '../util/rest-v5-response-selector';
-import StreamsRestUtils from '../util/streams-rest-v5';
-import SourceArchiveUtils from '../util/source-archive-utils';
-import StatusUtils from '../util/status-utils';
-import StreamsToolkitUtils from '../util/streams-toolkits-utils';
+import { ResponseSelector, SourceArchiveUtils, StateSelector, StatusUtils, StreamsRestUtils, StreamsToolkitsUtils } from '../util';
 import { Keychain } from '../../../utils';
 import MessageHandlerRegistry from '../../message-handler-registry';
 
@@ -318,17 +313,17 @@ const openStreamsConsoleEpic = (action, state) => action.pipe(
   map(() => ({ type: actions.POST_OPEN_STREAMS_CONSOLE }))
 );
 
-const icp4dUrlExistsEpic = (action, state) => action.pipe(
-  ofType(actions.CHECK_ICP4D_URL_EXISTS),
+const icp4dHostExistsEpic = (action, state) => action.pipe(
+  ofType(actions.CHECK_ICP4D_HOST_EXISTS),
   withLatestFrom(state),
-  mergeMap(([a, s]) => StreamsRestUtils.icp4d.icp4dUrlExists(s).pipe(
+  mergeMap(([a, s]) => StreamsRestUtils.icp4d.icp4dHostExists(s).pipe(
     tap((response) => a.successFn()),
     catchError(error => {
       a.errorFn();
       return of(handleError(a, error));
     })
   )),
-  map(() => ({ type: actions.POST_CHECK_ICP4D_URL_EXISTS }))
+  map(() => ({ type: actions.POST_CHECK_ICP4D_HOST_EXISTS }))
 );
 
 const icp4dAuthEpic = (action, state) => action.pipe(
@@ -420,14 +415,14 @@ const refreshToolkitsEpic = (action, state) => action.pipe(
   mergeMap(([a, s]) => StreamsRestUtils.toolkit.getToolkits(s).pipe(
     tap(() => MessageHandlerRegistry.getDefault().handleInfo('Initializing toolkit index cache')),
     map(toolkitsResponse => ResponseSelector.getToolkits(toolkitsResponse)),
-    map(toolkits => StreamsToolkitUtils.getToolkitsToCache(s, toolkits)),
+    map(toolkits => StreamsToolkitsUtils.getToolkitsToCache(s, toolkits)),
     mergeMap(toolkitsToCache => forkJoin(from(toolkitsToCache).pipe(
       mergeMap(toolkitToCache => StreamsRestUtils.toolkit.getToolkitIndex(s, toolkitToCache.id).pipe(
-        map(toolkitIndexResponse => StreamsToolkitUtils.cacheToolkitIndex(s, toolkitToCache, toolkitIndexResponse.body))
+        map(toolkitIndexResponse => StreamsToolkitsUtils.cacheToolkitIndex(s, toolkitToCache, toolkitIndexResponse.body))
       )),
       defaultIfEmpty('empty')
     ))),
-    tap(() => StreamsToolkitUtils.refreshLspToolkits(s, MessageHandlerRegistry.sendLspNotification)),
+    tap(() => StreamsToolkitsUtils.refreshLspToolkits(s, MessageHandlerRegistry.sendLspNotification)),
     map(() => ({ type: actions.POST_REFRESH_TOOLKITS })),
     tap(() => MessageHandlerRegistry.getDefault().handleSuccess('Toolkit indexes cached successfully', { notificationAutoDismiss: true })),
     catchError(error => of(handleError(a, error)))
@@ -495,7 +490,7 @@ const rootEpic = combineEpics(
   openStreamsConsoleEpic,
 
   instanceSelectedEpic,
-  icp4dUrlExistsEpic,
+  icp4dHostExistsEpic,
   icp4dAuthEpic,
   streamsAuthEpic,
   getStreamsInstancesEpic,
