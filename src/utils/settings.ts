@@ -32,6 +32,11 @@ export enum TARGET_VERSION_OPTION {
 export const TOOLKITS_PATH = 'ibm-streams.toolkitsPath';
 
 /**
+ * Default value for the toolkitsPath setting
+ */
+export const TOOLKITS_PATH_DEFAULT = '/path/to/toolkits/directory';
+
+/**
  * Use the host specified in the IBM Cloud Private for Data URL for builds
  */
 export const USE_ICP4D_MASTER_NODE_HOST = 'ibm-streams.useIcp4dMasterNodeHost';

@@ -183,7 +183,7 @@ export default class MessageHandler {
      * Handle the scenario where the IBM Cloud Private for Data URL is not specified, is invalid, or is unreachable
      * @param callbackFn    The callback function to execute after the user sets their URL
      */
-    public handleIcp4dUrlNotSet(callbackFn: () => void) {
+    public handleIcp4dUrlNotSet(callbackFn: () => void): Thenable<void> {
         return this.handleError('IBM Cloud Private for Data URL is not specified, is invalid, or is unreachable', {
             detail: 'Specify the IBM Cloud Private for Data URL or build with IBM Cloud Streaming Analytics in the extension settings.',
             notificationButtons: [{
@@ -191,6 +191,12 @@ export default class MessageHandler {
                 label: 'Set URL'
             }]
         });
+    }
+
+    /** Open the VS Code Settings */
+    public async openSettingsPage(): Promise<void> {
+        await commands.executeCommand('workbench.action.openSettings');
+        await commands.executeCommand('settings.action.search');
     }
 
     /**

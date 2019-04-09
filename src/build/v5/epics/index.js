@@ -453,7 +453,7 @@ const errorHandlingEpic = (action, state) => action.pipe(
     if (typeof a.error === 'string') {
       MessageHandlerRegistry.getDefault().handleError(a.error, { detail: a.sourceAction.type });
     } else if (a.error) {
-      MessageHandlerRegistry.getDefault().handleError(a.error.message, { detail: `${a.sourceAction.type}\n\n${a.error.stack}` });
+      MessageHandlerRegistry.getDefault().handleError(a.error.message, { detail: `Error occurred during ${a.sourceAction.type}`, stack: a.error.stack });
     }
   }),
   map(() => ({ type: actions.POST_ERROR }))

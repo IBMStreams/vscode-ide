@@ -59,7 +59,7 @@ export default class StreamsBuild {
         this._streamingAnalyticsCredentials = credentialsSetting ? JSON.stringify(credentialsSetting) : null;
 
         const toolkitsPathSetting = Configuration.getSetting(Settings.TOOLKITS_PATH);
-        this._toolkitsPath = toolkitsPathSetting !== '' ? toolkitsPathSetting : null;
+        this._toolkitsPath = toolkitsPathSetting !== '' && toolkitsPathSetting !== Settings.TOOLKITS_PATH_DEFAULT ? toolkitsPathSetting : null;
         getStore().dispatch(setToolkitsPathSetting(this._toolkitsPath));
 
         this._apiVersion = Configuration.getSetting(Settings.TARGET_VERSION);
@@ -133,7 +133,7 @@ export default class StreamsBuild {
 
             if (event.affectsConfiguration(Settings.TOOLKITS_PATH)) {
                 const currentToolkitsPathSetting = Configuration.getSetting(Settings.TOOLKITS_PATH);
-                this._toolkitsPath = currentToolkitsPathSetting !== '' ? currentToolkitsPathSetting : null;
+                this._toolkitsPath = currentToolkitsPathSetting !== '' && currentToolkitsPathSetting !== Settings.TOOLKITS_PATH_DEFAULT ? currentToolkitsPathSetting : null;
                 getStore().dispatch(setToolkitsPathSetting(this._toolkitsPath));
             }
 
@@ -514,6 +514,43 @@ export default class StreamsBuild {
     public static refreshLspToolkits() {
         if (this._apiVersion === Settings.TARGET_VERSION_OPTION.V5) {
             const refresh = () => {
+                MessageHandlerRegistry.getDefault().handleInfo('Refreshing toolkits');
+
+                const toolkitsPathSetting = Configuration.getSetting(Settings.TOOLKITS_PATH);
+                if (typeof toolkitsPathSetting === 'string' && toolkitsPathSetting.length > 0) {
+                    if (toolkitsPathSetting.match(/[,;]/)) {
+                        const directories = toolkitsPathSetting.split(/[,;]/);
+                        const directoriesInvalid = _.some(directories, dir => dir !== Settings.TOOLKITS_PATH_DEFAULT && !fs.existsSync(dir));
+                        if (directoriesInvalid) {
+                            MessageHandlerRegistry.getDefault().handleError(
+                                'One or more toolkit paths do not exist or are not valid. Verify the paths.',
+                                {
+                                    detail: `Verify that the paths exist:\n${directories.join('\n')}`,
+                                    notificationButtons: [{
+                                            label: 'Open settings',
+                                            callbackFn: () => MessageHandlerRegistry.getDefault().openSettingsPage()
+                                    }]
+                                }
+                            );
+                            return;
+                        }
+                    } else if (toolkitsPathSetting !== Settings.TOOLKITS_PATH_DEFAULT && !fs.existsSync(toolkitsPathSetting)) {
+                        MessageHandlerRegistry.getDefault().handleError(
+                            `The specified toolkit path ${toolkitsPathSetting} does not exist or is not valid. Verify the path.`,
+                            {
+                                detail: `Verify that the path exists: ${toolkitsPathSetting}`,
+                                notificationButtons: [{
+                                    label: 'Open settings',
+                                    callbackFn: () => MessageHandlerRegistry.getDefault().openSettingsPage()
+                                }]
+                            }
+                        );
+                        return;
+                    }
+                    const toolkitsPath = toolkitsPathSetting !== '' && toolkitsPathSetting !== Settings.TOOLKITS_PATH_DEFAULT ? toolkitsPathSetting : null;
+                    getStore().dispatch(setToolkitsPathSetting(toolkitsPath));
+                }
+
                 if (!StateSelector.hasAuthenticatedToStreamsInstance(getStore().getState())) {
                     // Authenticating automatically refreshes the toolkits
                     this.showIcp4dAuthPanel();
