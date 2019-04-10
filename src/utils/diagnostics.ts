@@ -1,7 +1,6 @@
 'use strict';
 
 import * as _ from 'lodash';
-import * as path from 'path';
 import { Diagnostic, DiagnosticChangeEvent, DiagnosticCollection, DiagnosticSeverity, ExtensionContext, languages, Range, TextDocument, TextDocumentChangeEvent, TextEditor, TextEditorDecorationType, Uri, window, workspace } from 'vscode';
 import { Constants } from '.';
 
@@ -43,10 +42,9 @@ export default class Diagnostics {
     public static lintFiles(regExp: RegExp, appRoot: string, messages: string[]): void {
         const diagnosticMap = new Map<Uri, Diagnostic[]>();
 
-        const messageObjs = this.parseMessages(regExp, messages);
-        _.each(messageObjs, (obj: any) => {
+        _.each(messages, (message: any) => {
             const document = _.find(workspace.textDocuments, (doc: TextDocument) => {
-                return doc.fileName === `${appRoot}${path.sep}${obj.path}`;
+                return doc.fileName === message.file;
             });
             if (document) {
                 let diagnostics = [];
@@ -56,23 +54,10 @@ export default class Diagnostics {
                     diagnostics = diagnosticMap.get(document.uri);
                 }
 
-                let severity = null;
-                switch (obj.type) {
-                    case 'ERROR':
-                        severity = DiagnosticSeverity.Error;
-                        break;
-                    case 'WARN':
-                        severity = DiagnosticSeverity.Warning;
-                        break;
-                    case 'INFO':
-                        severity = DiagnosticSeverity.Information;
-                        break;
-                }
-
                 const diagnostic: Diagnostic = {
-                    severity,
-                    range: new Range(obj.line - 1, obj.column - 1, obj.line - 1, obj.column - 1),
-                    message: `${obj.code} ${obj.message}`,
+                    severity: message.severity,
+                    range: new Range(message.line - 1, message.column - 1, message.line - 1, message.column - 1),
+                    message: `${message.code} ${message.description}`,
                     source: Constants.IBM_STREAMS
                 };
                 diagnostics.push(diagnostic);
@@ -83,30 +68,6 @@ export default class Diagnostics {
             this.diagnosticCollection.delete(uri);
             this.diagnosticCollection.set(uri, diagnosticMap.get(uri));
         }
-    }
-
-    /**
-     * Parse build messages for relevant information
-     * @param regExp      The regular expression to use for matching
-     * @param messages    The build messages to use for matching
-     */
-    private static parseMessages(regExp: RegExp, messages: string[]): object[] {
-        let match = null;
-        const messageObjs = [];
-        _.each(messages, (message: string) => {
-            match = regExp.exec(message);
-            if (match) {
-                messageObjs.push({
-                    path: match[1],
-                    line: parseInt(match[2], 10),
-                    column: parseInt(match[3], 10),
-                    code: match[4],
-                    message: match[5],
-                    type: match[6]
-                });
-            }
-        });
-        return messageObjs;
     }
 
     /**

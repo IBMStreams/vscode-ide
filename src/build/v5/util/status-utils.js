@@ -26,7 +26,9 @@ function buildStatusUpdate(action, state) {
   } else if (buildStatus === 'failed') {
     messageHandler.handleError(`Build failed - ${displayIdentifier}`, { detail: logMessages, showNotification: true });
     const lintHandler = getLintHandlerForBuildId(state, buildId);
-    lintHandler.lint(logMessages);
+    if (lintHandler) {
+      lintHandler.lint(logMessages);
+    }
   } else if (buildStatus === 'building') {
     messageHandler.handleInfo(`Building ${displayIdentifier}...`, { detail: logMessages, showNotification: true });
   }

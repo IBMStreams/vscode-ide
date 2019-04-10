@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 
 const SPL_MSG_REGEX = /^(?:[0-9][\w-:.]+\s*)?([\w.]+(?:\/[\w.]+)?):(\d+):(\d+):\s+(\w{5}\d{4}[IWE])\s+((ERROR|WARN|INFO):.*)$/;
+const SPL_MSG_REGEX_V5 = /^(?:\d{4}-\d{2}-\d{2}T\d{2}\:\d{2}\:\d{2}\.\d{3}.\s+)([\w.]+(?:\/[\w.]+)?):(\d+):(\d+):\s+(\w{5}\d{4}[IWE])\s+((ERROR|WARN|WARNING|INFO):.*)$/;
 
 const SPL_NAMESPACE_REGEX = /^\s*(?:\bnamespace\b)\s+([a-z|A-Z|0-9|.|_]+)\s*;/gm;
 
@@ -76,6 +77,7 @@ function parseV4ServiceCredentials(streamingAnalyticsCredentials) {
 const StreamsUtils = {
   SPL_MAIN_COMPOSITE_REGEX,
   SPL_MSG_REGEX,
+  SPL_MSG_REGEX_V5,
   SPL_NAMESPACE_REGEX,
   BUILD_ACTION,
   parseV4ServiceCredentials,

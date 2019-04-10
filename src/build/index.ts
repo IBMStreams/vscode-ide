@@ -160,7 +160,7 @@ export default class StreamsBuild {
 
             let lintHandler = LintHandlerRegistry.get(appRoot);
             if (!lintHandler) {
-                lintHandler = new LintHandler(appRoot);
+                lintHandler = new LintHandler(appRoot, this._apiVersion);
                 LintHandlerRegistry.add(appRoot, lintHandler);
             }
 
@@ -206,7 +206,7 @@ export default class StreamsBuild {
                 toolkitRootPath: this._toolkitsPath
             }).then((result: any) => {
                 if (result.archivePath) {
-                    const lintHandler = new LintHandler(appRoot);
+                    const lintHandler = new LintHandler(appRoot, this._apiVersion);
                     const builder = new SplBuilder(messageHandler, lintHandler, this._openUrlHandler, this._originator, { appRoot, fqn: compositeToBuild });
                     builder.build(action, this._streamingAnalyticsCredentials, { filename: result.archivePath });
                 }
@@ -251,7 +251,7 @@ export default class StreamsBuild {
 
             let lintHandler = LintHandlerRegistry.get(appRoot);
             if (!lintHandler) {
-                lintHandler = new LintHandler(appRoot);
+                lintHandler = new LintHandler(appRoot, this._apiVersion);
                 LintHandlerRegistry.add(appRoot, lintHandler);
             }
 
@@ -297,7 +297,7 @@ export default class StreamsBuild {
                 toolkitRootPath: this._toolkitsPath
             }).then((result: any) => {
                 if (result.archivePath) {
-                    const lintHandler = new LintHandler(appRoot);
+                    const lintHandler = new LintHandler(appRoot, this._apiVersion);
                     const builder = new SplBuilder(messageHandler, lintHandler, this._openUrlHandler, this._originator, { appRoot, makefilePath: filePath });
                     builder.build(action, this._streamingAnalyticsCredentials, { filename: result.archivePath });
                 }
@@ -373,7 +373,7 @@ export default class StreamsBuild {
             Logger.info(outputChannel, statusMessage, false, true);
             Logger.debug(outputChannel, `Selected: ${filePath}`);
 
-            const lintHandler = new LintHandler(appRoot);
+            const lintHandler = new LintHandler(appRoot, this._apiVersion);
             const builder = new SplBuilder(messageHandler, lintHandler, this._openUrlHandler, this._originator);
             builder.submit(this._streamingAnalyticsCredentials, { filename: filePath });
         } catch (error) {
@@ -520,7 +520,7 @@ export default class StreamsBuild {
                 if (typeof toolkitsPathSetting === 'string' && toolkitsPathSetting.length > 0) {
                     if (toolkitsPathSetting.match(/[,;]/)) {
                         const directories = toolkitsPathSetting.split(/[,;]/);
-                        const directoriesInvalid = _.some(directories, dir => dir !== Settings.TOOLKITS_PATH_DEFAULT && !fs.existsSync(dir));
+                        const directoriesInvalid = _.some(directories, (dir: string) => dir !== Settings.TOOLKITS_PATH_DEFAULT && !fs.existsSync(dir));
                         if (directoriesInvalid) {
                             MessageHandlerRegistry.getDefault().handleError(
                                 'One or more toolkit paths do not exist or are not valid. Verify the paths.',
