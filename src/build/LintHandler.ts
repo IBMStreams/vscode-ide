@@ -1,6 +1,6 @@
 import * as path from 'path';
 import { DiagnosticSeverity } from 'vscode';
-import { Diagnostics, Settings } from '../utils';
+import { Diagnostics } from '../utils';
 import { StreamsUtils } from './v5/util';
 
 /**
@@ -9,16 +9,12 @@ import { StreamsUtils } from './v5/util';
 export default class LintHandler {
     private _msgRegex: RegExp;
     private _appRoot: string;
-    private _apiVersion: string;
 
     /**
-     * @param appRoot       The application root path
-     * @param apiVersion    The Streams API version
+     * @param appRoot    The application root path
      */
-    constructor(appRoot: string, apiVersion: string) {
-        this._msgRegex = apiVersion === Settings.TARGET_VERSION_OPTION.V4 ? StreamsUtils.SPL_MSG_REGEX : StreamsUtils.SPL_MSG_REGEX_V5;
+    constructor(appRoot: string) {
         this._appRoot = appRoot;
-        this._apiVersion = apiVersion;
     }
 
     /**
@@ -31,10 +27,12 @@ export default class LintHandler {
         }
 
         let messages = [];
-        if (this._apiVersion === Settings.TARGET_VERSION_OPTION.V5) {
-            messages = response;
-        } else {
+        if (response.output) {
+            this._setV4();
             messages = response.output.map((message: any) => message.message_text);
+        } else if (Array.isArray(response)) {
+            this._setV5();
+            messages = response;
         }
 
         if (Array.isArray(messages)) {
@@ -43,6 +41,20 @@ export default class LintHandler {
                 .map((message: string) => this._parseMessage(message));
             Diagnostics.lintFiles(this._msgRegex, this._appRoot, convertedMessages);
         }
+    }
+
+    /**
+     * Target Streams API V4
+     */
+    private _setV4() {
+        this._msgRegex = StreamsUtils.SPL_MSG_REGEX;
+    }
+
+    /**
+     * Target Streams API V5
+     */
+    private _setV5() {
+        this._msgRegex = StreamsUtils.SPL_MSG_REGEX_V5;
     }
 
     /**

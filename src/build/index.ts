@@ -160,7 +160,7 @@ export default class StreamsBuild {
 
             let lintHandler = LintHandlerRegistry.get(appRoot);
             if (!lintHandler) {
-                lintHandler = new LintHandler(appRoot, this._apiVersion);
+                lintHandler = new LintHandler(appRoot);
                 LintHandlerRegistry.add(appRoot, lintHandler);
             }
 
@@ -206,7 +206,7 @@ export default class StreamsBuild {
                 toolkitCacheDir: StateSelector.getToolkitsCacheDir(getStore().getState())
             }).then((result: any) => {
                 if (result.archivePath) {
-                    const lintHandler = new LintHandler(appRoot, this._apiVersion);
+                    const lintHandler = new LintHandler(appRoot);
                     const builder = new SplBuilder(messageHandler, lintHandler, this._openUrlHandler, this._originator, { appRoot, fqn: compositeToBuild });
                     builder.build(action, this._streamingAnalyticsCredentials, { filename: result.archivePath });
                 }
@@ -251,7 +251,7 @@ export default class StreamsBuild {
 
             let lintHandler = LintHandlerRegistry.get(appRoot);
             if (!lintHandler) {
-                lintHandler = new LintHandler(appRoot, this._apiVersion);
+                lintHandler = new LintHandler(appRoot);
                 LintHandlerRegistry.add(appRoot, lintHandler);
             }
 
@@ -297,7 +297,7 @@ export default class StreamsBuild {
                 toolkitCacheDir: StateSelector.getToolkitsCacheDir(getStore().getState())
             }).then((result: any) => {
                 if (result.archivePath) {
-                    const lintHandler = new LintHandler(appRoot, this._apiVersion);
+                    const lintHandler = new LintHandler(appRoot);
                     const builder = new SplBuilder(messageHandler, lintHandler, this._openUrlHandler, this._originator, { appRoot, makefilePath: filePath });
                     builder.build(action, this._streamingAnalyticsCredentials, { filename: result.archivePath });
                 }
@@ -373,7 +373,7 @@ export default class StreamsBuild {
             Logger.info(outputChannel, statusMessage, false, true);
             Logger.debug(outputChannel, `Selected: ${filePath}`);
 
-            const lintHandler = new LintHandler(appRoot, this._apiVersion);
+            const lintHandler = new LintHandler(appRoot);
             const builder = new SplBuilder(messageHandler, lintHandler, this._openUrlHandler, this._originator);
             builder.submit(this._streamingAnalyticsCredentials, { filename: filePath });
         } catch (error) {
