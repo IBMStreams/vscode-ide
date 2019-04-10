@@ -26,7 +26,7 @@ export default class SplLanguageClient {
             debug: { command, args: ['-Xdebug', '-Xrunjdwp:transport=dt_socket,address=8998,server=y,suspend=n'], options: { cwd } }
         };
 
-        const toolkitsOption = StreamsToolkitsUtils.getLangServerOptionForInitToolkits(Constants.TOOLKITS_CACHE_DIR, Configuration.getSetting(Settings.TOOLKITS_PATH));
+        const toolkitsOption = StreamsToolkitsUtils.getLangServerOptionForInitToolkits(Constants.TOOLKITS_CACHE_DIR, Configuration.getSetting(Settings.TOOLKIT_PATHS));
         const initOptions = { ...toolkitsOption };
         const clientOptions: LanguageClientOptions = {
             outputChannelName: 'IBM Streams SPL Language Server',
@@ -38,7 +38,7 @@ export default class SplLanguageClient {
         };
 
         // Create the language client and start the client
-        const client = new LanguageClient('spl', Constants.IBM_STREAMS, serverOptions, clientOptions);
+        const client = new LanguageClient('ibm-streams', Constants.IBM_STREAMS, serverOptions, clientOptions);
         this.client = client;
 
         // Show progress in the status bar

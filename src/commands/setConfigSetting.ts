@@ -45,7 +45,7 @@ export class SetConfigSettingCommand implements IBaseCommand {
                 placeHolder = 'https://HOST:PORT';
                 break;
             case Commands.SET_TOOLKITS_PATH:
-                name = Settings.TOOLKITS_PATH;
+                name = Settings.TOOLKIT_PATHS;
                 prompt = 'Provide paths to directories, comma or semicolon separated, containing IBM Streams toolkits';
                 placeHolder = '/path/to/first/toolkits/directory;/path/to/second/toolkits/directory';
                 break;

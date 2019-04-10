@@ -41,7 +41,7 @@ import { SourceArchiveUtils, StateSelector, StreamsToolkitsUtils, StreamsUtils }
 export default class StreamsBuild {
     private static _context: ExtensionContext;
     private static _streamingAnalyticsCredentials: string;
-    private static _toolkitsPath: string;
+    private static _toolkitPaths: string;
     private static _apiVersion: string;
     private static _originator: object;
     private static _storeSubscription: any;
@@ -58,9 +58,9 @@ export default class StreamsBuild {
         const credentialsSetting = Configuration.getSetting(Settings.STREAMING_ANALYTICS_CREDENTIALS);
         this._streamingAnalyticsCredentials = credentialsSetting ? JSON.stringify(credentialsSetting) : null;
 
-        const toolkitsPathSetting = Configuration.getSetting(Settings.TOOLKITS_PATH);
-        this._toolkitsPath = toolkitsPathSetting !== '' && toolkitsPathSetting !== Settings.TOOLKITS_PATH_DEFAULT ? toolkitsPathSetting : null;
-        getStore().dispatch(setToolkitsPathSetting(this._toolkitsPath));
+        const toolkitPathsSetting = Configuration.getSetting(Settings.TOOLKIT_PATHS);
+        this._toolkitPaths = toolkitPathsSetting !== '' && toolkitPathsSetting !== Settings.TOOLKIT_PATHS_DEFAULT ? toolkitPathsSetting : null;
+        getStore().dispatch(setToolkitsPathSetting(this._toolkitPaths));
 
         this._apiVersion = Configuration.getSetting(Settings.TARGET_VERSION);
 
@@ -80,7 +80,7 @@ export default class StreamsBuild {
         }
 
         if (!StateSelector.getUseIcp4dMasterNodeHost(getStore().getState())) {
-            getStore().dispatch(setUseIcp4dMasterNodeHost(Configuration.getSetting(Settings.USE_ICP4D_MASTER_NODE_HOST)));
+            getStore().dispatch(setUseIcp4dMasterNodeHost(Configuration.getSetting(Settings.ICP4D_USE_MASTER_NODE_HOST)));
         }
 
         const username = Configuration.getState(`${Constants.EXTENSION_NAME}.username`);
@@ -111,8 +111,7 @@ export default class StreamsBuild {
 
         // Monitor changes to configuration settings
         this._context.subscriptions.push(workspace.onDidChangeConfiguration((event: ConfigurationChangeEvent) => {
-            const affectStreamsConfiguration = _.some(Settings.SECTION_IDS, (id: string) => event.affectsConfiguration(id));
-            if (!affectStreamsConfiguration) {
+            if (!event.affectsConfiguration(Settings.SECTION_ID)) {
                 return;
             }
 
@@ -120,6 +119,11 @@ export default class StreamsBuild {
                 this.updateIcp4dUrl(Configuration.getSetting(Settings.ICP4D_URL));
                 getStore().dispatch(resetAuth());
                 ICP4DWebviewPanel.close();
+            }
+
+            if (event.affectsConfiguration(Settings.ICP4D_USE_MASTER_NODE_HOST)) {
+                const useHostSetting = Configuration.getSetting(Settings.ICP4D_USE_MASTER_NODE_HOST);
+                getStore().dispatch(setUseIcp4dMasterNodeHost(useHostSetting));
             }
 
             if (event.affectsConfiguration(Settings.STREAMING_ANALYTICS_CREDENTIALS)) {
@@ -131,15 +135,10 @@ export default class StreamsBuild {
                 this._apiVersion = Configuration.getSetting(Settings.TARGET_VERSION);
             }
 
-            if (event.affectsConfiguration(Settings.TOOLKITS_PATH)) {
-                const currentToolkitsPathSetting = Configuration.getSetting(Settings.TOOLKITS_PATH);
-                this._toolkitsPath = currentToolkitsPathSetting !== '' && currentToolkitsPathSetting !== Settings.TOOLKITS_PATH_DEFAULT ? currentToolkitsPathSetting : null;
-                getStore().dispatch(setToolkitsPathSetting(this._toolkitsPath));
-            }
-
-            if (event.affectsConfiguration(Settings.USE_ICP4D_MASTER_NODE_HOST)) {
-                const useHostSetting = Configuration.getSetting(Settings.USE_ICP4D_MASTER_NODE_HOST);
-                getStore().dispatch(setUseIcp4dMasterNodeHost(useHostSetting));
+            if (event.affectsConfiguration(Settings.TOOLKIT_PATHS)) {
+                const currentToolkitPathsSetting = Configuration.getSetting(Settings.TOOLKIT_PATHS);
+                this._toolkitPaths = currentToolkitPathsSetting !== '' && currentToolkitPathsSetting !== Settings.TOOLKIT_PATHS_DEFAULT ? currentToolkitPathsSetting : null;
+                getStore().dispatch(setToolkitsPathSetting(this._toolkitPaths));
             }
         }));
 
@@ -202,7 +201,7 @@ export default class StreamsBuild {
                 buildId: null,
                 fqn: compositeToBuild,
                 makefilePath: null,
-                toolkitPathSetting: Configuration.getState(Settings.TOOLKITS_PATH),
+                toolkitPathSetting: Configuration.getState(Settings.TOOLKIT_PATHS),
                 toolkitCacheDir: StateSelector.getToolkitsCacheDir(getStore().getState())
             }).then((result: any) => {
                 if (result.archivePath) {
@@ -228,7 +227,7 @@ export default class StreamsBuild {
             fqn: compositeToBuild,
             makefilePath: null,
             postBuildAction: action,
-            toolkitRootPath: this._toolkitsPath
+            toolkitRootPath: this._toolkitPaths
         });
 
         if (!StateSelector.hasAuthenticatedToStreamsInstance(getStore().getState())) {
@@ -293,7 +292,7 @@ export default class StreamsBuild {
                 buildId: null,
                 fqn: null,
                 makefilePath: filePath,
-                toolkitPathSetting: Configuration.getState(Settings.TOOLKITS_PATH),
+                toolkitPathSetting: Configuration.getState(Settings.TOOLKIT_PATHS),
                 toolkitCacheDir: StateSelector.getToolkitsCacheDir(getStore().getState())
             }).then((result: any) => {
                 if (result.archivePath) {
@@ -319,7 +318,7 @@ export default class StreamsBuild {
             fqn: null,
             makefilePath: filePath,
             postBuildAction: action,
-            toolkitRootPath: this._toolkitsPath
+            toolkitRootPath: this._toolkitPaths
         });
 
         if (!StateSelector.hasAuthenticatedToStreamsInstance(getStore().getState())) {
@@ -515,11 +514,11 @@ export default class StreamsBuild {
         const cachedToolkits = StreamsToolkitsUtils.getCachedToolkits(StateSelector.getToolkitsCacheDir(getStore().getState())).map((tk: any) => tk.label);
         const cachedToolkitsStr = `\nBuild service toolkits:${cachedToolkits.length ? `\n\n${cachedToolkits.join('\n')}` : ' none'}`;
 
-        const localToolkitsPathSetting = Configuration.getSetting(Settings.TOOLKITS_PATH);
+        const localToolkitPathsSetting = Configuration.getSetting(Settings.TOOLKIT_PATHS);
         let localToolkitsStr = '';
-        if (localToolkitsPathSetting && localToolkitsPathSetting.length > 0) {
-            const localToolkits = StreamsToolkitsUtils.getLocalToolkits(localToolkitsPathSetting).map((tk: any) => tk.label);
-            localToolkitsStr = `\n\nLocal toolkits from ${localToolkitsPathSetting}:${localToolkits.length ? `\n\n${localToolkits.join('\n')}` : ' none'}`;
+        if (localToolkitPathsSetting && localToolkitPathsSetting.length > 0) {
+            const localToolkits = StreamsToolkitsUtils.getLocalToolkits(localToolkitPathsSetting).map((tk: any) => tk.label);
+            localToolkitsStr = `\n\nLocal toolkits from ${localToolkitPathsSetting}:${localToolkits.length ? `\n\n${localToolkits.join('\n')}` : ' none'}`;
         }
         window.showInformationMessage('The available IBM Streams toolkits are displayed in the IBM Streams output channel.');
         MessageHandlerRegistry.getDefault().handleInfo(
@@ -537,11 +536,11 @@ export default class StreamsBuild {
     public static refreshLspToolkits() {
         if (this._apiVersion === Settings.TARGET_VERSION_OPTION.V5) {
             const refresh = () => {
-                const toolkitsPathSetting = Configuration.getSetting(Settings.TOOLKITS_PATH);
-                if (typeof toolkitsPathSetting === 'string' && toolkitsPathSetting.length > 0) {
-                    if (toolkitsPathSetting.match(/[,;]/)) {
-                        const directories = toolkitsPathSetting.split(/[,;]/);
-                        const directoriesInvalid = _.some(directories, (dir: string) => dir !== Settings.TOOLKITS_PATH_DEFAULT && !fs.existsSync(dir));
+                const toolkitPathsSetting = Configuration.getSetting(Settings.TOOLKIT_PATHS);
+                if (typeof toolkitPathsSetting === 'string' && toolkitPathsSetting.length > 0) {
+                    if (toolkitPathsSetting.match(/[,;]/)) {
+                        const directories = toolkitPathsSetting.split(/[,;]/);
+                        const directoriesInvalid = _.some(directories, (dir: string) => dir !== Settings.TOOLKIT_PATHS_DEFAULT && !fs.existsSync(dir));
                         if (directoriesInvalid) {
                             MessageHandlerRegistry.getDefault().handleError(
                                 'One or more toolkit paths do not exist or are not valid. Verify the paths.',
@@ -555,11 +554,11 @@ export default class StreamsBuild {
                             );
                             return;
                         }
-                    } else if (toolkitsPathSetting !== Settings.TOOLKITS_PATH_DEFAULT && !fs.existsSync(toolkitsPathSetting)) {
+                    } else if (toolkitPathsSetting !== Settings.TOOLKIT_PATHS_DEFAULT && !fs.existsSync(toolkitPathsSetting)) {
                         MessageHandlerRegistry.getDefault().handleError(
-                            `The specified toolkit path ${toolkitsPathSetting} does not exist or is not valid. Verify the path.`,
+                            `The specified toolkit path ${toolkitPathsSetting} does not exist or is not valid. Verify the path.`,
                             {
-                                detail: `Verify that the path exists: ${toolkitsPathSetting}`,
+                                detail: `Verify that the path exists: ${toolkitPathsSetting}`,
                                 notificationButtons: [{
                                     label: 'Open settings',
                                     callbackFn: () => MessageHandlerRegistry.getDefault().openSettingsPage()
@@ -568,7 +567,7 @@ export default class StreamsBuild {
                         );
                         return;
                     }
-                    const toolkitsPath = toolkitsPathSetting !== '' && toolkitsPathSetting !== Settings.TOOLKITS_PATH_DEFAULT ? toolkitsPathSetting : null;
+                    const toolkitsPath = toolkitPathsSetting !== '' && toolkitPathsSetting !== Settings.TOOLKIT_PATHS_DEFAULT ? toolkitPathsSetting : null;
                     getStore().dispatch(setToolkitsPathSetting(toolkitsPath));
                 }
 

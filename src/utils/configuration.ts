@@ -51,10 +51,10 @@ export default class Configuration {
     private static getSettingsSnapshot(): object {
         return {
             [Settings.ICP4D_URL]: this.getSetting(Settings.ICP4D_URL),
+            [Settings.ICP4D_USE_MASTER_NODE_HOST]: this.getSetting(Settings.ICP4D_USE_MASTER_NODE_HOST),
             [Settings.STREAMING_ANALYTICS_CREDENTIALS]: this.getSetting(Settings.STREAMING_ANALYTICS_CREDENTIALS),
             [Settings.TARGET_VERSION]: this.getSetting(Settings.TARGET_VERSION),
-            [Settings.TOOLKITS_PATH]: this.getSetting(Settings.TOOLKITS_PATH),
-            [Settings.USE_ICP4D_MASTER_NODE_HOST]: this.getSetting(Settings.USE_ICP4D_MASTER_NODE_HOST),
+            [Settings.TOOLKIT_PATHS]: this.getSetting(Settings.TOOLKIT_PATHS),
             [Settings.TRACE_SERVER]: this.getSetting(Settings.TRACE_SERVER)
         };
     }
@@ -64,25 +64,26 @@ export default class Configuration {
      */
     private static watchSettings(): void {
         this.context.subscriptions.push(workspace.onDidChangeConfiguration((event: ConfigurationChangeEvent) => {
-            const affectStreamsConfiguration = _.some(Settings.SECTION_IDS, (id: string) => event.affectsConfiguration(id));
-            if (!affectStreamsConfiguration) {
+            if (!event.affectsConfiguration(Settings.SECTION_ID)) {
                 return;
             }
 
             let changedSettingName = null;
             if (event.affectsConfiguration(Settings.ICP4D_URL)) {
                 changedSettingName = Settings.ICP4D_URL;
+            } else if (event.affectsConfiguration(Settings.ICP4D_USE_MASTER_NODE_HOST)) {
+                changedSettingName = Settings.ICP4D_USE_MASTER_NODE_HOST;
             } else if (event.affectsConfiguration(Settings.STREAMING_ANALYTICS_CREDENTIALS)) {
                 changedSettingName = Settings.STREAMING_ANALYTICS_CREDENTIALS;
             } else if (event.affectsConfiguration(Settings.TARGET_VERSION)) {
                 changedSettingName = Settings.TARGET_VERSION;
-            } else if (event.affectsConfiguration(Settings.TOOLKITS_PATH)) {
-                changedSettingName = Settings.TOOLKITS_PATH;
+            } else if (event.affectsConfiguration(Settings.TOOLKIT_PATHS)) {
+                changedSettingName = Settings.TOOLKIT_PATHS;
 
                 // Send added and removed toolkits to the LSP server
-                const currentToolkitsPathSetting = Configuration.getSetting(changedSettingName);
-                const previousToolkitsPathSetting = Configuration.getState(changedSettingName);
-                const { addedToolkitPaths, removedToolkitNames } = StreamsToolkitsUtils.getChangedLocalToolkits(previousToolkitsPathSetting, currentToolkitsPathSetting);
+                const currentToolkitPathsSetting = Configuration.getSetting(changedSettingName);
+                const previousToolkitPathsSetting = Configuration.getState(changedSettingName);
+                const { addedToolkitPaths, removedToolkitNames } = StreamsToolkitsUtils.getChangedLocalToolkits(previousToolkitPathsSetting, currentToolkitPathsSetting);
                 if (addedToolkitPaths && addedToolkitPaths.length) {
                     const addParam = StreamsToolkitsUtils.getLangServerParamForAddToolkits(addedToolkitPaths);
                     SplLanguageClient.getClient().sendNotification(DidChangeConfigurationNotification.type, addParam);
@@ -91,8 +92,6 @@ export default class Configuration {
                     const removeParam = StreamsToolkitsUtils.getLangServerParamForRemoveToolkits(removedToolkitNames);
                     SplLanguageClient.getClient().sendNotification(DidChangeConfigurationNotification.type, removeParam);
                 }
-            } else if (event.affectsConfiguration(Settings.USE_ICP4D_MASTER_NODE_HOST)) {
-                changedSettingName = Settings.USE_ICP4D_MASTER_NODE_HOST;
             } else if (event.affectsConfiguration(Settings.TRACE_SERVER)) {
                 changedSettingName = Settings.TRACE_SERVER;
             }

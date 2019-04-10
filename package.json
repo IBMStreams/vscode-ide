@@ -39,12 +39,17 @@
       "type": "object",
       "title": "IBM Streams",
       "properties": {
-        "ibm-streams.icp4dUrl": {
+        "ibm-streams.icp4d.url": {
           "type": "string",
           "default": "https://HOST:PORT",
           "description": "IBM Cloud Private for Data URL."
         },
-        "ibm-streams.streamingAnalyticsCredentials": {
+        "ibm-streams.icp4d.useMasterNodeHost": {
+          "type": "boolean",
+          "default": true,
+          "description": "Use the host specified in the IBM Cloud Private for Data URL for builds."
+        },
+        "ibm-streams.streamingAnalytics.credentials": {
           "type": "object",
           "default": null,
           "description": "Credentials for an IBM Streaming Analytics service."
@@ -53,22 +58,17 @@
           "type": "string",
           "enum": [
             "IBM Cloud: Streaming Analytics service",
-            "IBM Cloud Private for Data: Streams add-on instance"
+            "IBM Cloud Private for Data: Streams add-on"
           ],
-          "default": "IBM Cloud Private for Data: Streams add-on instance",
+          "default": "IBM Cloud Private for Data: Streams add-on",
           "description": "Streams version to target for application builds and submissions."
         },
-        "ibm-streams.toolkitsPath": {
+        "ibm-streams.toolkitPaths": {
           "type": "string",
           "default": "/path/to/toolkits/directory",
           "description": "Paths to directories, comma or semicolon separated, containing IBM Streams toolkits."
         },
-        "ibm-streams.useIcp4dMasterNodeHost": {
-          "type": "boolean",
-          "default": true,
-          "description": "Use the host specified in the IBM Cloud Private for Data URL for builds."
-        },
-        "spl.trace.server": {
+        "ibm-streams.trace.server": {
           "type": "string",
           "enum": [
             "off",
@@ -86,33 +86,18 @@
         "category": "IBM Streams"
       },
       {
-        "command": "ibm-streams.listToolkits",
-        "title": "List available IBM Streams toolkits",
-        "category": "IBM Streams"
-      },
-      {
-        "command": "ibm-streams.openCloudDashboard",
-        "title": "Open IBM Cloud Dashboard",
-        "category": "IBM Streams"
-      },
-      {
-        "command": "ibm-streams.openIcp4dDashboard",
-        "title": "Open IBM Cloud Private for Data Dashboard",
-        "category": "IBM Streams"
-      },
-      {
-        "command": "ibm-streams.openStreamingAnalyticsConsole",
-        "title": "Open IBM Streaming Analytics Console",
-        "category": "IBM Streams"
-      },
-      {
-        "command": "ibm-streams.openStreamsConsole",
+        "command": "ibm-streams.icp4d.openConsole",
         "title": "Open IBM Streams Console",
         "category": "IBM Streams"
       },
       {
-        "command": "ibm-streams.refreshToolkits",
-        "title": "Refresh IBM Streams Toolkits",
+        "command": "ibm-streams.icp4d.openDashboard",
+        "title": "Open IBM Cloud Private for Data Dashboard",
+        "category": "IBM Streams"
+      },
+      {
+        "command": "ibm-streams.icp4d.setUrl",
+        "title": "Set IBM Cloud Private for Data URL",
         "category": "IBM Streams"
       },
       {
@@ -121,47 +106,62 @@
         "category": "IBM Streams"
       },
       {
-        "command": "ibm-streams.setIcp4dUrl",
-        "title": "Set IBM Cloud Private for Data URL",
-        "category": "IBM Streams"
-      },
-      {
-        "command": "ibm-streams.setServiceCredentials",
-        "title": "Set IBM Streaming Analytics Service Credentials",
-        "category": "IBM Streams"
-      },
-      {
         "command": "ibm-streams.setTargetVersion",
         "title": "Set IBM Streams Target Version",
         "category": "IBM Streams"
       },
       {
-        "command": "ibm-streams.setToolkitsPath",
-        "title": "Set IBM Streams Toolkits Path",
+        "command": "ibm-streams.streamingAnalytics.openConsole",
+        "title": "Open IBM Streaming Analytics Console",
         "category": "IBM Streams"
       },
       {
-        "command": "ibm-streams.buildAppDownload",
+        "command": "ibm-streams.streamingAnalytics.openDashboard",
+        "title": "Open IBM Cloud Dashboard",
+        "category": "IBM Streams"
+      },
+      {
+        "command": "ibm-streams.streamingAnalytics.setServiceCredentials",
+        "title": "Set IBM Streaming Analytics Service Credentials",
+        "category": "IBM Streams"
+      },
+      {
+        "command": "ibm-streams.toolkits.list",
+        "title": "List available IBM Streams toolkits",
+        "category": "IBM Streams"
+      },
+      {
+        "command": "ibm-streams.toolkits.refresh",
+        "title": "Refresh IBM Streams Toolkits",
+        "category": "IBM Streams"
+      },
+      {
+        "command": "ibm-streams.toolkits.setPaths",
+        "title": "Set IBM Streams Toolkit Paths",
+        "category": "IBM Streams"
+      },
+      {
+        "command": "ibm-streams.build.appDownload",
         "title": "Build",
         "category": "IBM Streams"
       },
       {
-        "command": "ibm-streams.buildAppSubmit",
+        "command": "ibm-streams.build.appSubmit",
         "title": "Build and Submit Job",
         "category": "IBM Streams"
       },
       {
-        "command": "ibm-streams.buildMakeDownload",
+        "command": "ibm-streams.build.makeDownload",
         "title": "Build",
         "category": "IBM Streams"
       },
       {
-        "command": "ibm-streams.buildMakeSubmit",
+        "command": "ibm-streams.build.makeSubmit",
         "title": "Build and Submit Job(s)",
         "category": "IBM Streams"
       },
       {
-        "command": "ibm-streams.submit",
+        "command": "ibm-streams.build.submit",
         "title": "Submit Job",
         "category": "IBM Streams"
       }
@@ -208,85 +208,88 @@
           "command": "ibm-streams.createApplication"
         },
         {
-          "command": "ibm-streams.openCloudDashboard",
-          "when": "config.ibm-streams.targetVersion == 'IBM Cloud: Streaming Analytics service'"
+          "command": "ibm-streams.icp4d.openConsole",
+          "when": "config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'"
         },
         {
-          "command": "ibm-streams.openIcp4dDashboard",
-          "when": "config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on instance'"
+          "command": "ibm-streams.icp4d.openDashboard",
+          "when": "config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'"
         },
         {
-          "command": "ibm-streams.openStreamingAnalyticsConsole",
-          "when": "config.ibm-streams.targetVersion == 'IBM Cloud: Streaming Analytics service'"
-        },
-        {
-          "command": "ibm-streams.openStreamsConsole",
-          "when": "config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on instance'"
-        },
-        {
-          "command": "ibm-streams.refreshToolkits"
+          "command": "ibm-streams.icp4d.setUrl",
+          "when": "config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'"
         },
         {
           "command": "ibm-streams.removeOutputChannels"
         },
         {
-          "command": "ibm-streams.setIcp4dUrl",
-          "when": "config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on instance'"
-        },
-        {
-          "command": "ibm-streams.setServiceCredentials",
-          "when": "config.ibm-streams.targetVersion == 'IBM Cloud: Streaming Analytics service'"
-        },
-        {
           "command": "ibm-streams.setTargetVersion"
         },
         {
-          "command": "ibm-streams.setToolkitsPath"
+          "command": "ibm-streams.streamingAnalytics.openConsole",
+          "when": "config.ibm-streams.targetVersion == 'IBM Cloud: Streaming Analytics service'"
         },
         {
-          "command": "ibm-streams.buildAppDownload",
+          "command": "ibm-streams.streamingAnalytics.openDashboard",
+          "when": "config.ibm-streams.targetVersion == 'IBM Cloud: Streaming Analytics service'"
+        },
+        {
+          "command": "ibm-streams.streamingAnalytics.setServiceCredentials",
+          "when": "config.ibm-streams.targetVersion == 'IBM Cloud: Streaming Analytics service'"
+        },
+        {
+          "command": "ibm-streams.toolkits.list"
+        },
+        {
+          "command": "ibm-streams.toolkits.refresh"
+        },
+        {
+          "command": "ibm-streams.toolkits.setPaths"
+        },
+        {
+          "command": "ibm-streams.build.appDownload",
           "when": "editorLangId == spl"
         },
         {
-          "command": "ibm-streams.buildAppSubmit",
+          "command": "ibm-streams.build.appSubmit",
           "when": "editorLangId == spl"
         },
         {
-          "command": "ibm-streams.buildMakeDownload",
+          "command": "ibm-streams.build.makeDownload",
           "when": "editorLangId == makefile"
         },
         {
-          "command": "ibm-streams.buildMakeSubmit",
+          "command": "ibm-streams.build.makeSubmit",
           "when": "editorLangId == makefile"
         },
         {
-          "command": "ibm-streams.submit",
+          "command": "ibm-streams.build.submit",
           "when": "resourceExtname == .sab"
         }
       ],
       "explorer/context": [
         {
-          "command": "ibm-streams.buildAppDownload",
+          "command": "ibm-streams.build.appDownload",
           "when": "resourceLangId == spl",
           "group": "STREAMS@1"
         },
         {
-          "command": "ibm-streams.buildAppSubmit",
+          "command": "ibm-streams.build.appSubmit",
           "when": "resourceLangId == spl",
           "group": "STREAMS@2"
         },
         {
-          "command": "ibm-streams.buildMakeDownload",
+          "command": "ibm-streams.build.makeDownload",
           "when": "resourceLangId == makefile",
           "group": "STREAMS@1"
         },
         {
-          "command": "ibm-streams.buildMakeSubmit",
+          "command": "ibm-streams.build.makeSubmit",
           "when": "resourceLangId == makefile",
           "group": "STREAMS@2"
         },
         {
-          "command": "ibm-streams.submit",
+          "command": "ibm-streams.build.submit",
           "when": "resourceExtname == .sab",
           "group": "STREAMS@3"
         },
@@ -295,69 +298,69 @@
           "group": "STREAMS@4"
         },
         {
-          "command": "ibm-streams.openCloudDashboard",
+          "command": "ibm-streams.icp4d.openDashboard",
+          "when": "resourceLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'",
+          "group": "STREAMS2@1"
+        },
+        {
+          "command": "ibm-streams.icp4d.openConsole",
+          "when": "resourceLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'",
+          "group": "STREAMS2@2"
+        },
+        {
+          "command": "ibm-streams.streamingAnalytics.openDashboard",
           "when": "resourceLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud: Streaming Analytics service'",
           "group": "STREAMS2@1"
         },
         {
-          "command": "ibm-streams.openStreamingAnalyticsConsole",
+          "command": "ibm-streams.streamingAnalytics.openConsole",
           "when": "resourceLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud: Streaming Analytics service'",
           "group": "STREAMS2@2"
         },
         {
-          "command": "ibm-streams.openIcp4dDashboard",
-          "when": "resourceLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on instance'",
+          "command": "ibm-streams.icp4d.openDashboard",
+          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'",
           "group": "STREAMS2@1"
         },
         {
-          "command": "ibm-streams.openStreamsConsole",
-          "when": "resourceLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on instance'",
+          "command": "ibm-streams.icp4d.openConsole",
+          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'",
           "group": "STREAMS2@2"
         },
         {
-          "command": "ibm-streams.openCloudDashboard",
+          "command": "ibm-streams.streamingAnalytics.openDashboard",
           "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud: Streaming Analytics service'",
           "group": "STREAMS2@1"
         },
         {
-          "command": "ibm-streams.openStreamingAnalyticsConsole",
+          "command": "ibm-streams.streamingAnalytics.openConsole",
           "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud: Streaming Analytics service'",
-          "group": "STREAMS2@2"
-        },
-        {
-          "command": "ibm-streams.openIcp4dDashboard",
-          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on instance'",
-          "group": "STREAMS2@1"
-        },
-        {
-          "command": "ibm-streams.openStreamsConsole",
-          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on instance'",
           "group": "STREAMS2@2"
         }
       ],
       "editor/context": [
         {
-          "command": "ibm-streams.buildAppDownload",
+          "command": "ibm-streams.build.appDownload",
           "when": "editorLangId == spl",
           "group": "STREAMS@1"
         },
         {
-          "command": "ibm-streams.buildAppSubmit",
+          "command": "ibm-streams.build.appSubmit",
           "when": "editorLangId == spl",
           "group": "STREAMS@2"
         },
         {
-          "command": "ibm-streams.buildMakeDownload",
+          "command": "ibm-streams.build.makeDownload",
           "when": "editorLangId == makefile",
           "group": "STREAMS@1"
         },
         {
-          "command": "ibm-streams.buildMakeSubmit",
+          "command": "ibm-streams.build.makeSubmit",
           "when": "editorLangId == makefile",
           "group": "STREAMS@2"
         },
         {
-          "command": "ibm-streams.submit",
+          "command": "ibm-streams.build.submit",
           "when": "resourceExtname == .sab",
           "group": "STREAMS@3"
         },
@@ -366,69 +369,69 @@
           "group": "STREAMS@4"
         },
         {
-          "command": "ibm-streams.openCloudDashboard",
+          "command": "ibm-streams.icp4d.openDashboard",
+          "when": "editorLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'",
+          "group": "STREAMS2@1"
+        },
+        {
+          "command": "ibm-streams.icp4d.openConsole",
+          "when": "editorLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'",
+          "group": "STREAMS2@2"
+        },
+        {
+          "command": "ibm-streams.streamingAnalytics.openDashboard",
           "when": "editorLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud: Streaming Analytics service'",
           "group": "STREAMS2@1"
         },
         {
-          "command": "ibm-streams.openStreamingAnalyticsConsole",
+          "command": "ibm-streams.streamingAnalytics.openConsole",
           "when": "editorLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud: Streaming Analytics service'",
           "group": "STREAMS2@2"
         },
         {
-          "command": "ibm-streams.openIcp4dDashboard",
-          "when": "editorLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on instance'",
+          "command": "ibm-streams.icp4d.openDashboard",
+          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'",
           "group": "STREAMS2@1"
         },
         {
-          "command": "ibm-streams.openStreamsConsole",
-          "when": "editorLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on instance'",
+          "command": "ibm-streams.icp4d.openConsole",
+          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'",
           "group": "STREAMS2@2"
         },
         {
-          "command": "ibm-streams.openCloudDashboard",
+          "command": "ibm-streams.streamingAnalytics.openDashboard",
           "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud: Streaming Analytics service'",
           "group": "STREAMS2@1"
         },
         {
-          "command": "ibm-streams.openStreamingAnalyticsConsole",
+          "command": "ibm-streams.streamingAnalytics.openConsole",
           "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud: Streaming Analytics service'",
-          "group": "STREAMS2@2"
-        },
-        {
-          "command": "ibm-streams.openIcp4dDashboard",
-          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on instance'",
-          "group": "STREAMS2@1"
-        },
-        {
-          "command": "ibm-streams.openStreamsConsole",
-          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on instance'",
           "group": "STREAMS2@2"
         }
       ],
       "editor/title/context": [
         {
-          "command": "ibm-streams.buildAppDownload",
+          "command": "ibm-streams.build.appDownload",
           "when": "resourceLangId == spl",
           "group": "STREAMS@1"
         },
         {
-          "command": "ibm-streams.buildAppSubmit",
+          "command": "ibm-streams.build.appSubmit",
           "when": "resourceLangId == spl",
           "group": "STREAMS@2"
         },
         {
-          "command": "ibm-streams.buildMakeDownload",
+          "command": "ibm-streams.build.makeDownload",
           "when": "resourceLangId == makefile",
           "group": "STREAMS@1"
         },
         {
-          "command": "ibm-streams.buildMakeSubmit",
+          "command": "ibm-streams.build.makeSubmit",
           "when": "resourceLangId == makefile",
           "group": "STREAMS@2"
         },
         {
-          "command": "ibm-streams.submit",
+          "command": "ibm-streams.build.submit",
           "when": "resourceExtname == .sab",
           "group": "STREAMS@3"
         },
@@ -437,43 +440,43 @@
           "group": "STREAMS@4"
         },
         {
-          "command": "ibm-streams.openCloudDashboard",
+          "command": "ibm-streams.icp4d.openDashboard",
+          "when": "resourceLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'",
+          "group": "STREAMS2@1"
+        },
+        {
+          "command": "ibm-streams.icp4d.openConsole",
+          "when": "resourceLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'",
+          "group": "STREAMS2@2"
+        },
+        {
+          "command": "ibm-streams.streamingAnalytics.openDashboard",
           "when": "resourceLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud: Streaming Analytics service'",
           "group": "STREAMS2@1"
         },
         {
-          "command": "ibm-streams.openStreamingAnalyticsConsole",
+          "command": "ibm-streams.streamingAnalytics.openConsole",
           "when": "resourceLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud: Streaming Analytics service'",
           "group": "STREAMS2@2"
         },
         {
-          "command": "ibm-streams.openIcp4dDashboard",
-          "when": "resourceLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on instance'",
+          "command": "ibm-streams.icp4d.openDashboard",
+          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'",
           "group": "STREAMS2@1"
         },
         {
-          "command": "ibm-streams.openStreamsConsole",
-          "when": "resourceLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on instance'",
+          "command": "ibm-streams.icp4d.openConsole",
+          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'",
           "group": "STREAMS2@2"
         },
         {
-          "command": "ibm-streams.openCloudDashboard",
+          "command": "ibm-streams.streamingAnalytics.openDashboard",
           "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud: Streaming Analytics service'",
           "group": "STREAMS2@1"
         },
         {
-          "command": "ibm-streams.openStreamingAnalyticsConsole",
+          "command": "ibm-streams.streamingAnalytics.openConsole",
           "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud: Streaming Analytics service'",
-          "group": "STREAMS2@2"
-        },
-        {
-          "command": "ibm-streams.openIcp4dDashboard",
-          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on instance'",
-          "group": "STREAMS2@1"
-        },
-        {
-          "command": "ibm-streams.openStreamsConsole",
-          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on instance'",
           "group": "STREAMS2@2"
         }
       ]
