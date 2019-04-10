@@ -3,6 +3,7 @@ import {
     BuildCommand,
     CreateApplicationCommand,
     IBaseCommand,
+    ListToolkitsCommand,
     OpenLinkCommand,
     RefreshToolkitsCommand,
     RemoveOutputChannelsCommand,
@@ -15,6 +16,7 @@ import * as Commands from './commands';
 export { default as IBaseCommand } from './base';
 export * from './build';
 export * from './createApplication';
+export * from './listToolkits';
 export * from './openLink';
 export * from './refreshToolkits';
 export * from './removeOutputChannels';
@@ -33,6 +35,7 @@ export function initialize(context: ExtensionContext) {
     streamsCommands.push(new BuildCommand(Commands.BUILD_MAKE_SUBMIT, StreamsUtils.BUILD_ACTION.SUBMIT));
     streamsCommands.push(new BuildCommand(Commands.SUBMIT));
     streamsCommands.push(new CreateApplicationCommand());
+    streamsCommands.push(new ListToolkitsCommand());
     streamsCommands.push(new OpenLinkCommand(Commands.OPEN_CLOUD_DASHBOARD));
     streamsCommands.push(new OpenLinkCommand(Commands.OPEN_ICP4D_DASHBOARD));
     streamsCommands.push(new OpenLinkCommand(Commands.OPEN_STREAMING_ANALYTICS_CONSOLE));

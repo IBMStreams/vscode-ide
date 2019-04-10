@@ -24,6 +24,11 @@ export const BUILD_MAKE_SUBMIT = 'ibm-streams.buildMakeSubmit';
 export const CREATE_APPLICATION = 'ibm-streams.createApplication';
 
 /**
+ * List available IBM Streams toolkits
+ */
+export const LIST_TOOLKITS = 'ibm-streams.listToolkits';
+
+/**
  * Open IBM Cloud Dashboard
  */
 export const OPEN_CLOUD_DASHBOARD = 'ibm-streams.openCloudDashboard';

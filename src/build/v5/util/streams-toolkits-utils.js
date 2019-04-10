@@ -162,6 +162,34 @@ function cacheToolkitIndex(state, toolkit, index) {
   }
 }
 
+function getLocalToolkits(pathStr) {
+  let localToolkits = [];
+  const localToolkitIndexPaths = getLocalToolkitIndexPaths(pathStr);
+  localToolkits = localToolkitIndexPaths.map(tkPath => {
+    const xml = fs.readFileSync(tkPath, 'utf8');
+    const document = new xmldoc.XmlDocument(xml);
+    const tkName = document.childNamed('toolkit').attr.name;
+    const tkVersion = document.childNamed('toolkit').attr.version;
+    return `${tkName} - ${tkVersion}`;
+  });
+  return localToolkits;
+}
+
+function getCachedToolkits(cachePath) {
+  let cachedToolkits = [];
+  if (fs.existsSync(cachePath)) {
+    const cachedToolkitIndexPaths = getCachedToolkitIndexPaths(cachePath);
+    cachedToolkits = cachedToolkitIndexPaths.map(tkPath => {
+      const xml = fs.readFileSync(tkPath, 'utf8');
+      const document = new xmldoc.XmlDocument(xml);
+      const tkName = document.childNamed('toolkit').attr.name;
+      const tkVersion = document.childNamed('toolkit').attr.version;
+      return `${tkName} - ${tkVersion}`;
+    });
+  }
+  return cachedToolkits;
+}
+
 const StreamsToolkitsUtils = {
   refreshLspToolkits,
   getLangServerOptionForInitToolkits,
@@ -172,7 +200,9 @@ const StreamsToolkitsUtils = {
   getLocalToolkitIndexPaths,
   getChangedLocalToolkits,
   cacheToolkitIndex,
-  getToolkitsToCache
+  getToolkitsToCache,
+  getLocalToolkits,
+  getCachedToolkits
 };
 
 export default StreamsToolkitsUtils;

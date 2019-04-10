@@ -86,6 +86,11 @@
         "category": "IBM Streams"
       },
       {
+        "command": "ibm-streams.listToolkits",
+        "title": "List available IBM Streams toolkits",
+        "category": "IBM Streams"
+      },
+      {
         "command": "ibm-streams.openCloudDashboard",
         "title": "Open IBM Cloud Dashboard",
         "category": "IBM Streams"

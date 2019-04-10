@@ -509,13 +509,34 @@ export default class StreamsBuild {
     }
 
     /**
+     * List available toolkits
+     */
+    public static listToolkits() {
+        const cachedToolkits = StreamsToolkitsUtils.getCachedToolkits(StateSelector.getToolkitsCacheDir(getStore().getState()));
+        const cachedToolkitsStr = `\nBuild service toolkits:${cachedToolkits.length ? `\n\n${cachedToolkits.join('\n')}` : ' none'}`;
+
+        const localToolkitsPathSetting = Configuration.getSetting(Settings.TOOLKITS_PATH);
+        let localToolkitsStr = '';
+        if (localToolkitsPathSetting && localToolkitsPathSetting.length > 0) {
+            const localToolkits = StreamsToolkitsUtils.getLocalToolkits(localToolkitsPathSetting);
+            localToolkitsStr = `\n\nLocal toolkits from ${localToolkitsPathSetting}:${localToolkits.length ? `\n\n${localToolkits.join('\n')}` : ' none'}`;
+        }
+        window.showInformationMessage('The available IBM Streams toolkits are displayed in the IBM Streams output channel.');
+        MessageHandlerRegistry.getDefault().handleInfo(
+            'Streams toolkits:',
+            {
+                detail: `${cachedToolkitsStr}${localToolkitsStr}`,
+                showNotification: false
+            }
+        );
+    }
+
+    /**
      * Refresh toolkits on the LSP server
      */
     public static refreshLspToolkits() {
         if (this._apiVersion === Settings.TARGET_VERSION_OPTION.V5) {
             const refresh = () => {
-                MessageHandlerRegistry.getDefault().handleInfo('Refreshing toolkits');
-
                 const toolkitsPathSetting = Configuration.getSetting(Settings.TOOLKITS_PATH);
                 if (typeof toolkitsPathSetting === 'string' && toolkitsPathSetting.length > 0) {
                     if (toolkitsPathSetting.match(/[,;]/)) {
