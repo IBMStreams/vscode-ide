@@ -1,10 +1,13 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import * as _ from 'lodash';
+import * as xmldoc from 'xmldoc';
+import * as semver from 'semver';
 
 import { from } from 'rxjs';
 import { actions } from '../actions';
 import MessageHandlerRegistry from '../../message-handler-registry';
+import { StreamsToolkitsUtils } from '.';
 
 const archiver = require('archiver');
 
@@ -36,13 +39,11 @@ async function buildSourceArchive(
   {
     buildId,
     appRoot,
-    toolkitRootPath,
+    toolkitPathSetting,
+    toolkitCacheDir,
     fqn,
-    makefilePath,
-    bundleToolkits
-  } = {
-    bundleToolkits: false
-  }
+    makefilePath
+  } = {}
 ) {
   const useMakefile = typeof (makefilePath) === 'string';
 
@@ -92,9 +93,14 @@ async function buildSourceArchive(
 
     let newMakefilePath = '';
 
-    const toolkitPaths = getToolkits(toolkitRootPath);
+    const toolkitPaths = getToolkits(toolkitCacheDir, toolkitPathSetting, appRoot);
     let tkPathString = '';
-    if (toolkitPaths) {
+    if (toolkitPaths && toolkitPaths.length) {
+      messageHandler.handleInfo('Including toolkits in source archive...',
+        {
+          detail: `Including the following toolkits with the application source:\n${toolkitPaths.map(tk => tk.tkPath).join('\n')}`
+        }
+      );
       const rootContents = fs.readdirSync(appRoot);
       const newRoot = path.basename(appRoot);
       let ignoreFiles = defaultIgnoreFiles;
@@ -158,22 +164,36 @@ async function buildSourceArchive(
     messageHandler.handleError(err.name, { detail: err.message, stack: err.stack, consoleErrorLog: false });
     return { archivePromise: Promise.reject(err), archivePath: outputFilePath, buildId };
   }
-  // return { archivePath: outputFilePath, buildId };
-  // return outputFilePath;
 }
 
-function getToolkits(toolkitRootDir) {
-  let validToolkitPaths = null;
-  if (toolkitRootDir && toolkitRootDir.trim() !== '') {
-    if (fs.existsSync(toolkitRootDir)) {
-      const toolkitRootContents = fs.readdirSync(toolkitRootDir);
-      validToolkitPaths = toolkitRootContents
-        .filter(item => fs.lstatSync(`${toolkitRootDir}${path.sep}${item}`).isDirectory())
-        .filter(dir => fs.readdirSync(`${toolkitRootDir}${path.sep}${dir}`).filter(tkDirItem => tkDirItem === 'toolkit.xml').length > 0)
-        .map(tk => ({ tk, tkPath: `${toolkitRootDir}${path.sep}${tk}` }));
+function getToolkits(toolkitCacheDir, toolkitPathSetting, appRoot) {
+  const allToolkits = StreamsToolkitsUtils.getAllToolkits(toolkitCacheDir, toolkitPathSetting);
+
+  // if info.xml exists, only include toolkits that are dependencies, ensuring they are newer versions than those on the build service
+  if (fs.existsSync(`${appRoot}${path.sep}info.xml`)) {
+    try {
+      const xml = fs.readFileSync(`${appRoot}${path.sep}info.xml`, 'utf8');
+      const document = new xmldoc.XmlDocument(xml);
+      const dependenciesNode = document.childNamed('info:dependencies');
+      if (dependenciesNode) {
+        const dependencyToolkitsNodes = dependenciesNode.childrenNamed('info:toolkit');
+        if (dependencyToolkitsNodes) {
+          const dependencies = dependencyToolkitsNodes.map(node => ({
+            name: node.valueWithPath('common:name'),
+            version: node.valueWithPath('common:version')
+          }));
+          const newestLocalToolkits = StreamsToolkitsUtils.filterNewestToolkits(allToolkits).filter(tk => tk.isLocal);
+          const toolkitsToInclude = _.intersectionWith(newestLocalToolkits, dependencies, (tk, dependency) => tk.name === dependency.name && semver.gte(tk.version, dependency.version));
+          return toolkitsToInclude.map(tk => ({ name: tk.name, tkPath: path.dirname(tk.indexPath) }));
+        }
+      }
+    } catch (err) {
+      throw new Error(`Error reading toolkit dependencies from ${appRoot}${path.sep}info.xml\n${err}`);
     }
+  } else {
+    // if there is no info.xml, include all local toolkits, ensuring they are newer versions than those on the build service
+    return StreamsToolkitsUtils.filterNewestToolkits(allToolkits).filter(tk => tk.isLocal).map(tk => ({ name: tk.name, tkPath: path.dirname(tk.indexPath) }));
   }
-  return validToolkitPaths;
 }
 
 function getApplicationRoot(rootDirArray, filePath) {

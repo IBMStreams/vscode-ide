@@ -200,10 +200,10 @@ export default class StreamsBuild {
             return SourceArchiveUtils.buildSourceArchive({
                 appRoot,
                 buildId: null,
-                bundleToolkits: false,
                 fqn: compositeToBuild,
                 makefilePath: null,
-                toolkitRootPath: this._toolkitsPath
+                toolkitPathSetting: Configuration.getState(Settings.TOOLKITS_PATH),
+                toolkitCacheDir: StateSelector.getToolkitsCacheDir(getStore().getState())
             }).then((result: any) => {
                 if (result.archivePath) {
                     const lintHandler = new LintHandler(appRoot, this._apiVersion);
@@ -291,10 +291,10 @@ export default class StreamsBuild {
             return SourceArchiveUtils.buildSourceArchive({
                 appRoot,
                 buildId: null,
-                bundleToolkits: false,
                 fqn: null,
                 makefilePath: filePath,
-                toolkitRootPath: this._toolkitsPath
+                toolkitPathSetting: Configuration.getState(Settings.TOOLKITS_PATH),
+                toolkitCacheDir: StateSelector.getToolkitsCacheDir(getStore().getState())
             }).then((result: any) => {
                 if (result.archivePath) {
                     const lintHandler = new LintHandler(appRoot, this._apiVersion);
@@ -512,13 +512,13 @@ export default class StreamsBuild {
      * List available toolkits
      */
     public static listToolkits() {
-        const cachedToolkits = StreamsToolkitsUtils.getCachedToolkits(StateSelector.getToolkitsCacheDir(getStore().getState()));
+        const cachedToolkits = StreamsToolkitsUtils.getCachedToolkits(StateSelector.getToolkitsCacheDir(getStore().getState())).map((tk: any) => tk.label);
         const cachedToolkitsStr = `\nBuild service toolkits:${cachedToolkits.length ? `\n\n${cachedToolkits.join('\n')}` : ' none'}`;
 
         const localToolkitsPathSetting = Configuration.getSetting(Settings.TOOLKITS_PATH);
         let localToolkitsStr = '';
         if (localToolkitsPathSetting && localToolkitsPathSetting.length > 0) {
-            const localToolkits = StreamsToolkitsUtils.getLocalToolkits(localToolkitsPathSetting);
+            const localToolkits = StreamsToolkitsUtils.getLocalToolkits(localToolkitsPathSetting).map((tk: any) => tk.label);
             localToolkitsStr = `\n\nLocal toolkits from ${localToolkitsPathSetting}:${localToolkits.length ? `\n\n${localToolkits.join('\n')}` : ' none'}`;
         }
         window.showInformationMessage('The available IBM Streams toolkits are displayed in the IBM Streams output channel.');

@@ -88,10 +88,12 @@ const buildAppEpic = (action, state) => action.pipe(
  */
 const uploadSourceEpic = (action, state) => action.pipe(
   ofType(actions.BUILD_UPLOAD_SOURCE),
-  mergeMap(uploadAction => SourceArchiveUtils.buildSourceArchive({
+  withLatestFrom(state),
+  mergeMap(([uploadAction, s]) => SourceArchiveUtils.buildSourceArchive({
     buildId: uploadAction.buildId,
     appRoot: uploadAction.appRoot,
-    toolkitRootPath: uploadAction.toolkitRootPath,
+    toolkitPathSetting: uploadAction.toolkitRootPath,
+    toolkitCacheDir: StateSelector.getToolkitsCacheDir(s),
     fqn: uploadAction.fqn,
     makefilePath: uploadAction.makefilePath
   })),

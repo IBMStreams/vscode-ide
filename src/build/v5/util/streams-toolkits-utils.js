@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as _ from 'lodash';
+import * as semver from 'semver';
 import * as xmldoc from 'xmldoc';
 import StateSelector from './state-selectors';
 
@@ -166,11 +167,21 @@ function getLocalToolkits(pathStr) {
   let localToolkits = [];
   const localToolkitIndexPaths = getLocalToolkitIndexPaths(pathStr);
   localToolkits = localToolkitIndexPaths.map(tkPath => {
-    const xml = fs.readFileSync(tkPath, 'utf8');
-    const document = new xmldoc.XmlDocument(xml);
-    const tkName = document.childNamed('toolkit').attr.name;
-    const tkVersion = document.childNamed('toolkit').attr.version;
-    return `${tkName} - ${tkVersion}`;
+    try {
+      const xml = fs.readFileSync(tkPath, 'utf8');
+      const document = new xmldoc.XmlDocument(xml);
+      const tkName = document.childNamed('toolkit').attr.name;
+      const tkVersion = document.childNamed('toolkit').attr.version;
+      return {
+        name: tkName,
+        version: tkVersion,
+        indexPath: tkPath,
+        label: `${tkName} - ${tkVersion}`,
+        isLocal: true
+      };
+    } catch (err) {
+      throw new Error(`Error reading toolkit index contents for: ${tkPath}\n${err}`);
+    }
   });
   return localToolkits;
 }
@@ -180,14 +191,34 @@ function getCachedToolkits(cachePath) {
   if (fs.existsSync(cachePath)) {
     const cachedToolkitIndexPaths = getCachedToolkitIndexPaths(cachePath);
     cachedToolkits = cachedToolkitIndexPaths.map(tkPath => {
-      const xml = fs.readFileSync(tkPath, 'utf8');
-      const document = new xmldoc.XmlDocument(xml);
-      const tkName = document.childNamed('toolkit').attr.name;
-      const tkVersion = document.childNamed('toolkit').attr.version;
-      return `${tkName} - ${tkVersion}`;
+      try {
+        const xml = fs.readFileSync(tkPath, 'utf8');
+        const document = new xmldoc.XmlDocument(xml);
+        const tkName = document.childNamed('toolkit').attr.name;
+        const tkVersion = document.childNamed('toolkit').attr.version;
+        return {
+          name: tkName,
+          version: tkVersion,
+          indexPath: tkPath,
+          label: `${tkName} - ${tkVersion}`,
+          isLocal: false
+        };
+      } catch (err) {
+        throw new Error(`Error reading toolkit index contents for: ${tkPath}\n${err}`);
+      }
     });
   }
   return cachedToolkits;
+}
+
+function getAllToolkits(cacheDir, tkPathSetting) {
+  // tkType, tkIndexPath, name, version
+  return [...getCachedToolkits(cacheDir), ...getLocalToolkits(tkPathSetting)];
+}
+
+function filterNewestToolkits(toolkitList) {
+  // returns a uniq'd list where only the newest version of a given toolkit is kept
+  return _.uniqWith(toolkitList, (tkA, tkB) => tkA.name === tkB.name && semver.gt(tkA.version, tkB.version));
 }
 
 const StreamsToolkitsUtils = {
@@ -202,7 +233,9 @@ const StreamsToolkitsUtils = {
   cacheToolkitIndex,
   getToolkitsToCache,
   getLocalToolkits,
-  getCachedToolkits
+  getCachedToolkits,
+  getAllToolkits,
+  filterNewestToolkits
 };
 
 export default StreamsToolkitsUtils;
