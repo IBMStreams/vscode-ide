@@ -258,10 +258,14 @@ const getStreamsJmxUrl = createSelector(
 );
 
 const convertUrl = (icp4dUrlString, endpointUrlString) => {
-  const icp4dUrl = new URL(icp4dUrlString);
-  const streamsRestUrl = new URL(endpointUrlString);
-  streamsRestUrl.hostname = icp4dUrl.hostname;
-  return streamsRestUrl.toString();
+  try {
+    const icp4dUrl = new URL(icp4dUrlString);
+    const streamsRestUrl = new URL(endpointUrlString);
+    streamsRestUrl.hostname = icp4dUrl.hostname;
+    return streamsRestUrl.toString();
+  } catch (err) {
+    return endpointUrlString;
+  }
 };
 
 const StateSelector = {

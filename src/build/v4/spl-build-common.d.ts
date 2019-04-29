@@ -15,3 +15,7 @@ export class SplBuilder {
     public openStreamingAnalyticsConsole(streamingAnalyticsCredentials: string, callback: Function): void;
     public openCloudDashboard(callback: Function): void;
 }
+
+export class SplBuildCommonV4 {
+    public static setTimeout(timeoutInSeconds: number): void;
+}

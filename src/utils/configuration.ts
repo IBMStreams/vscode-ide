@@ -19,6 +19,7 @@ export default class Configuration {
         this.context = context;
 
         this.customizeWorkbench();
+        this.migrateOldSettings();
 
         // Store initial settings
         const initialSettings = this.getSettingsSnapshot();
@@ -46,12 +47,41 @@ export default class Configuration {
     }
 
     /**
+     * Migrate old settings that have updated names
+     */
+    private static migrateOldSettings(): void {
+        const settingsMap = {
+            'ibm-streams.streamingAnalyticsCredentials': {
+                name: Settings.STREAMING_ANALYTICS_CREDENTIALS,
+                default: null
+            },
+            'ibm-streams.toolkitsPath': {
+                name: Settings.TOOLKIT_PATHS,
+                default: Settings.TOOLKIT_PATHS_DEFAULT
+            },
+            'spl.trace.server': {
+                name: Settings.TRACE_SERVER,
+                default: Settings.TRACE_SERVER_DEFAULT
+            }
+        };
+        _.forEach(settingsMap, (newSetting: any, oldName: string) => {
+            const oldSettingValue = this.getSetting(oldName);
+            const newSettingValue = this.getSetting(newSetting.name);
+            if (oldSettingValue && _.isEqual(newSettingValue, newSetting.default)) {
+                this.setSetting(newSetting.name, this.getSetting(oldName));
+                this.setSetting(oldName, null);
+            }
+        });
+    }
+
+    /**
      * Get a snapshot of the configuration settings
      */
     private static getSettingsSnapshot(): object {
         return {
             [Settings.ICP4D_URL]: this.getSetting(Settings.ICP4D_URL),
             [Settings.ICP4D_USE_MASTER_NODE_HOST]: this.getSetting(Settings.ICP4D_USE_MASTER_NODE_HOST),
+            [Settings.REQUEST_TIMEOUT]: this.getSetting(Settings.REQUEST_TIMEOUT),
             [Settings.STREAMING_ANALYTICS_CREDENTIALS]: this.getSetting(Settings.STREAMING_ANALYTICS_CREDENTIALS),
             [Settings.TARGET_VERSION]: this.getSetting(Settings.TARGET_VERSION),
             [Settings.TOOLKIT_PATHS]: this.getSetting(Settings.TOOLKIT_PATHS),
@@ -73,6 +103,8 @@ export default class Configuration {
                 changedSettingName = Settings.ICP4D_URL;
             } else if (event.affectsConfiguration(Settings.ICP4D_USE_MASTER_NODE_HOST)) {
                 changedSettingName = Settings.ICP4D_USE_MASTER_NODE_HOST;
+            } else if (event.affectsConfiguration(Settings.REQUEST_TIMEOUT)) {
+                changedSettingName = Settings.REQUEST_TIMEOUT;
             } else if (event.affectsConfiguration(Settings.STREAMING_ANALYTICS_CREDENTIALS)) {
                 changedSettingName = Settings.STREAMING_ANALYTICS_CREDENTIALS;
             } else if (event.affectsConfiguration(Settings.TARGET_VERSION)) {

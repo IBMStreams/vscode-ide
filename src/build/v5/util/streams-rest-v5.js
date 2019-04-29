@@ -12,7 +12,6 @@ const baseRequestOptions = {
   method: 'GET',
   json: true,
   gzip: true,
-  timeout: 60000,
   agentOptions: {
     rejectUnauthorized: false
   },
@@ -25,6 +24,10 @@ const baseRequestOptions = {
 };
 
 const baseRequest = request.defaults(baseRequestOptions);
+
+function setTimeout(timeoutInSeconds) {
+  baseRequest.defaults.timeout = timeoutInSeconds * 1000;
+}
 
 /**
  *  StreamsRestUtils.build
@@ -447,7 +450,8 @@ const StreamsRestUtils = {
   build,
   artifact,
   toolkit,
-  icp4d
+  icp4d,
+  setTimeout
 };
 
 export default StreamsRestUtils;

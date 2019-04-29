@@ -49,6 +49,11 @@
           "default": true,
           "description": "Use the host specified in the IBM Cloud Private for Data URL for builds."
         },
+        "ibm-streams.requestTimeout": {
+          "type": "number",
+          "default": 30,
+          "description": "Number of seconds before a request times out."
+        },
         "ibm-streams.streamingAnalytics.credentials": {
           "type": "object",
           "default": null,
@@ -60,7 +65,7 @@
             "IBM Cloud: Streaming Analytics service",
             "IBM Cloud Private for Data: Streams add-on"
           ],
-          "default": "IBM Cloud Private for Data: Streams add-on",
+          "default": "IBM Cloud: Streaming Analytics service",
           "description": "Streams version to target for application builds and submissions."
         },
         "ibm-streams.toolkitPaths": {

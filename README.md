@@ -100,8 +100,9 @@ Name | Description | Default
 --- | --- | ---
 `ibm-streams.icp4d.url` | *(string)* Specifies the URL for an IBM Cloud Private for Data instance. | `https://HOST:PORT`
 `ibm-streams.icp4d.useMasterNodeHost` | *(boolean)* Specifies whether to use the host specified in the IBM Cloud Private for Data URL for builds. | `true`
+`ibm-streams.requestTimeout` | *(number)* Number of seconds before a request times out. | `30`
 `ibm-streams.streamingAnalytics.credentials` | *(object)* Specifies the credentials for an IBM Streaming Analytics service. | `null`
-`ibm-streams.targetVersion` | *(string)* Specifies the Streams version to target for application builds and submissions.<br><ul><li>`IBM Cloud: Streaming Analytics service`</li><li>`IBM Cloud Private for Data: Streams add-on`</li></ul> | `IBM Cloud Private for Data: Streams add-on`
+`ibm-streams.targetVersion` | *(string)* Specifies the Streams version to target for application builds and submissions.<br><ul><li>`IBM Cloud: Streaming Analytics service`</li><li>`IBM Cloud Private for Data: Streams add-on`</li></ul> | `IBM Cloud: Streaming Analytics service`
 `ibm-streams.toolkitPaths` | *(string)* Specifies paths to directories, comma or semicolon separated, containing IBM Streams toolkits. | `/path/to/toolkits/directory`
 `ibm-streams.trace.server` | *(string)* Traces the communication between VS Code and the SPL language server.<br><ul><li>`off`: tracing turned off</li><li>`verbose`: tracing turned on</li></ul> | `off`
 
