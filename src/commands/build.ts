@@ -1,12 +1,11 @@
-'use strict';
+import { ExtensionContext, Uri, window } from 'vscode';
+import { Commands, IBaseCommand } from '.';
+import StreamsBuild from '../build';
 
-import { window, ExtensionContext, Uri } from 'vscode';
-
-import { BaseCommand } from './base';
-import { Commands } from './commands';
-import { SplBuild } from '../utils';
-
-export class BuildCommand implements BaseCommand {
+/**
+ * Command that allows a user to build or submit Streams application(s)
+ */
+export class BuildCommand implements IBaseCommand {
     private _buildType: number;
 
     /**
@@ -23,27 +22,28 @@ export class BuildCommand implements BaseCommand {
      * @param context    The extension context
      * @param args       Array of arguments
      */
-    execute(context: ExtensionContext, ...args: any[]): Promise<void> {
-        let uri = null;
-        if (args[0] && args[0][0] instanceof Uri) {
-            uri = args[0][0];
+    public execute(context: ExtensionContext, ...args: any[]): Promise<void> {
+        let filePaths = null;
+        if (args[0] && Array.isArray(args[0][1])) {
+            filePaths = args[0][1].map((uri: Uri) => uri.fsPath);
         } else {
-            const editor = window.activeTextEditor;
-            uri = editor.document.uri;
+            filePaths = [ window.activeTextEditor.document.fileName ];
         }
 
-        switch(this.commandName) {
-            case Commands.BUILD_DOWNLOAD:
-            case Commands.BUILD_SUBMIT:
-                return SplBuild.build(uri, this._buildType)
-                    .catch(error => { throw error; });
+        switch (this.commandName) {
+            case Commands.BUILD_APP_DOWNLOAD:
+            case Commands.BUILD_APP_SUBMIT:
+                return StreamsBuild.buildApp(filePaths[0], this._buildType)
+                    .catch((error) => { throw error; });
             case Commands.BUILD_MAKE_DOWNLOAD:
             case Commands.BUILD_MAKE_SUBMIT:
-                return SplBuild.buildMake(uri, this._buildType)
-                    .catch(error => { throw error; });
+                return StreamsBuild.buildMake(filePaths[0], this._buildType)
+                    .catch((error) => { throw error; });
             case Commands.SUBMIT:
-                return SplBuild.submit(uri)
-                    .catch(error => { throw error; });
+                return StreamsBuild.submit(filePaths)
+                    .catch((error) => { throw error; });
+            default:
+                return null;
         }
     }
 }

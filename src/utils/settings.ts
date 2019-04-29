@@ -1,21 +1,47 @@
-'use strict';
+/**
+ * Section identifiers
+ */
+export const SECTION_ID = 'ibm-streams';
 
-export namespace Settings {
-    export const ID = 'ibm-streams';
-    export const SPL_ID = 'spl';
+/**
+ * IBM Cloud Private for Data URL
+ */
+export const ICP4D_URL = 'ibm-streams.icp4d.url';
 
-    /**
-     * Credentials for an IBM Streaming Analytics service.
-     */
-    export const STREAMING_ANALYTICS_CREDENTIALS = 'streamingAnalyticsCredentials';
+/**
+ * Use the host specified in the IBM Cloud Private for Data URL for builds
+ */
+export const ICP4D_USE_MASTER_NODE_HOST = 'ibm-streams.icp4d.useMasterNodeHost';
 
-    /**
-     * Paths to directories, comma or semicolon separated, containing IBM Streams toolkits.
-     */
-    export const TOOLKITS_PATH = 'toolkitsPath';
+/**
+ * Credentials for an IBM Streaming Analytics service
+ */
+export const STREAMING_ANALYTICS_CREDENTIALS = 'ibm-streams.streamingAnalytics.credentials';
 
-    /**
-     * Traces the communication between VS Code and the SPL language server.
-     */
-    export const TRACE_SERVER = 'trace.server';
+/**
+ * Streams version to target for application builds and submissions
+ */
+export const TARGET_VERSION = 'ibm-streams.targetVersion';
+
+/**
+ * Options for Streams version to target for application builds and submissions
+ */
+export enum TARGET_VERSION_OPTION {
+    V4 = 'IBM Cloud: Streaming Analytics service',
+    V5 = 'IBM Cloud Private for Data: Streams add-on'
 }
+
+/**
+ * Paths to directories, comma or semicolon separated, containing IBM Streams toolkits
+ */
+export const TOOLKIT_PATHS = 'ibm-streams.toolkitPaths';
+
+/**
+ * Default value for the toolkitPaths setting
+ */
+export const TOOLKIT_PATHS_DEFAULT = '/path/to/toolkits/directory';
+
+/**
+ * Traces the communication between VS Code and the SPL language server
+ */
+export const TRACE_SERVER = 'ibm-streams.trace.server';

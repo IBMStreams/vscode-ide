@@ -1,24 +1,29 @@
-'use strict';
+import { env, ExtensionContext } from 'vscode';
+import { Configuration, Diagnostics, Logger } from '.';
+import * as Constants from './constants';
+import * as Settings from './settings';
 
-import { ExtensionContext } from 'vscode';
-import { LanguageClient } from 'vscode-languageclient';
-
-import { SplConfig, SplLinter, SplLogger } from '.';
-
-export * from './build';
-export * from './config';
-export * from './linter';
-export * from './logger';
-export * from './settings';
-export * from './spl-build-common';
+export { default as Configuration } from './configuration';
+export { default as Diagnostics } from './diagnostics';
+export { default as Keychain } from './keychain';
+export { default as Logger } from './logger';
+export { Constants, Settings };
 
 /**
  * Initialize utilities
  * @param context    The extension context
  * @param client     The language client
  */
-export function initialize(context: ExtensionContext, client: LanguageClient) {
-    SplConfig.configure(context, client);
-    SplLinter.configure(context);
-    SplLogger.configure(context);
+export function initialize(context: ExtensionContext) {
+    Configuration.configure(context);
+    Diagnostics.configure(context);
+    Logger.configure();
+}
+
+/**
+ * Determine whether the extension is being debugged or not
+ */
+export function inDebugMode() {
+    const { sessionId, machineId } = env;
+    return sessionId === 'someValue.sessionId' || machineId === 'someValue.machineId';
 }

@@ -7,51 +7,51 @@
 	"patterns": [
 		{
 			"begin": "Building\\.\\.\\.",
-			"end": "(?=\\[SPL.*\\])",
+			"end": "(?=\\[.*\\])",
 			"contentName": "meta.log.debug.body.splLog"
 		},
 		{
-			"begin": "(\\[SPL.*\\]\\[(DEBUG)\\])",
+			"begin": "(\\[.*\\]\\[(DEBUG)\\])",
 			"beginCaptures": {
 				"1": {
 					"name": "meta.log.debug.header.splLog"
 				}
 			},
-			"end": "(?=\\[SPL.*\\])",
+			"end": "(?=\\[.*\\])",
 			"patterns": [
 				{
 					"begin": "(?<=\\[DEBUG\\])",
-					"end": "(?=\\[SPL.*\\])",
+					"end": "(?=\\[.*\\])",
 					"contentName": "meta.log.debug.body.splLog"
 				}
 			]
 		},
 		{
-			"begin": "(\\[SPL.*\\]\\[(ERROR)\\])",
+			"begin": "(\\[.*\\]\\[(ERROR)\\])",
 			"beginCaptures": {
 				"1": {
 					"name": "meta.log.error.header.splLog"
 				}
 			},
-			"end": "(?=\\[SPL.*\\])",
+			"end": "(?=\\[.*\\])",
 			"patterns": [
 				{
 					"begin": "(?<=\\[ERROR\\])",
-					"end": "(?=\\[SPL.*\\])",
+					"end": "(?=\\[.*\\])",
 					"contentName": "meta.log.error.body.splLog"
 				}
 			]
 		},
 		{
-			"match": "\\[SPL.*\\]\\[(INFO)\\]",
+			"match": "\\[.*\\]\\[(INFO)\\]",
 			"name": "meta.log.info.splLog"
 		},
 		{
-			"match": "\\[SPL.*\\]\\[(SUCCESS)\\]",
+			"match": "\\[.*\\]\\[(SUCCESS)\\]",
 			"name": "meta.log.success.splLog"
 		},
 		{
-			"match": "\\[SPL.*\\]\\[(WARN)\\]",
+			"match": "\\[.*\\]\\[(WARN)\\]",
 			"name": "meta.log.warn.splLog"
 		}
 	]	

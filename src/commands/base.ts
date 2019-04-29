@@ -1,6 +1,7 @@
-'use strict';
-
-export interface BaseCommand {
+/**
+ * The base command
+ */
+export default interface IBaseCommand {
     commandName: string;
 
     /**
