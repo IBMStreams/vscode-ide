@@ -60,7 +60,7 @@
             "IBM Cloud: Streaming Analytics service",
             "IBM Cloud Private for Data: Streams add-on"
           ],
-          "default": "IBM Cloud Private for Data: Streams add-on",
+          "default": "IBM Cloud: Streaming Analytics service",
           "description": "Streams version to target for application builds and submissions."
         },
         "ibm-streams.toolkitPaths": {
