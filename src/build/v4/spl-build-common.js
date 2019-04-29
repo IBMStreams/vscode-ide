@@ -799,3 +799,9 @@ export class SplBuilder {
     return {};
   }
 }
+
+export class SplBuildCommonV4 {
+  static setTimeout(timeoutInSeconds) {
+    request.defaults.timeout = timeoutInSeconds * 1000;
+  }
+};

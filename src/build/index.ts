@@ -13,7 +13,7 @@ import LintHandlerRegistry from './lint-handler-registry';
 import LintHandler from './LintHandler';
 import MessageHandlerRegistry from './message-handler-registry';
 import MessageHandler from './MessageHandler';
-import { SplBuilder } from './v4/spl-build-common';
+import { SplBuilder, SplBuildCommonV4 } from './v4/spl-build-common';
 import {
     checkIcp4dHostExists,
     executeCallbackFn,
@@ -33,7 +33,7 @@ import {
     submitApplicationsFromBundleFiles
 } from './v5/actions';
 import getStore from './v5/redux-store/configure-store';
-import { SourceArchiveUtils, StateSelector, StreamsToolkitsUtils, StreamsUtils } from './v5/util';
+import { SourceArchiveUtils, StateSelector, StreamsToolkitsUtils, StreamsUtils, StreamsRestUtils } from './v5/util';
 
 /**
  * Handles Streams builds and submissions
@@ -65,6 +65,10 @@ export default class StreamsBuild {
         this._apiVersion = Configuration.getSetting(Settings.TARGET_VERSION);
 
         this._originator = { originator: 'vscode', version: packageJson.version, type: 'spl' };
+
+        const timeout = Configuration.getSetting(Settings.REQUEST_TIMEOUT);
+        StreamsRestUtils.setTimeout(timeout);
+        SplBuildCommonV4.setTimeout(timeout);
 
         this._storeSubscription = getStore().subscribe(() => {
             if (inDebugMode()) {
@@ -124,6 +128,12 @@ export default class StreamsBuild {
             if (event.affectsConfiguration(Settings.ICP4D_USE_MASTER_NODE_HOST)) {
                 const useHostSetting = Configuration.getSetting(Settings.ICP4D_USE_MASTER_NODE_HOST);
                 getStore().dispatch(setUseIcp4dMasterNodeHost(useHostSetting));
+            }
+
+            if (event.affectsConfiguration(Settings.ICP4D_USE_MASTER_NODE_HOST)) {
+                const timeoutSetting = Configuration.getSetting(Settings.REQUEST_TIMEOUT);
+                StreamsRestUtils.setTimeout(timeoutSetting);
+                SplBuildCommonV4.setTimeout(timeoutSetting);
             }
 
             if (event.affectsConfiguration(Settings.STREAMING_ANALYTICS_CREDENTIALS)) {

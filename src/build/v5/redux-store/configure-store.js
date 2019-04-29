@@ -1,6 +1,6 @@
 import { createStore, applyMiddleware, compose } from 'redux';
 import { createEpicMiddleware } from 'redux-observable';
-import { composeWithDevTools } from 'remote-redux-devtools';
+// import { composeWithDevTools } from 'remote-redux-devtools';
 import { inDebugMode } from '../../../utils';
 
 import rootEpic from '../epics';
@@ -10,7 +10,7 @@ const epicMiddleware = createEpicMiddleware();
 
 let store;
 
-const composeEnhancers = inDebugMode() && composeWithDevTools ? composeWithDevTools({ hostname: 'localhost', port: 8000, realtime: true }) : compose;
+const composeEnhancers = compose; // inDebugMode() && composeWithDevTools ? composeWithDevTools({ hostname: 'localhost', port: 8000, realtime: true }) : compose;
 
 const addLoggingToDispatch = (s) => {
   const rawDispatch = s.dispatch;
