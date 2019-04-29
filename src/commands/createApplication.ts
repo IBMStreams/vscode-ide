@@ -1,36 +1,34 @@
-'use strict';
-
 import * as fs from 'fs';
+import { commands, ExtensionContext, Uri, window, workspace } from 'vscode';
+import { Commands, IBaseCommand } from '.';
+import { Logger } from '../utils';
 
-import { commands, window, workspace, ExtensionContext, Uri } from 'vscode';
-
-import { BaseCommand } from './base';
-import { Commands } from './commands';
-import { SplLogger } from '../utils';
-
-export class CreateApplicationCommand implements BaseCommand {
-    commandName: string = Commands.CREATE_APPLICATION;
+/**
+ * Command that creates a simple Streams application from a template
+ */
+export class CreateApplicationCommand implements IBaseCommand {
+    public readonly commandName: string = Commands.CREATE_APPLICATION;
 
     /**
      * Execute the command
      * @param context    The extension context
      * @param args       Array of arguments
      */
-    execute(context: ExtensionContext, ...args: any[]): any {
-        return this.createApplication();
+    public execute(context: ExtensionContext, ...args: any[]): any {
+        return this._createApplication();
     }
 
     /**
      * Create a simple Streams application. Prompt the user to select a root folder,
      * and specify a namespace and composite.
      */
-    private async createApplication(): Promise<void> {
-        SplLogger.info(null, 'Received request to create an IBM Streams application', false, true);
+    private async _createApplication(): Promise<void> {
+        Logger.info(null, 'Received request to create an IBM Streams application', false, true);
 
-        const rootUri = await this.promptForRootFolder();
+        const rootUri = await this._promptForRootFolder();
         const rootDir = rootUri.fsPath;
-        const namespace = await this.promptForInput('namespace');
-        const composite = await this.promptForInput('composite');
+        const namespace = await this._promptForInput('namespace');
+        const composite = await this._promptForInput('composite');
 
         // Create namespace directory
         const namespaceDir = `${rootDir}/${namespace}`;
@@ -54,18 +52,18 @@ export class CreateApplicationCommand implements BaseCommand {
         workspace.updateWorkspaceFolders(workspace.workspaceFolders ? workspace.workspaceFolders.length : 0, null, { uri: rootUri });
         commands.executeCommand('vscode.open', Uri.file(compositeFile));
 
-        SplLogger.info(null, `Created ${namespace}::${composite}`);
+        Logger.info(null, `Created ${namespace}::${composite}`);
     }
 
     /**
      * Prompts the user to select a root folder
      */
-    private async promptForRootFolder(): Promise<Uri> {
+    private async _promptForRootFolder(): Promise<Uri> {
         return window.showOpenDialog({
-            'canSelectFiles': false,
-            'canSelectFolders': true,
-            'canSelectMany': false,
-            'openLabel': 'Set as root folder'
+            canSelectFiles: false,
+            canSelectFolders: true,
+            canSelectMany: false,
+            openLabel: 'Set as root folder'
         }).then((selected: Uri[]) => {
             if (selected && selected.length === 1) {
                 return selected[0];
@@ -79,7 +77,7 @@ export class CreateApplicationCommand implements BaseCommand {
      * Prompts the user to specify a namespace or composite
      * @param type    The input type
      */
-    private async promptForInput(type: string): Promise<string> {
+    private async _promptForInput(type: string): Promise<string> {
         const capitalizedType = type.charAt(0).toUpperCase() + type.substring(1).toLowerCase();
         return window.showInputBox({
             ignoreFocusOut: true,

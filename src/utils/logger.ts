@@ -1,31 +1,26 @@
-'use strict';
-
-import * as path from 'path';
-import * as util from 'util';
 import * as moment from 'moment';
-import * as _ from 'underscore';
+import * as util from 'util';
+import { OutputChannel, window } from 'vscode';
+import { Constants } from '.';
 
-import { commands, window, ExtensionContext, OutputChannel } from 'vscode';
+enum Level { DEBUG, ERROR, INFO, SUCCESS, WARN }
 
-import { Commands } from '../commands';
-
-export enum Level { DEBUG, ERROR, INFO, SUCCESS, WARN }
-
-export class SplLogger {
-    private static _context: ExtensionContext;
-    private static _mainOutputChannel: OutputChannel;
-    public static _outputChannels: Object;
+/**
+ * Manages message logging to output channels
+ */
+export default class Logger {
+    public static _mainOutputChannel: OutputChannel;
+    public static _outputChannels: object;
 
     /**
      * Perform initial configuration
      * @param context    The extension context
      */
-    public static configure(context: ExtensionContext): void {
-        this._context = context;
+    public static configure(): void {
         this._outputChannels = {};
 
         // Set up main output channel for logging
-        this._mainOutputChannel = this.registerOutputChannel('IBM Streams', 'IBM Streams');
+        this._mainOutputChannel = this.registerOutputChannel(Constants.IBM_STREAMS, Constants.IBM_STREAMS);
     }
 
     /**
@@ -38,13 +33,12 @@ export class SplLogger {
         if (this._outputChannels[name]) {
             outputChannel = this._outputChannels[name].outputChannel;
         } else {
-            const channelName = displayName === 'IBM Streams' ? displayName : `IBM Streams: ${displayName}`;
+            const channelName = displayName === Constants.IBM_STREAMS ? displayName : `${Constants.IBM_STREAMS}: ${displayName}`;
             outputChannel = window.createOutputChannel(channelName);
             this._outputChannels[name] = {
-                displayName: displayName,
-                outputChannel: outputChannel
+                displayName,
+                outputChannel
             };
-            this._context.subscriptions.push(outputChannel);
         }
         return outputChannel;
     }
@@ -122,7 +116,7 @@ export class SplLogger {
 
         console.log(message);
         if (showNotification) {
-            switch(logLevel) {
+            switch (logLevel) {
                 case Level.DEBUG:
                 case Level.INFO:
                 case Level.SUCCESS:
@@ -162,237 +156,7 @@ export class SplLogger {
         if (hideLogTypePrefix) {
             outputChannel.appendLine(message);
         } else {
-            outputChannel.appendLine(util.format('[SPL %s][%s]%s%s%s', moment().format(), Level[logLevel], levelBufferWhitespace, messageBufferWhitespace, message));
-        }
-    }
-}
-
-export class MessageHandler {
-    /**
-     * Handle an info message
-     * @param message                The message to display
-     * @param detail                 The message detail
-     * @param showNotification       Whether to show a notification to the user
-     * @param showConsoleMessage     Whether to log to the output channel
-     * @param notificationButtons    The notification buttons to display
-     * @param buildProgress          Whether this is a build progress notification
-     * @param structure              The associated file path and application root
-     */
-    handleInfo(
-        message: string,
-        {
-            detail = null,
-            showNotification = true,
-            showConsoleMessage = true,
-            notificationButtons = [],
-            buildProgress = false,
-            structure = null
-        }: {
-            detail?: Array<string>,
-            showNotification?: boolean,
-            showConsoleMessage?: boolean,
-            notificationButtons?: Array<any>,
-            buildProgress?: boolean,
-            structure?: { filePath: string, appRoot: string }
-        } = {}
-    ): Thenable<void> {
-        if (showConsoleMessage) {
-            const outputChannel = this.getOutputChannel(structure);
-            const detailMessage = this.joinMessageArray(detail);
-            let logMessage = '';
-            if (buildProgress) {
-                logMessage = `${detailMessage !== '' ? detailMessage : ''}`;
-            } else {
-                logMessage = `${message}${detailMessage ? '\n' + detailMessage : ''}`;
-            }
-            if (logMessage !== '') {
-                SplLogger.debug(outputChannel, logMessage, false, false, true);
-            }
-        }
-
-        if (showNotification && typeof message === 'string') {
-            const buttons = this.processButtons(notificationButtons);
-            return window.showInformationMessage(message, ...buttons).then(selection => {
-                this.handleNotificationButtonSelection(notificationButtons, selection);
-            });
-        }
-    }
-
-    /**
-     * Handle an error message
-     * @param message                The message to display
-     * @param detail                 The error detail
-     * @param stack                  The error stack
-     * @param showNotification       Whether to show a notification to the user
-     * @param showConsoleMessage      Whether to log to the output channel
-     * @param consoleErrorLog        Whether to log to the console
-     * @param notificationButtons    The notification buttons to display
-     * @param structure              The associated file path and application root
-     */
-    handleError(
-        message: string,
-        {
-            detail,
-            stack,
-            showNotification = true,
-            showConsoleMessage = true,
-            consoleErrorLog = true,
-            notificationButtons = [],
-            structure = null
-        }: {
-            detail?: Array<string>,
-            stack?: Array<string>,
-            showNotification?: boolean,
-            showConsoleMessage?: boolean,
-            consoleErrorLog?: boolean,
-            notificationButtons?: Array<any>,
-            structure?: { filePath: string, appRoot: string }
-        } = {}
-    ): Thenable<void> {
-        if (consoleErrorLog) {
-            if (stack) {
-                console.error(message, stack);
-            } else {
-                console.error(message);
-            }
-        }
-
-        if (showConsoleMessage) {
-            const outputChannel = this.getOutputChannel(structure);
-            const detailMessage = this.joinMessageArray(detail);
-            const stackMessage = this.joinMessageArray(stack);
-            SplLogger.error(outputChannel, message);
-            if (typeof detailMessage === 'string' && detailMessage.length) {
-                SplLogger.error(outputChannel, detailMessage);
-            }
-            if (typeof stackMessage === 'string' && stackMessage.length) {
-                SplLogger.error(outputChannel, stackMessage);
-            }
-        }
-
-        if (showNotification && typeof message === 'string') {
-            const buttons = this.processButtons(notificationButtons);
-            return window.showErrorMessage(message, ...buttons).then(selection => {
-                this.handleNotificationButtonSelection(notificationButtons, selection);
-            });
-        }
-    }
-
-    /**
-     * Handle a success message
-     * @param message                The message to display
-     * @param detail                 The message detail
-     * @param showNotification       Whether to show a notification to the user
-     * @param showConsoleMessage     Whether to log to the output channel
-     * @param notificationButtons    The notification buttons to display
-     * @param structure              The associated file path and application root
-     */
-    handleSuccess (
-        message: string,
-        {
-            detail = null,
-            showNotification = true,
-            showConsoleMessage = true,
-            notificationButtons = [],
-            structure = null
-        }: {
-            detail?: Array<string>,
-            showNotification?: boolean,
-            showConsoleMessage?: boolean,
-            notificationButtons?: Array<any>,
-            structure?: { filePath: string, appRoot: string }
-        } = {}
-    ): Thenable<void> {
-        if (showConsoleMessage) {
-            const outputChannel = this.getOutputChannel(structure);
-            const detailMessage = this.joinMessageArray(detail);
-            const logMessage = `${message}${detailMessage ? '\n' + detailMessage : ''}`;
-            SplLogger.success(outputChannel, logMessage);
-        }
-
-        if (showNotification && typeof message === 'string') {
-            const buttons = this.processButtons(notificationButtons);
-            return window.showInformationMessage(message, ...buttons).then(selection => {
-                this.handleNotificationButtonSelection(notificationButtons, selection);
-            });
-        }
-    }
-
-    /**
-     * Handle the scenario where the Streaming Analytics service credentials are missing
-     */
-    handleCredentialsMissing(): Thenable<void> {
-        const notificationButtons = [{
-            label: 'Set credentials',
-            callbackFn: () => commands.executeCommand(Commands.SET_SERVICE_CREDENTIALS)
-        }];
-        const buttons = this.processButtons(notificationButtons);
-        const message = 'Copy and paste your Streaming Analytics service credentials';
-        return window.showErrorMessage(message, ...buttons).then(selection => {
-            this.handleNotificationButtonSelection(notificationButtons, selection);
-        });
-    }
-
-    /**
-     * Converts messages to a loggable string
-     * @param messages    The messages
-     */
-    getLoggableMessage(messages: Array<any>): string {
-        return this.joinMessageArray(messages.map(outputMsg => outputMsg.message_text));
-    }
-
-    dismissNotification() {}
-
-    /**
-     * Retrieve an output channel
-     * @param structure    The associated file path and application root
-     */
-    private getOutputChannel(structure: { filePath: string, appRoot: string }): OutputChannel {
-        const channelObj = SplLogger._outputChannels[structure.filePath];
-        if (!channelObj) {
-            const displayPath = `${path.basename(structure.appRoot)}${path.sep}${path.relative(structure.appRoot, structure.filePath)}`;
-            const outputChannel = SplLogger.registerOutputChannel(structure.filePath, displayPath);
-            outputChannel.show();
-            return outputChannel;
-        } else {
-            return channelObj.outputChannel;
-        }
-    }
-
-    /**
-     * Retrieve the button labels to display
-     * @param notificationButtons    The notification buttons to display
-     */
-    private processButtons(notificationButtons: Array<any>): string[] {
-        let labels = [];
-        if (Array.isArray(notificationButtons)) {
-            labels = _.map(notificationButtons, obj => obj.label);
-        }
-        return labels;
-    }
-
-    /**
-     * Convert an array of messages to a string
-     * @param msgArray    The messages
-     */
-    private joinMessageArray(msgArray: Array<string>): string {
-        if (Array.isArray(msgArray)) {
-            return msgArray.join('\n').trimRight();
-        }
-        return msgArray;
-    }
-
-    /**
-     * Handle a notification button selection
-     * @param notificationButtons    The notification buttons to display
-     * @param selection              The label of the button that the user clicked on
-     */
-    private handleNotificationButtonSelection(notificationButtons: Array<any>, selection: string): void {
-        if (selection) {
-            const buttonObj = _.find(notificationButtons, (obj: any) => obj.label === selection);
-            if (buttonObj && buttonObj.callbackFn) {
-                buttonObj.callbackFn();
-            }
+            outputChannel.appendLine(util.format('[%s][%s]%s%s%s', moment().format(), Level[logLevel], levelBufferWhitespace, messageBufferWhitespace, message));
         }
     }
 }

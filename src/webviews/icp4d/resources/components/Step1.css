@@ -1,0 +1,13 @@
+#root .errorInput {
+    border-color: #b78e92;
+    box-shadow: 0 0 0 0.2rem rgba(234,151,159,.25);
+}
+
+.loadingModal .modal-content {
+    background-color: transparent;
+    border: none;
+}
+
+.loadingModal .loadingSpinner {
+    margin: 0 auto;
+}
