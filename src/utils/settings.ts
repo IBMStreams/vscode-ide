@@ -4,12 +4,12 @@
 export const SECTION_ID = 'ibm-streams';
 
 /**
- * IBM Cloud Private for Data URL
+ * IBM Cloud Pak for Data URL
  */
 export const ICP4D_URL = 'ibm-streams.icp4d.url';
 
 /**
- * Use the host specified in the IBM Cloud Private for Data URL for builds
+ * Use the host specified in the IBM Cloud Pak for Data URL for builds
  */
 export const ICP4D_USE_MASTER_NODE_HOST = 'ibm-streams.icp4d.useMasterNodeHost';
 
@@ -33,7 +33,7 @@ export const TARGET_VERSION = 'ibm-streams.targetVersion';
  */
 export enum TARGET_VERSION_OPTION {
     V4 = 'IBM Cloud: Streaming Analytics service',
-    V5 = 'IBM Cloud Private for Data: Streams add-on'
+    V5 = 'IBM Cloud Pak for Data: Streams add-on'
 }
 
 /**

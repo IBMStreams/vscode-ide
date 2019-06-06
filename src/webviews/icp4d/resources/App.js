@@ -4,7 +4,7 @@ import './App.css';
 
 const App = () => (
     <div>
-        <h1>IBM Cloud Private for Data Settings</h1>
+        <h1>IBM Cloud Pak for Data Settings</h1>
         <br />
         <Wizard />
     </div>

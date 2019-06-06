@@ -41,7 +41,7 @@ export class SetConfigSettingCommand implements IBaseCommand {
                 break;
             case Commands.SET_ICP4D_URL:
                 name = Settings.ICP4D_URL;
-                prompt = 'Provide your IBM Cloud Private for Data URL';
+                prompt = 'Provide your IBM Cloud Pak for Data URL';
                 placeHolder = 'https://HOST:PORT';
                 break;
             case Commands.SET_TOOLKITS_PATH:
