@@ -42,12 +42,12 @@
         "ibm-streams.icp4d.url": {
           "type": "string",
           "default": "https://HOST:PORT",
-          "description": "IBM Cloud Private for Data URL."
+          "description": "IBM Cloud Pak for Data URL."
         },
         "ibm-streams.icp4d.useMasterNodeHost": {
           "type": "boolean",
           "default": true,
-          "description": "Use the host specified in the IBM Cloud Private for Data URL for builds."
+          "description": "Use the host specified in the IBM Cloud Pak for Data URL for builds."
         },
         "ibm-streams.requestTimeout": {
           "type": "number",
@@ -63,7 +63,7 @@
           "type": "string",
           "enum": [
             "IBM Cloud: Streaming Analytics service",
-            "IBM Cloud Private for Data: Streams add-on"
+            "IBM Cloud Pak for Data: Streams add-on"
           ],
           "default": "IBM Cloud: Streaming Analytics service",
           "description": "Streams version to target for application builds and submissions."
@@ -97,12 +97,12 @@
       },
       {
         "command": "ibm-streams.icp4d.openDashboard",
-        "title": "Open IBM Cloud Private for Data Dashboard",
+        "title": "Open IBM Cloud Pak for Data Dashboard",
         "category": "IBM Streams"
       },
       {
         "command": "ibm-streams.icp4d.setUrl",
-        "title": "Set IBM Cloud Private for Data URL",
+        "title": "Set IBM Cloud Pak for Data URL",
         "category": "IBM Streams"
       },
       {
@@ -214,15 +214,15 @@
         },
         {
           "command": "ibm-streams.icp4d.openConsole",
-          "when": "config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'"
+          "when": "config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'"
         },
         {
           "command": "ibm-streams.icp4d.openDashboard",
-          "when": "config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'"
+          "when": "config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'"
         },
         {
           "command": "ibm-streams.icp4d.setUrl",
-          "when": "config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'"
+          "when": "config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'"
         },
         {
           "command": "ibm-streams.removeOutputChannels"
@@ -304,12 +304,12 @@
         },
         {
           "command": "ibm-streams.icp4d.openDashboard",
-          "when": "resourceLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'",
+          "when": "resourceLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'",
           "group": "STREAMS2@1"
         },
         {
           "command": "ibm-streams.icp4d.openConsole",
-          "when": "resourceLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'",
+          "when": "resourceLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'",
           "group": "STREAMS2@2"
         },
         {
@@ -324,12 +324,12 @@
         },
         {
           "command": "ibm-streams.icp4d.openDashboard",
-          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'",
+          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'",
           "group": "STREAMS2@1"
         },
         {
           "command": "ibm-streams.icp4d.openConsole",
-          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'",
+          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'",
           "group": "STREAMS2@2"
         },
         {
@@ -375,12 +375,12 @@
         },
         {
           "command": "ibm-streams.icp4d.openDashboard",
-          "when": "editorLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'",
+          "when": "editorLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'",
           "group": "STREAMS2@1"
         },
         {
           "command": "ibm-streams.icp4d.openConsole",
-          "when": "editorLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'",
+          "when": "editorLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'",
           "group": "STREAMS2@2"
         },
         {
@@ -395,12 +395,12 @@
         },
         {
           "command": "ibm-streams.icp4d.openDashboard",
-          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'",
+          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'",
           "group": "STREAMS2@1"
         },
         {
           "command": "ibm-streams.icp4d.openConsole",
-          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'",
+          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'",
           "group": "STREAMS2@2"
         },
         {
@@ -446,12 +446,12 @@
         },
         {
           "command": "ibm-streams.icp4d.openDashboard",
-          "when": "resourceLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'",
+          "when": "resourceLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'",
           "group": "STREAMS2@1"
         },
         {
           "command": "ibm-streams.icp4d.openConsole",
-          "when": "resourceLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'",
+          "when": "resourceLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'",
           "group": "STREAMS2@2"
         },
         {
@@ -466,12 +466,12 @@
         },
         {
           "command": "ibm-streams.icp4d.openDashboard",
-          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'",
+          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'",
           "group": "STREAMS2@1"
         },
         {
           "command": "ibm-streams.icp4d.openConsole",
-          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'",
+          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'",
           "group": "STREAMS2@2"
         },
         {

@@ -494,7 +494,7 @@ export default class StreamsBuild {
     }
 
     /**
-     * Open IBM Cloud Private for Data Dashboard
+     * Open IBM Cloud Pak for Data Dashboard
      */
     public static openIcp4dDashboard() {
         if (this._apiVersion === Settings.TARGET_VERSION_OPTION.V5) {
@@ -504,10 +504,10 @@ export default class StreamsBuild {
                     const icp4dDashboard = `${icp4dUrl}/zen/#/homepage`;
                     this._openUrlHandler(
                         icp4dDashboard,
-                        () => Logger.info(null, `Opened IBM Cloud Private for Data Dashboard: ${icp4dDashboard}`)
+                        () => Logger.info(null, `Opened IBM Cloud Pak for Data Dashboard: ${icp4dDashboard}`)
                     );
                 } catch (error) {
-                    Logger.error(null, 'Error opening IBM Cloud Private for Data Dashboard', true);
+                    Logger.error(null, 'Error opening IBM Cloud Pak for Data Dashboard', true);
                     if (error.stack) {
                         Logger.error(null, error.stack);
                     }
@@ -655,7 +655,7 @@ export default class StreamsBuild {
     }
 
     /**
-     * Handle the scenario where the IBM Cloud Private for Data URL is not specified
+     * Handle the scenario where the IBM Cloud Pak for Data URL is not specified
      * @param callbackFn    The callback function to execute
      */
     private static handleIcp4dUrlNotSet(callbackFn: () => void) {

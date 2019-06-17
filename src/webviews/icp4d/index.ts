@@ -23,7 +23,7 @@ const enum MessageId {
 }
 
 /**
- * Manages webview panel for IBM Cloud Private for Data authentication
+ * Manages webview panel for IBM Cloud Pak for Data authentication
  */
 export default class ICP4DWebviewPanel {
     private static currentPanel: ICP4DWebviewPanel | undefined;
@@ -45,7 +45,7 @@ export default class ICP4DWebviewPanel {
             return;
         }
 
-        const panel = window.createWebviewPanel(ICP4DWebviewPanel.viewType, 'IBM Cloud Private for Data Settings', ViewColumn.Beside, {
+        const panel = window.createWebviewPanel(ICP4DWebviewPanel.viewType, 'IBM Cloud Pak for Data Settings', ViewColumn.Beside, {
             enableScripts: true,
             localResourceRoots: [ Uri.file(path.join(context.extensionPath, 'out')) ]
         });
