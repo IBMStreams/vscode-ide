@@ -50,7 +50,8 @@ export default class Configuration {
      * Migrate old settings that have updated names
      */
     private static migrateOldSettings(): void {
-        const settingsMap = {
+        // Migrate settings that have changed names
+        const settingNamesMap = {
             'ibm-streams.streamingAnalyticsCredentials': {
                 name: Settings.STREAMING_ANALYTICS_CREDENTIALS,
                 default: null
@@ -64,12 +65,26 @@ export default class Configuration {
                 default: Settings.TRACE_SERVER_DEFAULT
             }
         };
-        _.forEach(settingsMap, (newSetting: any, oldName: string) => {
+        _.forEach(settingNamesMap, (newSetting: any, oldName: string) => {
             const oldSettingValue = this.getSetting(oldName);
             const newSettingValue = this.getSetting(newSetting.name);
             if (oldSettingValue && _.isEqual(newSettingValue, newSetting.default)) {
                 this.setSetting(newSetting.name, this.getSetting(oldName));
                 this.setSetting(oldName, null);
+            }
+        });
+
+        // Migrate settings that have changed values
+        const settingValuesMap = {
+            [Settings.TARGET_VERSION]: {
+                oldValue: 'IBM Cloud Private for Data: Streams add-on',
+                newValue: Settings.TARGET_VERSION_OPTION.V5
+            }
+        };
+        _.forEach(settingValuesMap, (settingValues: any, settingName: string) => {
+            const settingValue = this.getSetting(settingName);
+            if (_.isEqual(settingValue, settingValues.oldValue)) {
+                this.setSetting(settingName, settingValues.newValue);
             }
         });
     }
