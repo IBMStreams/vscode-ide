@@ -10,7 +10,7 @@ import { getNonce } from '../../webviews';
 /**
  * Identifiers for messages between the extension and the webview
  */
-const enum MessageId {
+enum MessageId {
     AUTHENTICATE_ICP4D = 'authenticateIcp4d',
     CLOSE = 'close',
     CURRENT_STEP = 'currentStep',
@@ -47,7 +47,7 @@ export default class ICP4DWebviewPanel {
 
         const panel = window.createWebviewPanel(ICP4DWebviewPanel.viewType, 'IBM Cloud Pak for Data Settings', ViewColumn.Beside, {
             enableScripts: true,
-            localResourceRoots: [ Uri.file(path.join(context.extensionPath, 'out')) ]
+            localResourceRoots: [ Uri.file(path.join(context.extensionPath, 'dist', 'webviews')) ]
         });
         panel.iconPath = Uri.file(path.join(context.extensionPath, 'images', 'ibm-streaming-analytics.svg'));
         ICP4DWebviewPanel.currentPanel = new ICP4DWebviewPanel(panel, context);
@@ -117,16 +117,11 @@ export default class ICP4DWebviewPanel {
      * Set the HTML content for the webview
      */
     private _setHtml() {
-        let content = fs.readFileSync(path.join(this._extensionPath, 'src', 'webviews', 'icp4d', 'resources', 'index.html'), 'utf8');
-
+        let content = fs.readFileSync(path.join(this._extensionPath, 'dist', 'webviews', 'icp4d.html'), 'utf8');
         const nonce = getNonce();
         content = content.replace(/{{nonce}}/g, nonce);
 
-        const vendorScriptPathOnDisk = Uri.file(this._context.asAbsolutePath('out/vendor.js'));
-        const vendorSriptUri = vendorScriptPathOnDisk.with({ scheme: 'vscode-resource' }).toString();
-        content = content.replace('{{vendorScriptUri}}', vendorSriptUri);
-
-        const mainScriptPathOnDisk = Uri.file(this._context.asAbsolutePath('out/icp4d.js'));
+        const mainScriptPathOnDisk = Uri.file(this._context.asAbsolutePath('dist/webviews/icp4d.js'));
         const mainScriptUri = mainScriptPathOnDisk.with({ scheme: 'vscode-resource' }).toString();
         content = content.replace('{{mainScriptUri}}', mainScriptUri);
 

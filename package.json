@@ -33,7 +33,7 @@
   "activationEvents": [
     "*"
   ],
-  "main": "./out/src/extension",
+  "main": "./dist/extension",
   "contributes": {
     "configuration": {
       "type": "object",
@@ -500,10 +500,14 @@
     ]
   },
   "devDependencies": {
+    "@babel/cli": "^7.4.4",
     "@babel/core": "^7.4.5",
     "@babel/plugin-proposal-class-properties": "^7.4.4",
+    "@babel/plugin-proposal-object-rest-spread": "^7.4.4",
+    "@babel/plugin-transform-runtime": "^7.4.4",
     "@babel/preset-env": "^7.4.5",
     "@babel/preset-react": "^7.0.0",
+    "@babel/preset-typescript": "^7.3.3",
     "@types/archiver": "^3.0.0",
     "@types/clipboardy": "^2.0.1",
     "@types/keytar": "^4.4.0",
@@ -523,6 +527,7 @@
     "eslint-plugin-import": "^2.17.3",
     "eslint-plugin-jsx-a11y": "^6.2.1",
     "eslint-plugin-react": "^7.13.0",
+    "html-webpack-plugin": "^3.2.0",
     "npm-run-all": "^4.1.5",
     "remotedev-server": "^0.3.1",
     "style-loader": "^0.23.1",
@@ -535,6 +540,8 @@
     "webpack-cli": "^3.3.4"
   },
   "dependencies": {
+    "@babel/polyfill": "^7.4.4",
+    "@babel/runtime": "^7.4.5",
     "@ibmstreams/spl-lsp": "0.9.6",
     "archiver": "^3.0.0",
     "clipboardy": "^2.0.0",
@@ -559,15 +566,12 @@
     "xmldoc": "^1.1.2"
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "compile": "npm-run-all compile:*",
-    "compile:extension": "tsc -p ./",
-    "compile:webviews": "webpack --mode development",
-    "watch": "npm-run-all -p watch:*",
-    "watch:extension": "tsc -watch -p ./",
-    "watch:webviews": "webpack --mode development --watch",
+    "vscode:prepublish": "webpack --mode production",
+    "compile": "webpack --mode development",
+    "watch": "webpack --mode development --watch",
     "postinstall": "node ./node_modules/vscode/bin/install",
     "lint": "tslint --project tsconfig.json && eslint src/webviews/*/resources/**/*.js",
+    "type-check": "tsc --noEmit",
     "package": "vsce package",
     "publish": "vsce publish",
     "remotedev": "remotedev --hostname=localhost --port=8000"

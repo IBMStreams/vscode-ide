@@ -36,7 +36,7 @@ The IBM Streams product toolkits are bundled with this package. If your Streams 
 
 ### Building and submitting SPL applications
 
-![SPL application build](./images/build.gif)
+![SPL application build](./images/docs/build.gif)
 
 ### Color themes
 
@@ -44,7 +44,7 @@ Two [color themes](https://code.visualstudio.com/docs/getstarted/themes) are pro
 
 Note: To set a default color theme for `.spl` files to one of the included themes, you may want to search for a VS Code extension that provides that capability.
 
-![Themes](./images/themes.png)
+![Themes](./images/docs/themes.png)
 
 ### Code assistance
 
@@ -90,7 +90,7 @@ Command | Title | Description
 `ibm-streams.build.makeSubmit` | Build and Submit Job(s) | Build application(s) defined in a Makefile and submit them to either an IBM Streaming Analytics service or IBM Cloud Pak for Data Streams add-on. There are two submission options: (1) submit with the default configuration; (2) use the Streaming Analytics Console to customize the submission-time configuration.<br>Only available for `Makefile` files.
 `ibm-streams.build.submit` | Submit Job | Submit an application to either an IBM Streaming Analytics service or IBM Cloud Pak for Data Streams add-on. There are two submission options: (1) submit with the default configuration; (2) use the Streaming Analytics Console to customize the submission-time configuration..<br>Only available for `.sab` files.
 
-![Commands](./images/commands.gif)
+![Commands](./images/docs/commands.gif)
 
 ## Settings
 
@@ -106,4 +106,4 @@ Name | Description | Default
 `ibm-streams.toolkitPaths` | *(string)* Specifies paths to directories, comma or semicolon separated, containing IBM Streams toolkits. | `/path/to/toolkits/directory`
 `ibm-streams.trace.server` | *(string)* Traces the communication between VS Code and the SPL language server.<br><ul><li>`off`: tracing turned off</li><li>`verbose`: tracing turned on</li></ul> | `off`
 
-![Settings](./images/settings.png)
+![Settings](./images/docs/settings.png)
