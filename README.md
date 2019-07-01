@@ -98,7 +98,7 @@ The following [settings](https://code.visualstudio.com/docs/getstarted/settings)
 
 Name | Description | Default
 --- | --- | ---
-`ibm-streams.icp4d.url` | *(string)* Specifies the URL for an IBM Cloud Pak for Data instance. | `https://HOST:PORT`
+`ibm-streams.icp4d.url` | *(string)* Specifies the URL for an IBM Cloud Pak for Data instance. For example, if your web client URL is `https://123.45.67.89:31843/zen`, enter `https://123.45.67.89:31843`. | `https://HOST:PORT`
 `ibm-streams.icp4d.useMasterNodeHost` | *(boolean)* Specifies whether to use the host specified in the IBM Cloud Pak for Data URL for builds. | `true`
 `ibm-streams.requestTimeout` | *(number)* Number of seconds before a request times out. | `30`
 `ibm-streams.streamingAnalytics.credentials` | *(object)* Specifies the credentials for an IBM Streaming Analytics service. | `null`

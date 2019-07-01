@@ -42,7 +42,7 @@
         "ibm-streams.icp4d.url": {
           "type": "string",
           "default": "https://HOST:PORT",
-          "description": "IBM Cloud Pak for Data URL."
+          "markdownDescription": "IBM Cloud Pak for Data URL. For example, if your web client URL is `https://123.45.67.89:31843/zen`, enter `https://123.45.67.89:31843`."
         },
         "ibm-streams.icp4d.useMasterNodeHost": {
           "type": "boolean",

@@ -4,7 +4,7 @@
 export const SECTION_ID = 'ibm-streams';
 
 /**
- * IBM Cloud Pak for Data URL
+ * IBM Cloud Pak for Data URL. For example, if your web client URL is https://123.45.67.89:31843/zen, enter https://123.45.67.89:31843.
  */
 export const ICP4D_URL = 'ibm-streams.icp4d.url';
 
