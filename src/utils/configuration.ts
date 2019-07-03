@@ -1,5 +1,11 @@
 import * as _ from 'lodash';
-import { ConfigurationChangeEvent, ConfigurationTarget, ExtensionContext, Memento, workspace } from 'vscode';
+import {
+    ConfigurationChangeEvent,
+    ConfigurationTarget,
+    ExtensionContext,
+    Memento,
+    workspace
+} from 'vscode';
 import { DidChangeConfigurationNotification } from 'vscode-languageserver-protocol';
 import { Logger, Settings } from '.';
 import { StreamsToolkitsUtils } from '../build/v5/util';
@@ -133,21 +139,21 @@ export default class Configuration {
                 const { addedToolkitPaths, removedToolkitNames } = StreamsToolkitsUtils.getChangedLocalToolkits(previousToolkitPathsSetting, currentToolkitPathsSetting);
                 if (addedToolkitPaths && addedToolkitPaths.length) {
                     const addParam = StreamsToolkitsUtils.getLangServerParamForAddToolkits(addedToolkitPaths);
-                    SplLanguageClient.getClient().sendNotification(DidChangeConfigurationNotification.type, addParam);
+                    SplLanguageClient.getClient().sendNotification(DidChangeConfigurationNotification.type.method, addParam);
                 }
                 if (removedToolkitNames && removedToolkitNames.length) {
                     const removeParam = StreamsToolkitsUtils.getLangServerParamForRemoveToolkits(removedToolkitNames);
-                    SplLanguageClient.getClient().sendNotification(DidChangeConfigurationNotification.type, removeParam);
+                    SplLanguageClient.getClient().sendNotification(DidChangeConfigurationNotification.type.method, removeParam);
                 }
             } else if (event.affectsConfiguration(Settings.TRACE_SERVER)) {
                 changedSettingName = Settings.TRACE_SERVER;
             }
 
             if (changedSettingName) {
-                const oldValue = Configuration.getState(changedSettingName) === '' ? '\"\"' : Configuration.getState(changedSettingName);
-                const newValue = Configuration.getSetting(changedSettingName) === '' ? '\"\"' : Configuration.getSetting(changedSettingName);
-                const formatValue = (value: any) => typeof value === 'object' ? `\n${JSON.stringify(value, null, 4)}` : ` ${value}`;
-                const whitespaceValue = typeof oldValue === 'object' ? '\n\n' : `\n`;
+                const oldValue = Configuration.getState(changedSettingName) === '' ? '""' : Configuration.getState(changedSettingName);
+                const newValue = Configuration.getSetting(changedSettingName) === '' ? '""' : Configuration.getSetting(changedSettingName);
+                const formatValue = (value: any): string => (typeof value === 'object' ? `\n${JSON.stringify(value, null, 4)}` : ` ${value}`);
+                const whitespaceValue = typeof oldValue === 'object' ? '\n\n' : '\n';
                 Logger.info(null, `The ${changedSettingName} configuration setting was changed:\nPrevious value:${formatValue(oldValue)}${whitespaceValue}Current value: ${formatValue(newValue)}`);
                 Configuration.setState(changedSettingName, newValue);
             }

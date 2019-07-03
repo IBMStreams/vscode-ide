@@ -1,7 +1,7 @@
 /**
  * The base command
  */
-export default interface IBaseCommand {
+export default interface BaseCommand {
     commandName: string;
 
     /**

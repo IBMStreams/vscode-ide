@@ -1,11 +1,11 @@
 import { ExtensionContext, window } from 'vscode';
-import { Commands, IBaseCommand } from '.';
+import { Commands, BaseCommand } from '.';
 import { Configuration, Logger, Settings } from '../utils';
 
 /**
  * Command that allows a user to set a configuration setting
  */
-export class SetConfigSettingCommand implements IBaseCommand {
+export default class SetConfigSettingCommand implements BaseCommand {
     /**
      * Initialize the command
      * @param commandName    The name of the command
@@ -54,6 +54,8 @@ export class SetConfigSettingCommand implements IBaseCommand {
                 placeHolder = 'Select the IBM Streams version to target for builds and submissions';
                 options = Object.keys(Settings.TARGET_VERSION_OPTION).map((key: string) => Settings.TARGET_VERSION_OPTION[key]);
                 break;
+            default:
+                break;
         }
 
         if (name && placeHolder) {
@@ -74,34 +76,35 @@ export class SetConfigSettingCommand implements IBaseCommand {
                         }
                     }
                 });
-            } else {
-                return window.showInputBox({
-                    ignoreFocusOut: true,
-                    prompt,
-                    placeHolder
-                }).then(async (input: string) => {
-                    if (typeof input === 'string') {
-                        try {
-                            input = input.trim();
-                            if (this.commandName === Commands.SET_SERVICE_CREDENTIALS) {
-                                input = JSON.parse(input);
-                            }
-                            if (input === 'null') {
-                                input = null;
-                            }
-                            await Configuration.setSetting(name, input);
-                            if (callbackFn) {
-                                const setting = Configuration.getSetting(name);
-                                callbackFn(setting);
-                            }
-                        } catch (error) {
-                            throw error;
-                        }
-                    }
-                });
             }
-        } else {
-            throw new Error('The command name is not supported');
+
+            return window.showInputBox({
+                ignoreFocusOut: true,
+                prompt,
+                placeHolder
+            }).then(async (input: string) => {
+                if (typeof input === 'string') {
+                    let inputValue = input;
+                    try {
+                        inputValue = input.trim();
+                        if (this.commandName === Commands.SET_SERVICE_CREDENTIALS) {
+                            inputValue = JSON.parse(inputValue);
+                        }
+                        if (inputValue === 'null') {
+                            inputValue = null;
+                        }
+                        await Configuration.setSetting(name, inputValue);
+                        if (callbackFn) {
+                            const setting = Configuration.getSetting(name);
+                            callbackFn(setting);
+                        }
+                    } catch (error) {
+                        throw error;
+                    }
+                }
+            });
         }
+
+        throw new Error('The command name is not supported');
     }
 }

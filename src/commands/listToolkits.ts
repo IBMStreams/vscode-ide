@@ -1,11 +1,11 @@
 import { ExtensionContext } from 'vscode';
-import { Commands, IBaseCommand } from '.';
+import { Commands, BaseCommand } from '.';
 import StreamsBuild from '../build';
 
 /**
  * Command that lists the available toolkits
  */
-export class ListToolkitsCommand implements IBaseCommand {
+export default class ListToolkitsCommand implements BaseCommand {
     public commandName: string = Commands.LIST_TOOLKITS;
 
     /**

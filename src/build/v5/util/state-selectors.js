@@ -29,16 +29,6 @@ const getQueuedAction = createSelector(
   (base = Map()) => base.getIn(['queuedAction'])
 );
 
-const getSelectedInstance = createSelector(
-  getBase,
-  (base = Map()) => base.getIn(['selectedInstance'])
-);
-
-const getBuilds = createSelector(
-  getBase,
-  (base = Map()) => base.getIn(['builds'])
-);
-
 const getSelectedInstanceName = createSelector(
   getBase,
   (base = Map()) => base.getIn(['selectedInstance', 'instanceName'])

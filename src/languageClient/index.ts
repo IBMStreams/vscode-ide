@@ -31,9 +31,7 @@ export default class SplLanguageClient {
         const clientOptions: LanguageClientOptions = {
             outputChannelName: 'IBM Streams SPL Language Server',
             documentSelector: [{ scheme: 'file', language: 'spl' }],
-            synchronize: {
-                fileEvents: workspace.createFileSystemWatcher('**/*.*')
-            },
+            synchronize: { fileEvents: workspace.createFileSystemWatcher('**/*.*') },
             initializationOptions: () => initOptions
         };
 

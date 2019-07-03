@@ -1,12 +1,18 @@
 import * as fs from 'fs';
-import { commands, ExtensionContext, Uri, window, workspace } from 'vscode';
-import { Commands, IBaseCommand } from '.';
+import {
+    commands,
+    ExtensionContext,
+    Uri,
+    window,
+    workspace
+} from 'vscode';
+import { Commands, BaseCommand } from '.';
 import { Logger } from '../utils';
 
 /**
  * Command that creates a simple Streams application from a template
  */
-export class CreateApplicationCommand implements IBaseCommand {
+export default class CreateApplicationCommand implements BaseCommand {
     public readonly commandName: string = Commands.CREATE_APPLICATION;
 
     /**
@@ -67,9 +73,8 @@ export class CreateApplicationCommand implements IBaseCommand {
         }).then((selected: Uri[]) => {
             if (selected && selected.length === 1) {
                 return selected[0];
-            } else {
-                throw new Error('Application creation canceled, a root folder was not selected');
             }
+            throw new Error('Application creation canceled, a root folder was not selected');
         });
     }
 
@@ -86,9 +91,8 @@ export class CreateApplicationCommand implements IBaseCommand {
         }).then((input: string) => {
             if (input && input.trim() !== '') {
                 return input;
-            } else {
-                throw new Error(`Application creation canceled, a ${type} was not specified`);
             }
+            throw new Error(`Application creation canceled, a ${type} was not specified`);
         });
     }
 }

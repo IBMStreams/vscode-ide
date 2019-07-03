@@ -14,7 +14,7 @@ export { Constants, Settings };
  * @param context    The extension context
  * @param client     The language client
  */
-export function initialize(context: ExtensionContext) {
+export function initialize(context: ExtensionContext): void {
     Configuration.configure(context);
     Diagnostics.configure(context);
     Logger.configure();
@@ -23,7 +23,7 @@ export function initialize(context: ExtensionContext) {
 /**
  * Determine whether the extension is being debugged or not
  */
-export function inDebugMode() {
+export function inDebugMode(): boolean {
     const { sessionId, machineId } = env;
     return sessionId === 'someValue.sessionId' || machineId === 'someValue.machineId';
 }

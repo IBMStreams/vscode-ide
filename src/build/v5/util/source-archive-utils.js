@@ -96,10 +96,9 @@ async function buildSourceArchive(
     const toolkitPaths = getToolkits(toolkitCacheDir, toolkitPathSetting, appRoot);
     let tkPathString = '';
     if (toolkitPaths && toolkitPaths.length) {
-      messageHandler.handleInfo('Including toolkits in source archive...',
-        {
-          detail: `Including the following toolkits with the application source:\n${toolkitPaths.map(tk => tk.tkPath).join('\n')}`
-        }
+      messageHandler.handleInfo(
+        'Including toolkits in source archive...',
+        { detail: `Including the following toolkits with the application source:\n${toolkitPaths.map(tk => tk.tkPath).join('\n')}` }
       );
       const rootContents = fs.readdirSync(appRoot);
       const newRoot = path.basename(appRoot);

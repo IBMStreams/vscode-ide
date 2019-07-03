@@ -4,9 +4,9 @@ images/docs/**
 node_modules/!(@ibmstreams)
 src/**
 toolkitsCache/**
+.eslintrc.js
 .gitignore
 ibm-streams-*.vsix
 package-lock.json
 tsconfig.json
-tslint.json
 webpack.config.js
