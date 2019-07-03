@@ -76,7 +76,7 @@ function getLocalToolkitIndexPaths(toolkitPaths) {
       const toolkitRoots = [];
 
       if (toolkitPaths.includes(',') || toolkitPaths.includes(';')) {
-        toolkitRoots.push(...toolkitPaths.split(/[,;]/));
+        toolkitRoots.push(...toolkitPaths.split(/[,;]/).map((toolkitPath) => toolkitPath.trim()));
       } else {
         toolkitRoots.push(toolkitPaths);
       }
