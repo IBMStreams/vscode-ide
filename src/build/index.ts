@@ -2,12 +2,28 @@ import * as fs from 'fs';
 import * as _ from 'lodash';
 import * as path from 'path';
 import { URL } from 'url';
-import { commands, ConfigurationChangeEvent, Disposable, ExtensionContext, Uri, window, workspace, WorkspaceFolder } from 'vscode';
+import {
+    commands,
+    ConfigurationChangeEvent,
+    Disposable,
+    ExtensionContext,
+    Uri,
+    window,
+    workspace,
+    WorkspaceFolder
+} from 'vscode';
 import { DidChangeConfigurationNotification } from 'vscode-languageserver-protocol';
 import * as packageJson from '../../package.json';
 import { Commands } from '../commands';
 import SplLanguageClient from '../languageClient';
-import { Configuration, Constants, inDebugMode, Keychain, Logger, Settings } from '../utils';
+import {
+    Configuration,
+    Constants,
+    inDebugMode,
+    Keychain,
+    Logger,
+    Settings
+} from '../utils';
 import { ICP4DWebviewPanel } from '../webviews';
 import LintHandlerRegistry from './lint-handler-registry';
 import LintHandler from './LintHandler';
@@ -33,7 +49,9 @@ import {
     submitApplicationsFromBundleFiles
 } from './v5/actions';
 import getStore from './v5/redux-store/configure-store';
-import { SourceArchiveUtils, StateSelector, StreamsToolkitsUtils, StreamsUtils, StreamsRestUtils } from './v5/util';
+import {
+    SourceArchiveUtils, StateSelector, StreamsToolkitsUtils, StreamsUtils, StreamsRestUtils
+} from './v5/util';
 
 /**
  * Handles Streams builds and submissions
@@ -72,6 +90,7 @@ export default class StreamsBuild {
 
         this._storeSubscription = getStore().subscribe(() => {
             if (inDebugMode()) {
+                // eslint-disable-next-line no-console
                 console.log('Store subscription updated state: ', getStore().getState());
             }
         });
@@ -103,7 +122,7 @@ export default class StreamsBuild {
         this._openUrlHandler = (url: string, callback?: () => void): Thenable<void> => commands.executeCommand('vscode.open', Uri.parse(url)).then(() => callback && callback());
         MessageHandlerRegistry.setOpenUrlHandler(this._openUrlHandler);
 
-        this._sendLspNotificationHandler = (param: object) => SplLanguageClient.getClient().sendNotification(DidChangeConfigurationNotification.type, param);
+        this._sendLspNotificationHandler = (param: object) => SplLanguageClient.getClient().sendNotification(DidChangeConfigurationNotification.type.method, param);
         MessageHandlerRegistry.setSendLspNotificationHandler(this._sendLspNotificationHandler);
 
         if (!fs.existsSync(Constants.TOOLKITS_CACHE_DIR)) {
@@ -187,7 +206,7 @@ export default class StreamsBuild {
             Logger.debug(outputChannel, `Selected: ${filePath}`);
 
             if (this._apiVersion === Settings.TARGET_VERSION_OPTION.V5) {
-                const build = () => this.buildAppV5(appRoot, compositeToBuild, action);
+                const build = (): Promise<void> => this.buildAppV5(appRoot, compositeToBuild, action);
                 this.handleV5Action(build);
             } else {
                 this.buildAppV4(appRoot, compositeToBuild, action, messageHandler);
@@ -278,7 +297,7 @@ export default class StreamsBuild {
             Logger.debug(outputChannel, `Selected: ${filePath}`);
 
             if (this._apiVersion === Settings.TARGET_VERSION_OPTION.V5) {
-                const build = () => this.buildMakeV5(appRoot, filePath, action);
+                const build = (): Promise<void> => this.buildMakeV5(appRoot, filePath, action);
                 this.handleV5Action(build);
             } else {
                 this.buildMakeV4(appRoot, filePath, action, messageHandler);
@@ -346,7 +365,7 @@ export default class StreamsBuild {
     public static async submit(filePaths: string[]): Promise<void> {
         if (filePaths) {
             if (this._apiVersion === Settings.TARGET_VERSION_OPTION.V5) {
-                const submit = () => this.submitV5(filePaths);
+                const submit = (): Promise<void> => this.submitV5(filePaths);
                 this.handleV5Action(submit);
             } else {
                 this.submitV4(filePaths[0]);
@@ -416,11 +435,11 @@ export default class StreamsBuild {
     /**
      * Open IBM Streaming Analytics Console
      */
-    public static openStreamingAnalyticsConsole() {
+    public static openStreamingAnalyticsConsole(): void {
         if (this._apiVersion === Settings.TARGET_VERSION_OPTION.V4) {
             try {
                 const builder = new SplBuilder(null, null, this._openUrlHandler, null);
-                const openConsole = (setting: any) => {
+                const openConsole = (setting: any): void => {
                     const streamingAnalyticsCredentials = setting ? JSON.stringify(setting) : null;
                     builder.openStreamingAnalyticsConsole(streamingAnalyticsCredentials, (url: string) => Logger.info(null, `Streaming Analytics Console: ${url}`));
                 };
@@ -447,7 +466,7 @@ export default class StreamsBuild {
     /**
      * Open IBM Cloud Dashboard
      */
-    public static openCloudDashboard() {
+    public static openCloudDashboard(): void {
         if (this._apiVersion === Settings.TARGET_VERSION_OPTION.V4) {
             try {
                 const builder = new SplBuilder(null, null, this._openUrlHandler, null);
@@ -464,11 +483,11 @@ export default class StreamsBuild {
     /**
      * Open IBM Streams Console
      */
-    public static openStreamsConsole() {
+    public static openStreamsConsole(): void {
         if (this._apiVersion === Settings.TARGET_VERSION_OPTION.V5) {
-            const openConsole = () => {
+            const openConsole = (): void => {
                 try {
-                    const openUrl = () => {
+                    const openUrl = (): void => {
                         const consoleUrl = StateSelector.getStreamsConsoleUrl(getStore().getState());
                         this._openUrlHandler(
                             consoleUrl,
@@ -494,20 +513,20 @@ export default class StreamsBuild {
     }
 
     /**
-     * Open IBM Cloud Private for Data Dashboard
+     * Open IBM Cloud Pak for Data Dashboard
      */
-    public static openIcp4dDashboard() {
+    public static openIcp4dDashboard(): void {
         if (this._apiVersion === Settings.TARGET_VERSION_OPTION.V5) {
-            const openDashboard = () => {
+            const openDashboard = (): void => {
                 try {
                     const icp4dUrl = StateSelector.getIcp4dUrl(getStore().getState());
                     const icp4dDashboard = `${icp4dUrl}/zen/#/homepage`;
                     this._openUrlHandler(
                         icp4dDashboard,
-                        () => Logger.info(null, `Opened IBM Cloud Private for Data Dashboard: ${icp4dDashboard}`)
+                        () => Logger.info(null, `Opened IBM Cloud Pak for Data Dashboard: ${icp4dDashboard}`)
                     );
                 } catch (error) {
-                    Logger.error(null, 'Error opening IBM Cloud Private for Data Dashboard', true);
+                    Logger.error(null, 'Error opening IBM Cloud Pak for Data Dashboard', true);
                     if (error.stack) {
                         Logger.error(null, error.stack);
                     }
@@ -520,7 +539,7 @@ export default class StreamsBuild {
     /**
      * List available toolkits
      */
-    public static listToolkits() {
+    public static listToolkits(): void {
         const cachedToolkits = StreamsToolkitsUtils.getCachedToolkits(StateSelector.getToolkitsCacheDir(getStore().getState())).map((tk: any) => tk.label);
         const cachedToolkitsStr = `\nBuild service toolkits:${cachedToolkits.length ? `\n\n${cachedToolkits.join('\n')}` : ' none'}`;
 
@@ -543,9 +562,9 @@ export default class StreamsBuild {
     /**
      * Refresh toolkits on the LSP server
      */
-    public static refreshLspToolkits() {
+    public static refreshLspToolkits(): void {
         if (this._apiVersion === Settings.TARGET_VERSION_OPTION.V5) {
-            const refresh = () => {
+            const refresh = (): void => {
                 const toolkitPathsSetting = Configuration.getSetting(Settings.TOOLKIT_PATHS);
                 if (typeof toolkitPathsSetting === 'string' && toolkitPathsSetting.length > 0) {
                     if (toolkitPathsSetting.match(/[,;]/)) {
@@ -557,8 +576,8 @@ export default class StreamsBuild {
                                 {
                                     detail: `Verify that the paths exist:\n${directories.join('\n')}`,
                                     notificationButtons: [{
-                                            label: 'Open settings',
-                                            callbackFn: () => MessageHandlerRegistry.getDefault().openSettingsPage()
+                                        label: 'Open settings',
+                                        callbackFn: () => MessageHandlerRegistry.getDefault().openSettingsPage()
                                     }]
                                 }
                             );
@@ -602,38 +621,29 @@ export default class StreamsBuild {
      */
     private static async getCompositeToBuild(namespace: string, composites: string[]): Promise<string> {
         if (composites.length === 1) {
-            if (namespace === '') {
-               return composites[0];
-            } else {
-                return `${namespace}::${composites[0]}`;
-            }
-        } else {
-            return window.showQuickPick(composites, {
-                ignoreFocusOut: true,
-                placeHolder: 'Select the main composite to build...'
-            }).then((composite: string) => {
-                if (composite) {
-                    if (namespace === '') {
-                        return composite;
-                    } else {
-                        return `${namespace}::${composite}`;
-                    }
-                } else {
-                    throw new Error(`Build canceled, a main composite was not selected`);
-                }
-            });
+            return namespace === '' ? composites[0] : `${namespace}::${composites[0]}`;
         }
+
+        return window.showQuickPick(composites, {
+            ignoreFocusOut: true,
+            placeHolder: 'Select the main composite to build...'
+        }).then((composite: string) => {
+            if (composite) {
+                return namespace === '' ? composite : `${namespace}::${composite}`;
+            }
+            throw new Error('Build canceled, a main composite was not selected');
+        });
     }
 
     /**
      * Handle a build or submission
      * @param callbackFn    The callback function to execute
      */
-    private static async handleV5Action(callbackFn: () => void) {
+    private static async handleV5Action(callbackFn: () => void): Promise<void> {
         const icp4dUrl = StateSelector.getIcp4dUrl(getStore().getState());
         if (icp4dUrl) {
             const successFn = callbackFn;
-            const errorFn = () => this.handleIcp4dUrlNotSet(this.handleV5Action.bind(this, callbackFn));
+            const errorFn = (): void => this.handleIcp4dUrlNotSet(this.handleV5Action.bind(this, callbackFn));
             getStore().dispatch(checkIcp4dHostExists(successFn, errorFn));
         } else {
             this.handleIcp4dUrlNotSet(this.handleV5Action.bind(this, callbackFn));
@@ -655,17 +665,17 @@ export default class StreamsBuild {
     }
 
     /**
-     * Handle the scenario where the IBM Cloud Private for Data URL is not specified
+     * Handle the scenario where the IBM Cloud Pak for Data URL is not specified
      * @param callbackFn    The callback function to execute
      */
-    private static handleIcp4dUrlNotSet(callbackFn: () => void) {
+    private static handleIcp4dUrlNotSet(callbackFn: () => void): void {
         MessageHandlerRegistry.getDefault().handleIcp4dUrlNotSet(callbackFn);
     }
 
     /**
      * Show ICP4D authentication webview panel if not yet authenticated
      */
-    private static showIcp4dAuthPanel() {
+    private static showIcp4dAuthPanel(): void {
         const username = StateSelector.getFormUsername(getStore().getState()) || StateSelector.getUsername(getStore().getState());
         const rememberPassword = StateSelector.getFormRememberPassword(getStore().getState()) || StateSelector.getRememberPassword(getStore().getState());
         if (username && rememberPassword) {

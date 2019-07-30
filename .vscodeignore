@@ -1,5 +1,12 @@
+.git/**
+.vscode/**
+images/docs/**
+node_modules/!(@ibmstreams)
+src/**
+toolkitsCache/**
+.eslintrc.js
 .gitignore
-.vscode
+ibm-streams-*.vsix
+package-lock.json
 tsconfig.json
-webpack.config.json
-toolkitsCache/
+webpack.config.js

@@ -1,11 +1,11 @@
 import { ExtensionContext, Uri, window } from 'vscode';
-import { Commands, IBaseCommand } from '.';
+import { Commands, BaseCommand } from '.';
 import StreamsBuild from '../build';
 
 /**
  * Command that allows a user to build or submit Streams application(s)
  */
-export class BuildCommand implements IBaseCommand {
+export default class BuildCommand implements BaseCommand {
     private _buildType: number;
 
     /**
@@ -27,7 +27,7 @@ export class BuildCommand implements IBaseCommand {
         if (args[0] && Array.isArray(args[0][1])) {
             filePaths = args[0][1].map((uri: Uri) => uri.fsPath);
         } else {
-            filePaths = [ window.activeTextEditor.document.fileName ];
+            filePaths = [window.activeTextEditor.document.fileName];
         }
 
         switch (this.commandName) {

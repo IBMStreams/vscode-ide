@@ -102,7 +102,7 @@ function jobSubmitted(state, submitInfo, buildId) {
     messageHandler.handleSuccess(
       `Job ${submitInfo.name} has been successfully submitted to the ${StateSelector.getSelectedInstanceName(state)} instance`,
       {
-        detail: 'To monitor or manage the job, use the IBM Cloud Private for Data Manage Jobs webpage or the Streams Console.',
+        detail: 'To monitor or manage the job, use the IBM Cloud Pak for Data Manage Jobs webpage or the Streams Console.',
         notificationAutoDismiss: false,
         notificationButtons: [
           {

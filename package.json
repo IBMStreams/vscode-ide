@@ -33,7 +33,7 @@
   "activationEvents": [
     "*"
   ],
-  "main": "./out/src/extension",
+  "main": "./dist/extension",
   "contributes": {
     "configuration": {
       "type": "object",
@@ -42,12 +42,12 @@
         "ibm-streams.icp4d.url": {
           "type": "string",
           "default": "https://HOST:PORT",
-          "description": "IBM Cloud Private for Data URL."
+          "markdownDescription": "IBM Cloud Pak for Data URL. For example, if your web client URL is `https://123.45.67.89:31843/zen`, enter `https://123.45.67.89:31843`."
         },
         "ibm-streams.icp4d.useMasterNodeHost": {
           "type": "boolean",
           "default": true,
-          "description": "Use the host specified in the IBM Cloud Private for Data URL for builds."
+          "description": "Use the host specified in the IBM Cloud Pak for Data URL for builds."
         },
         "ibm-streams.requestTimeout": {
           "type": "number",
@@ -63,7 +63,7 @@
           "type": "string",
           "enum": [
             "IBM Cloud: Streaming Analytics service",
-            "IBM Cloud Private for Data: Streams add-on"
+            "IBM Cloud Pak for Data: Streams add-on"
           ],
           "default": "IBM Cloud: Streaming Analytics service",
           "description": "Streams version to target for application builds and submissions."
@@ -97,12 +97,12 @@
       },
       {
         "command": "ibm-streams.icp4d.openDashboard",
-        "title": "Open IBM Cloud Private for Data Dashboard",
+        "title": "Open IBM Cloud Pak for Data Dashboard",
         "category": "IBM Streams"
       },
       {
         "command": "ibm-streams.icp4d.setUrl",
-        "title": "Set IBM Cloud Private for Data URL",
+        "title": "Set IBM Cloud Pak for Data URL",
         "category": "IBM Streams"
       },
       {
@@ -214,15 +214,15 @@
         },
         {
           "command": "ibm-streams.icp4d.openConsole",
-          "when": "config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'"
+          "when": "config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'"
         },
         {
           "command": "ibm-streams.icp4d.openDashboard",
-          "when": "config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'"
+          "when": "config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'"
         },
         {
           "command": "ibm-streams.icp4d.setUrl",
-          "when": "config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'"
+          "when": "config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'"
         },
         {
           "command": "ibm-streams.removeOutputChannels"
@@ -304,12 +304,12 @@
         },
         {
           "command": "ibm-streams.icp4d.openDashboard",
-          "when": "resourceLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'",
+          "when": "resourceLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'",
           "group": "STREAMS2@1"
         },
         {
           "command": "ibm-streams.icp4d.openConsole",
-          "when": "resourceLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'",
+          "when": "resourceLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'",
           "group": "STREAMS2@2"
         },
         {
@@ -324,12 +324,12 @@
         },
         {
           "command": "ibm-streams.icp4d.openDashboard",
-          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'",
+          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'",
           "group": "STREAMS2@1"
         },
         {
           "command": "ibm-streams.icp4d.openConsole",
-          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'",
+          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'",
           "group": "STREAMS2@2"
         },
         {
@@ -375,12 +375,12 @@
         },
         {
           "command": "ibm-streams.icp4d.openDashboard",
-          "when": "editorLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'",
+          "when": "editorLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'",
           "group": "STREAMS2@1"
         },
         {
           "command": "ibm-streams.icp4d.openConsole",
-          "when": "editorLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'",
+          "when": "editorLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'",
           "group": "STREAMS2@2"
         },
         {
@@ -395,12 +395,12 @@
         },
         {
           "command": "ibm-streams.icp4d.openDashboard",
-          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'",
+          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'",
           "group": "STREAMS2@1"
         },
         {
           "command": "ibm-streams.icp4d.openConsole",
-          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'",
+          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'",
           "group": "STREAMS2@2"
         },
         {
@@ -446,12 +446,12 @@
         },
         {
           "command": "ibm-streams.icp4d.openDashboard",
-          "when": "resourceLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'",
+          "when": "resourceLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'",
           "group": "STREAMS2@1"
         },
         {
           "command": "ibm-streams.icp4d.openConsole",
-          "when": "resourceLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'",
+          "when": "resourceLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'",
           "group": "STREAMS2@2"
         },
         {
@@ -466,12 +466,12 @@
         },
         {
           "command": "ibm-streams.icp4d.openDashboard",
-          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'",
+          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'",
           "group": "STREAMS2@1"
         },
         {
           "command": "ibm-streams.icp4d.openConsole",
-          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Private for Data: Streams add-on'",
+          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'",
           "group": "STREAMS2@2"
         },
         {
@@ -500,39 +500,45 @@
     ]
   },
   "devDependencies": {
-    "@babel/core": "^7.4.3",
-    "@babel/plugin-proposal-class-properties": "^7.4.0",
-    "@babel/preset-env": "^7.4.3",
+    "@babel/cli": "^7.4.4",
+    "@babel/core": "^7.4.5",
+    "@babel/plugin-proposal-class-properties": "^7.4.4",
+    "@babel/plugin-proposal-object-rest-spread": "^7.4.4",
+    "@babel/plugin-transform-runtime": "^7.4.4",
+    "@babel/preset-env": "^7.4.5",
     "@babel/preset-react": "^7.0.0",
-    "@types/archiver": "^2.1.3",
-    "@types/clipboardy": "^1.1.0",
+    "@babel/preset-typescript": "^7.3.3",
+    "@babel/runtime": "^7.4.5",
+    "@types/archiver": "^3.0.0",
+    "@types/clipboardy": "^2.0.1",
     "@types/keytar": "^4.4.0",
-    "@types/lodash": "^4.14.123",
-    "@types/react": "^16.8.13",
-    "@types/react-dom": "^16.8.3",
-    "@types/react-select": "^2.0.15",
+    "@types/lodash": "^4.14.135",
+    "@types/react": "^16.8.23",
+    "@types/react-dom": "^16.8.4",
+    "@types/react-select": "^3.0.0",
     "@types/remote-redux-devtools": "^0.5.3",
-    "@types/semver": "^6.0.0",
+    "@types/semver": "^6.0.1",
     "@types/xmldoc": "^1.1.4",
-    "ajv": "^6.10.0",
-    "babel-eslint": "^10.0.1",
-    "babel-loader": "^8.0.5",
-    "css-loader": "^2.1.1",
-    "eslint": "^5.16.0",
-    "eslint-config-airbnb": "^17.1.0",
-    "eslint-plugin-import": "^2.16.0",
-    "eslint-plugin-jsx-a11y": "^6.2.1",
-    "eslint-plugin-react": "^7.12.4",
-    "npm-run-all": "^4.1.5",
+    "@typescript-eslint/eslint-plugin": "^1.11.0",
+    "@typescript-eslint/parser": "^1.11.0",
+    "babel-eslint": "^10.0.2",
+    "babel-loader": "^8.0.6",
+    "css-loader": "^3.0.0",
+    "eslint": "^6.0.1",
+    "eslint-config-airbnb": "^17.1.1",
+    "eslint-import-resolver-webpack": "^0.11.1",
+    "eslint-plugin-import": "^2.18.0",
+    "eslint-plugin-jsx-a11y": "^6.2.3",
+    "eslint-plugin-react": "^7.14.2",
+    "html-webpack-plugin": "^3.2.0",
+    "remote-redux-devtools": "^0.5.16",
     "remotedev-server": "^0.3.1",
     "style-loader": "^0.23.1",
-    "ts-loader": "^5.3.3",
-    "tslint": "^5.15.0",
-    "typescript": "^3.4.3",
-    "vsce": "^1.59.0",
-    "vscode": "^1.1.33",
-    "webpack": "^4.29.6",
-    "webpack-cli": "^3.3.0"
+    "typescript": "^3.5.2",
+    "vsce": "^1.64.0",
+    "vscode": "^1.1.35",
+    "webpack": "^4.35.2",
+    "webpack-cli": "^3.3.5"
   },
   "dependencies": {
     "@ibmstreams/spl-lsp": "0.9.6",
@@ -543,13 +549,12 @@
     "moment": "^2.22.2",
     "prop-types": "^15.7.2",
     "react": "^16.8.6",
-    "react-bootstrap": "^1.0.0-beta.6",
+    "react-bootstrap": "^1.0.0-beta.9",
     "react-dom": "^16.8.6",
     "react-loading": "^2.0.3",
-    "react-select": "^2.4.2",
+    "react-select": "^3.0.4",
     "redux": "^4.0.1",
     "redux-observable": "^1.1.0",
-    "remote-redux-devtools": "^0.5.16",
     "request": "^2.88.0",
     "reselect": "^4.0.0",
     "rxjs": "^6.4.0",
@@ -559,17 +564,19 @@
     "xmldoc": "^1.1.2"
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "compile": "npm-run-all compile:*",
-    "compile:extension": "tsc -p ./",
-    "compile:webviews": "webpack --mode development",
-    "watch": "npm-run-all -p watch:*",
-    "watch:extension": "tsc -watch -p ./",
-    "watch:webviews": "webpack --mode development --watch",
-    "postinstall": "node ./node_modules/vscode/bin/install",
-    "lint": "tslint --project tsconfig.json && eslint src/webviews/*/resources/**/*.js",
+    "clean": "rm -rf dist",
+    "compile": "webpack --mode development",
+    "install-deps": "rm -rf node_modules && npm install",
+    "lint": "eslint --ext .js,.ts,.d.ts src",
+    "lint:fix": "eslint --ext .js,.ts,.d.ts src --fix",
+    "lint:js": "eslint --ext .js src",
+    "lint:ts": "eslint --ext .ts,.d.ts src",
     "package": "vsce package",
+    "postinstall": "node ./node_modules/vscode/bin/install",
     "publish": "vsce publish",
-    "remotedev": "remotedev --hostname=localhost --port=8000"
+    "remotedev": "remotedev --hostname=localhost --port=8000",
+    "type-check": "tsc --noEmit --skipLibCheck",
+    "vscode:prepublish": "webpack --mode production",
+    "watch": "webpack --mode development --watch"
   }
 }

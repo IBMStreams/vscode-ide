@@ -6,7 +6,7 @@
         "jsx": "react",
         "module": "commonjs",
         "noUnusedLocals": true,
-        "outDir": "out",
+        "outDir": "dist",
         "resolveJsonModule": true,
         "rootDir": ".",
         "sourceMap": true,
@@ -14,7 +14,6 @@
     },
     "exclude": [
         "node_modules",
-        ".vscode-test",
-        "out"
+        "dist"
     ]
 }

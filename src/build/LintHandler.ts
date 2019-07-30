@@ -46,14 +46,14 @@ export default class LintHandler {
     /**
      * Target Streams API V4
      */
-    private _setV4() {
+    private _setV4(): void {
         this._msgRegex = StreamsUtils.SPL_MSG_REGEX;
     }
 
     /**
      * Target Streams API V5
      */
-    private _setV5() {
+    private _setV5(): void {
         this._msgRegex = StreamsUtils.SPL_MSG_REGEX_V5;
     }
 
@@ -96,5 +96,6 @@ export default class LintHandler {
                 description: parts[5]
             };
         }
+        return null;
     }
 }
