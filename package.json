@@ -545,7 +545,7 @@
     "archiver": "^3.0.0",
     "clipboardy": "^2.0.0",
     "immutable": "^4.0.0-rc.12",
-    "lodash": "^4.17.11",
+    "lodash": "^4.17.13",
     "moment": "^2.22.2",
     "prop-types": "^15.7.2",
     "react": "^16.8.6",
