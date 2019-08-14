@@ -67,10 +67,11 @@ export default class SetConfigSettingCommand implements BaseCommand {
                     if (typeof selection === 'string') {
                         try {
                             await Configuration.setSetting(name, selection);
+                            const settingValue = Configuration.getSetting(name);
                             if (callbackFn) {
-                                const setting = Configuration.getSetting(name);
-                                callbackFn(setting);
+                                callbackFn(settingValue);
                             }
+                            return settingValue;
                         } catch (error) {
                             throw error;
                         }
@@ -94,10 +95,11 @@ export default class SetConfigSettingCommand implements BaseCommand {
                             inputValue = null;
                         }
                         await Configuration.setSetting(name, inputValue);
+                        const settingValue = Configuration.getSetting(name);
                         if (callbackFn) {
-                            const setting = Configuration.getSetting(name);
-                            callbackFn(setting);
+                            callbackFn(settingValue);
                         }
+                        return settingValue;
                     } catch (error) {
                         throw error;
                     }

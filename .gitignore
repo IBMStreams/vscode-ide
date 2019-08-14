@@ -1,5 +1,7 @@
-dist
-node_modules
-toolkitsCache
 .DS_Store
+.vscode-test
+dist
 ibm-streams-*.vsix
+node_modules
+out
+toolkitsCache

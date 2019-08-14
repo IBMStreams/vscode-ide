@@ -30,9 +30,14 @@ const defaultIgnoreDirectories = [
   '.build*',
   '___bundle'
 ];
+let archiveDone = false;
 
 function observableBuildSourceArchive(options) {
   return from(buildSourceArchive(options));
+}
+
+function checkArchiveDone() {
+  return archiveDone;
 }
 
 async function buildSourceArchive(
@@ -80,6 +85,7 @@ async function buildSourceArchive(
     });
     output.on('close', () => {
       messageHandler.handleInfo('Application archive created, submitting to build service...');
+      archiveDone = true;
     });
     archive.on('warning', (err) => {
       if (err.code !== 'ENOENT') {
@@ -133,7 +139,7 @@ async function buildSourceArchive(
         }))
         .forEach(item => archive.directory(`${appRoot}/${item}`, `${newRoot}/${item}`));
 
-      toolkitPaths.forEach(tk => archive.directory(tk.tkPath, `toolkits/${tk.tk}`));
+      toolkitPaths.forEach(tk => archive.directory(tk.tkPath, `toolkits/${tk.name}`));
       tkPathString = ':../toolkits';
       newMakefilePath = `${newRoot}/`;
 
@@ -249,7 +255,8 @@ const SourceArchiveUtils = {
   buildSourceArchive,
   getToolkits,
   getApplicationRoot,
-  observableBuildSourceArchive
+  observableBuildSourceArchive,
+  checkArchiveDone
 };
 
 export default SourceArchiveUtils;

@@ -16,7 +16,7 @@ request.defaults({ jar: true });
 
 const buildConsoleUrl = (url, instanceId) => `${url}#application/dashboard/Application%20Dashboard?instance=${instanceId}`;
 
-const ibmCloudDashboardUrl = 'https://cloud.ibm.com/resources?groups=resource-instance';
+export const ibmCloudDashboardUrl = 'https://cloud.ibm.com/resources?groups=resource-instance';
 
 export class SplBuilder {
   static BUILD_ACTION = { DOWNLOAD: 0, SUBMIT: 1 };

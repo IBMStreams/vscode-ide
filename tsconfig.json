@@ -3,17 +3,17 @@
         "allowJs": true,
         "alwaysStrict": true,
         "forceConsistentCasingInFileNames": true,
-        "jsx": "react",
         "module": "commonjs",
         "noUnusedLocals": true,
-        "outDir": "dist",
+        "outDir": "out",
         "resolveJsonModule": true,
-        "rootDir": ".",
         "sourceMap": true,
         "target": "es6"
     },
     "exclude": [
         "node_modules",
-        "dist"
+        "dist",
+        "out",
+        ".vscode-test"
     ]
 }
