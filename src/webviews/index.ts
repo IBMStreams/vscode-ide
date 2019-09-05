@@ -9,7 +9,7 @@ export { default as ICP4DWebviewPanel } from './icp4d';
  * @param context    The extension context
  * @param client     The language client
  */
-export function initialize(context: ExtensionContext) {
+export function initialize(context: ExtensionContext): void {
     context.subscriptions.push(commands.registerCommand(Commands.SHOW_ICP4D_SETTINGS_WEBVIEW_PANEL, () => {
         ICP4DWebviewPanel.createOrShow(context);
     }));
@@ -18,10 +18,10 @@ export function initialize(context: ExtensionContext) {
 /**
  * Generate a nonce to whitelist which scripts can be run
  */
-export function getNonce() {
+export function getNonce(): string {
     let text = '';
     const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    for (let i = 0; i < 32; i++) {
+    for (let i = 0; i < 32; i += 1) {
         text += possible.charAt(Math.floor(Math.random() * possible.length));
     }
     return text;

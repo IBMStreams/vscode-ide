@@ -128,12 +128,11 @@ export class SplBuilder {
       switchMap(artifacts => this.getConsoleUrlObservable().pipe(
         map(consoleResponse => [artifacts, consoleResponse]),
         map(consoleResult => {
-          // tslint:disable-next-line: no-shadowed-variable
-          const [artifacts, consoleResponse] = consoleResult;
+          const [submitArtifacts, consoleResponse] = consoleResult;
           if (consoleResponse.body.streams_console && consoleResponse.body.id) {
             const consoleUrl = buildConsoleUrl(consoleResponse.body.streams_console, consoleResponse.body.id);
 
-            this.submitJobPrompt(consoleUrl, outputDir, this.submitAppObservable.bind(this), artifacts);
+            this.submitJobPrompt(consoleUrl, outputDir, this.submitAppObservable.bind(this), submitArtifacts);
           } else {
             this.messageHandler.handleError('Cannot retrieve Streaming Analytics Console URL');
           }
@@ -163,8 +162,8 @@ export class SplBuilder {
     );
   }
 
-  submit(streamingAnalyticsCredentials, input) {
-    console.log('submit(); input:', arguments);
+  submit(streamingAnalyticsCredentials, input, ...args) {
+    console.log('submit(); input:', args);
     this.serviceCredentials = SplBuilder.parseServiceCredentials(streamingAnalyticsCredentials);
     if (this.serviceCredentials.apikey && this.serviceCredentials.v2_rest_url) {
       const outputDir = path.dirname(input.filename);
@@ -177,8 +176,7 @@ export class SplBuilder {
         switchMap(submitInput => this.getConsoleUrlObservable().pipe(
           map(consoleResponse => [submitInput, consoleResponse]),
           map(consoleResult => {
-            // tslint:disable-next-line: no-shadowed-variable
-            const [submitInput, consoleResponse] = consoleResult;
+            const [, consoleResponse] = consoleResult;
             if (consoleResponse.body.streams_console && consoleResponse.body.id) {
               const consoleUrl = buildConsoleUrl(consoleResponse.body.streams_console, consoleResponse.body.id);
 
@@ -208,8 +206,8 @@ export class SplBuilder {
     }
   }
 
-  submitJobPrompt(consoleUrl, outputDir, submissionObservableFunc, submissionObservableInput) {
-    console.log('submitJobPrompt(); input:', arguments);
+  submitJobPrompt(consoleUrl, outputDir, submissionObservableFunc, submissionObservableInput, ...args) {
+    console.log('submitJobPrompt(); input:', args);
     let submissionTarget = 'the application(s)';
     if (typeof (this.useMakefile) === 'boolean') {
       if (this.useMakefile) {
@@ -398,7 +396,6 @@ export class SplBuilder {
     }
 
     const startingNotification = this.messageHandler.handleInfo('Streaming Analytics service is starting...', { notificationAutoDismiss: false });
-    const startSuccessNotification = null;
     let serviceState = null;
     const poll = interval(8000);
 
@@ -421,10 +418,10 @@ export class SplBuilder {
         }
         this.checkKnownErrors(err, errorNotification, retryCallbackFunction, retryInput);
       },
-      startServiceResult => {
+      (startServiceResult, ...args) => {
         this.messageHandler.dismissNotification(startingNotification);
         if (serviceState === 'STARTED') {
-          console.log('serviceRestartedSuccess', arguments);
+          console.log('serviceRestartedSuccess', args);
           console.log('retryCallbackFunction:', retryCallbackFunction);
           console.log('retryCallbackInput:', retryInput);
           this.messageHandler.handleSuccess('Streaming Analytics service started', { detail: 'Service has been started. Retrying Build Service request...' });
@@ -462,11 +459,10 @@ export class SplBuilder {
       ).subscribe(
         next => { },
         err => {
-          let errorNotification = null;
           if (err instanceof Error) {
-            errorNotification = this.messageHandler.handleError(err.name, { detail: err.message, stack: err.stack });
+            this.messageHandler.handleError(err.name, { detail: err.message, stack: err.stack });
           } else {
-            errorNotification = this.messageHandler.handleError(err);
+            this.messageHandler.handleError(err);
           }
           this.checkKnownErrors(err);
         },
@@ -804,4 +800,4 @@ export class SplBuildCommonV4 {
   static setTimeout(timeoutInSeconds) {
     request.defaults.timeout = timeoutInSeconds * 1000;
   }
-};
+}

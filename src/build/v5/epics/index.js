@@ -48,7 +48,14 @@ import {
   refreshToolkits,
   setFormDataField
 } from '../actions';
-import { ResponseSelector, SourceArchiveUtils, StateSelector, StatusUtils, StreamsRestUtils, StreamsToolkitsUtils } from '../util';
+import {
+  ResponseSelector,
+  SourceArchiveUtils,
+  StateSelector,
+  StatusUtils,
+  StreamsRestUtils,
+  StreamsToolkitsUtils
+} from '../util';
 import { Keychain } from '../../../utils';
 import MessageHandlerRegistry from '../../message-handler-registry';
 

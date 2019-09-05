@@ -1,11 +1,11 @@
 import { ExtensionContext } from 'vscode';
-import { Commands, IBaseCommand } from '.';
+import { Commands, BaseCommand } from '.';
 import StreamsBuild from '../build';
 
 /**
  * Command that opens a link in a web browser
  */
-export class OpenLinkCommand implements IBaseCommand {
+export default class OpenLinkCommand implements BaseCommand {
     /**
      * Initialize the command
      * @param commandName    The name of the command
@@ -30,6 +30,8 @@ export class OpenLinkCommand implements IBaseCommand {
                 break;
             case Commands.OPEN_ICP4D_DASHBOARD:
                 StreamsBuild.openIcp4dDashboard();
+                break;
+            default:
                 break;
         }
     }

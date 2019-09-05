@@ -1,16 +1,18 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { Disposable, ExtensionContext, Uri, ViewColumn, WebviewPanel, window } from 'vscode';
+import {
+    Disposable, ExtensionContext, Uri, ViewColumn, WebviewPanel, window
+} from 'vscode';
+import { getNonce } from '..';
 import { authenticateIcp4d, setCurrentLoginStep, setFormDataField, setSelectedInstance } from '../../build/v5/actions';
 import getStore from '../../build/v5/redux-store/configure-store';
 import { StateSelector } from '../../build/v5/util';
 import { Configuration, Constants } from '../../utils';
-import { getNonce } from '../../webviews';
 
 /**
  * Identifiers for messages between the extension and the webview
  */
-const enum MessageId {
+enum MessageId {
     AUTHENTICATE_ICP4D = 'authenticateIcp4d',
     CLOSE = 'close',
     CURRENT_STEP = 'currentStep',
@@ -23,7 +25,7 @@ const enum MessageId {
 }
 
 /**
- * Manages webview panel for IBM Cloud Private for Data authentication
+ * Manages webview panel for IBM Cloud Pak for Data authentication
  */
 export default class ICP4DWebviewPanel {
     private static currentPanel: ICP4DWebviewPanel | undefined;
@@ -39,15 +41,15 @@ export default class ICP4DWebviewPanel {
      * Create or show the webview
      * @param context    The extension context
      */
-    public static createOrShow(context: ExtensionContext) {
+    public static createOrShow(context: ExtensionContext): void {
         if (ICP4DWebviewPanel.currentPanel) {
             ICP4DWebviewPanel.currentPanel._panel.reveal(ViewColumn.Beside);
             return;
         }
 
-        const panel = window.createWebviewPanel(ICP4DWebviewPanel.viewType, 'IBM Cloud Private for Data Settings', ViewColumn.Beside, {
+        const panel = window.createWebviewPanel(ICP4DWebviewPanel.viewType, 'IBM Cloud Pak for Data Settings', ViewColumn.Beside, {
             enableScripts: true,
-            localResourceRoots: [ Uri.file(path.join(context.extensionPath, 'out')) ]
+            localResourceRoots: [Uri.file(path.join(context.extensionPath, 'dist', 'webviews'))]
         });
         panel.iconPath = Uri.file(path.join(context.extensionPath, 'images', 'ibm-streaming-analytics.svg'));
         ICP4DWebviewPanel.currentPanel = new ICP4DWebviewPanel(panel, context);
@@ -56,7 +58,7 @@ export default class ICP4DWebviewPanel {
     /**
      * Close the webview if it exists
      */
-    public static close() {
+    public static close(): void {
         if (ICP4DWebviewPanel.currentPanel) {
             ICP4DWebviewPanel.currentPanel._panel.dispose();
         }
@@ -65,7 +67,7 @@ export default class ICP4DWebviewPanel {
     /**
      * Close webview and and clean up resources
      */
-    public dispose() {
+    public dispose(): void {
         ICP4DWebviewPanel.currentPanel = undefined;
 
         this._panel.dispose();
@@ -116,17 +118,12 @@ export default class ICP4DWebviewPanel {
     /**
      * Set the HTML content for the webview
      */
-    private _setHtml() {
-        let content = fs.readFileSync(path.join(this._extensionPath, 'src', 'webviews', 'icp4d', 'resources', 'index.html'), 'utf8');
-
+    private _setHtml(): void {
+        let content = fs.readFileSync(path.join(this._extensionPath, 'dist', 'webviews', 'icp4d.html'), 'utf8');
         const nonce = getNonce();
         content = content.replace(/{{nonce}}/g, nonce);
 
-        const vendorScriptPathOnDisk = Uri.file(this._context.asAbsolutePath('out/vendor.js'));
-        const vendorSriptUri = vendorScriptPathOnDisk.with({ scheme: 'vscode-resource' }).toString();
-        content = content.replace('{{vendorScriptUri}}', vendorSriptUri);
-
-        const mainScriptPathOnDisk = Uri.file(this._context.asAbsolutePath('out/icp4d.js'));
+        const mainScriptPathOnDisk = Uri.file(this._context.asAbsolutePath('dist/webviews/icp4d.js'));
         const mainScriptUri = mainScriptPathOnDisk.with({ scheme: 'vscode-resource' }).toString();
         content = content.replace('{{mainScriptUri}}', mainScriptUri);
 
@@ -145,15 +142,14 @@ export default class ICP4DWebviewPanel {
                 case MessageId.CURRENT_STEP:
                     this._sendMessage(panel, {
                         id: MessageId.CURRENT_STEP,
-                        value: {
-                            currentStep: StateSelector.getCurrentLoginStep(state) || 1
-                        }
+                        value: { currentStep: StateSelector.getCurrentLoginStep(state) || 1 }
                     });
                     break;
-                case MessageId.PREVIOUS_STEP:
+                case MessageId.PREVIOUS_STEP: {
                     const currentStep = StateSelector.getCurrentLoginStep(state);
                     getStore().dispatch(setCurrentLoginStep(currentStep - 1));
                     break;
+                }
                 case MessageId.INIT_STEP1:
                     this._sendMessage(panel, {
                         id: MessageId.INIT_STEP1,
@@ -164,26 +160,32 @@ export default class ICP4DWebviewPanel {
                         }
                     });
                     break;
-                case MessageId.UPDATE_FORM_DATA_FIELD:
+                case MessageId.UPDATE_FORM_DATA_FIELD: {
                     const { formKey, formValue } = value;
                     getStore().dispatch(setFormDataField(formKey, formValue));
                     break;
-                case MessageId.AUTHENTICATE_ICP4D:
+                }
+                case MessageId.AUTHENTICATE_ICP4D: {
                     const { username, password, rememberPassword } = value;
                     getStore().dispatch(authenticateIcp4d(username, password, rememberPassword));
                     break;
-                case MessageId.PERSIST_AUTH:
+                }
+                case MessageId.PERSIST_AUTH: {
                     const formUsername = StateSelector.getUsername(state);
                     const formRememberPassword = StateSelector.getRememberPassword(state);
                     Configuration.setState(`${Constants.EXTENSION_NAME}.username`, formUsername);
                     Configuration.setState(`${Constants.EXTENSION_NAME}.rememberPassword`, formRememberPassword);
                     break;
-                case MessageId.SET_INSTANCE:
+                }
+                case MessageId.SET_INSTANCE: {
                     const { instance } = value;
                     getStore().dispatch(setSelectedInstance(instance));
                     break;
+                }
                 case MessageId.CLOSE:
                     ICP4DWebviewPanel.close();
+                    break;
+                default:
                     break;
             }
         }, null, disposables);

@@ -34,7 +34,7 @@ export const LIST_TOOLKITS = 'ibm-streams.toolkits.list';
 export const OPEN_CLOUD_DASHBOARD = 'ibm-streams.streamingAnalytics.openDashboard';
 
 /**
- * Open IBM Cloud Private for Data Dashboard
+ * Open IBM Cloud Pak for Data Dashboard
  */
 export const OPEN_ICP4D_DASHBOARD = 'ibm-streams.icp4d.openDashboard';
 
@@ -59,7 +59,7 @@ export const REFRESH_TOOLKITS = 'ibm-streams.toolkits.refresh';
 export const REMOVE_OUTPUT_CHANNELS = 'ibm-streams.removeOutputChannels';
 
 /**
- * Set IBM Cloud Private for Data URL
+ * Set IBM Cloud Pak for Data URL
  */
 export const SET_ICP4D_URL = 'ibm-streams.icp4d.setUrl';
 

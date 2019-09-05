@@ -1,11 +1,11 @@
 import { ExtensionContext } from 'vscode';
-import { Commands, IBaseCommand } from '.';
+import { Commands, BaseCommand } from '.';
 import StreamsBuild from '../build';
 
 /**
  * Command that allows a user to refresh the toolkits on the SPL LSP server
  */
-export class RefreshToolkitsCommand implements IBaseCommand {
+export default class RefreshToolkitsCommand implements BaseCommand {
     public commandName: string = Commands.REFRESH_TOOLKITS;
 
     /**

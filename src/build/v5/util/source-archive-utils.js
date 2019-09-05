@@ -96,10 +96,9 @@ async function buildSourceArchive(
     const toolkitPaths = getToolkits(toolkitCacheDir, toolkitPathSetting, appRoot);
     let tkPathString = '';
     if (toolkitPaths && toolkitPaths.length) {
-      messageHandler.handleInfo('Including toolkits in source archive...',
-        {
-          detail: `Including the following toolkits with the application source:\n${toolkitPaths.map(tk => tk.tkPath).join('\n')}`
-        }
+      messageHandler.handleInfo(
+        'Including toolkits in source archive...',
+        { detail: `Including the following toolkits with the application source:\n${toolkitPaths.map(tk => tk.tkPath).join('\n')}` }
       );
       const rootContents = fs.readdirSync(appRoot);
       const newRoot = path.basename(appRoot);
@@ -166,6 +165,40 @@ async function buildSourceArchive(
   }
 }
 
+function parseToolkitVersions(dependencies) {
+  return dependencies.map((dep) => {
+    const vr = dep.version.split(',');
+    let range = '';
+    if (vr.length === 2) {
+      const regex = RegExp(/[[,(]\d+\.\d+\.\d+,\d+\.\d+\.\d+[\],)]/);
+      if (!regex.test(dep.version)) {
+        throw new Error(`invalid toolkit version: ${dep.version}`);
+      }
+      range = '';
+      if (vr[0].charAt(0) === '[') {
+        vr[0] = vr[0].slice(1);
+        range += `>=${vr[0]}`;
+      } else {
+        vr[0] = vr[0].slice(1);
+        range += `>${vr[0]}`;
+      }
+      if (vr[1].charAt(vr[1].length - 1) === ')') {
+        vr[1] = vr[1].substr(0, vr.length - 1);
+        range += ` <${vr[1]}`;
+      } else {
+        vr[1] = vr[1].slice(0, vr.length - 1);
+        range += ` <=${vr[1]}`;
+      }
+    } else if (vr.length === 1) {
+      range = `>=${vr[0]}`;
+    } else {
+      throw new Error(`invalid toolkit version: ${dep.version}`);
+    }
+    const parsedDep = { name: dep.name, version: range };
+    return parsedDep;
+  });
+}
+
 function getToolkits(toolkitCacheDir, toolkitPathSetting, appRoot) {
   const allToolkits = StreamsToolkitsUtils.getAllToolkits(toolkitCacheDir, toolkitPathSetting);
 
@@ -182,8 +215,9 @@ function getToolkits(toolkitCacheDir, toolkitPathSetting, appRoot) {
             name: node.valueWithPath('common:name'),
             version: node.valueWithPath('common:version')
           }));
+          const parsedDependencies = parseToolkitVersions(dependencies);
           const newestLocalToolkits = StreamsToolkitsUtils.filterNewestToolkits(allToolkits).filter(tk => tk.isLocal);
-          const toolkitsToInclude = _.intersectionWith(newestLocalToolkits, dependencies, (tk, dependency) => tk.name === dependency.name && semver.gte(tk.version, dependency.version));
+          const toolkitsToInclude = _.intersectionWith(newestLocalToolkits, parsedDependencies, (tk, dependency) => tk.name === dependency.name && semver.satisfies(semver.coerce(tk.version), dependency.version));
           return toolkitsToInclude.map(tk => ({ name: tk.name, tkPath: path.dirname(tk.indexPath) }));
         }
       }

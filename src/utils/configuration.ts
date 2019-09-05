@@ -1,5 +1,11 @@
 import * as _ from 'lodash';
-import { ConfigurationChangeEvent, ConfigurationTarget, ExtensionContext, Memento, workspace } from 'vscode';
+import {
+    ConfigurationChangeEvent,
+    ConfigurationTarget,
+    ExtensionContext,
+    Memento,
+    workspace
+} from 'vscode';
 import { DidChangeConfigurationNotification } from 'vscode-languageserver-protocol';
 import { Logger, Settings } from '.';
 import { StreamsToolkitsUtils } from '../build/v5/util';
@@ -50,7 +56,8 @@ export default class Configuration {
      * Migrate old settings that have updated names
      */
     private static migrateOldSettings(): void {
-        const settingsMap = {
+        // Migrate settings that have changed names
+        const settingNamesMap = {
             'ibm-streams.streamingAnalyticsCredentials': {
                 name: Settings.STREAMING_ANALYTICS_CREDENTIALS,
                 default: null
@@ -64,12 +71,26 @@ export default class Configuration {
                 default: Settings.TRACE_SERVER_DEFAULT
             }
         };
-        _.forEach(settingsMap, (newSetting: any, oldName: string) => {
+        _.forEach(settingNamesMap, (newSetting: any, oldName: string) => {
             const oldSettingValue = this.getSetting(oldName);
             const newSettingValue = this.getSetting(newSetting.name);
             if (oldSettingValue && _.isEqual(newSettingValue, newSetting.default)) {
                 this.setSetting(newSetting.name, this.getSetting(oldName));
                 this.setSetting(oldName, null);
+            }
+        });
+
+        // Migrate settings that have changed values
+        const settingValuesMap = {
+            [Settings.TARGET_VERSION]: {
+                oldValue: 'IBM Cloud Private for Data: Streams add-on',
+                newValue: Settings.TARGET_VERSION_OPTION.V5
+            }
+        };
+        _.forEach(settingValuesMap, (settingValues: any, settingName: string) => {
+            const settingValue = this.getSetting(settingName);
+            if (_.isEqual(settingValue, settingValues.oldValue)) {
+                this.setSetting(settingName, settingValues.newValue);
             }
         });
     }
@@ -118,21 +139,21 @@ export default class Configuration {
                 const { addedToolkitPaths, removedToolkitNames } = StreamsToolkitsUtils.getChangedLocalToolkits(previousToolkitPathsSetting, currentToolkitPathsSetting);
                 if (addedToolkitPaths && addedToolkitPaths.length) {
                     const addParam = StreamsToolkitsUtils.getLangServerParamForAddToolkits(addedToolkitPaths);
-                    SplLanguageClient.getClient().sendNotification(DidChangeConfigurationNotification.type, addParam);
+                    SplLanguageClient.getClient().sendNotification(DidChangeConfigurationNotification.type.method, addParam);
                 }
                 if (removedToolkitNames && removedToolkitNames.length) {
                     const removeParam = StreamsToolkitsUtils.getLangServerParamForRemoveToolkits(removedToolkitNames);
-                    SplLanguageClient.getClient().sendNotification(DidChangeConfigurationNotification.type, removeParam);
+                    SplLanguageClient.getClient().sendNotification(DidChangeConfigurationNotification.type.method, removeParam);
                 }
             } else if (event.affectsConfiguration(Settings.TRACE_SERVER)) {
                 changedSettingName = Settings.TRACE_SERVER;
             }
 
             if (changedSettingName) {
-                const oldValue = Configuration.getState(changedSettingName) === '' ? '\"\"' : Configuration.getState(changedSettingName);
-                const newValue = Configuration.getSetting(changedSettingName) === '' ? '\"\"' : Configuration.getSetting(changedSettingName);
-                const formatValue = (value: any) => typeof value === 'object' ? `\n${JSON.stringify(value, null, 4)}` : ` ${value}`;
-                const whitespaceValue = typeof oldValue === 'object' ? '\n\n' : `\n`;
+                const oldValue = Configuration.getState(changedSettingName) === '' ? '""' : Configuration.getState(changedSettingName);
+                const newValue = Configuration.getSetting(changedSettingName) === '' ? '""' : Configuration.getSetting(changedSettingName);
+                const formatValue = (value: any): string => (typeof value === 'object' ? `\n${JSON.stringify(value, null, 4)}` : ` ${value}`);
+                const whitespaceValue = typeof oldValue === 'object' ? '\n\n' : '\n';
                 Logger.info(null, `The ${changedSettingName} configuration setting was changed:\nPrevious value:${formatValue(oldValue)}${whitespaceValue}Current value: ${formatValue(newValue)}`);
                 Configuration.setState(changedSettingName, newValue);
             }

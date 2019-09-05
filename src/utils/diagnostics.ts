@@ -1,7 +1,7 @@
-'use strict';
-
 import * as _ from 'lodash';
-import { Diagnostic, DiagnosticChangeEvent, DiagnosticCollection, DiagnosticSeverity, ExtensionContext, languages, Range, TextDocument, TextDocumentChangeEvent, TextEditor, TextEditorDecorationType, Uri, window, workspace } from 'vscode';
+import {
+    Diagnostic, DiagnosticChangeEvent, DiagnosticCollection, DiagnosticSeverity, ExtensionContext, languages, Range, TextDocument, TextDocumentChangeEvent, TextEditor, TextEditorDecorationType, Uri, window, workspace
+} from 'vscode';
 import { Constants } from '.';
 
 /**
@@ -25,7 +25,7 @@ export default class Diagnostics {
         // If diagnostics exist for a file, delete them when the user starts typing
         context.subscriptions.push(workspace.onDidChangeTextDocument((event: TextDocumentChangeEvent) => {
             if (event.contentChanges.length) {
-                const uri = event.document.uri;
+                const { uri } = event.document;
                 if (this.diagnosticCollection.get(uri)) {
                     this.diagnosticCollection.delete(uri);
                 }
@@ -43,9 +43,7 @@ export default class Diagnostics {
         const diagnosticMap = new Map<Uri, Diagnostic[]>();
 
         _.each(messages, (message: any) => {
-            const document = _.find(workspace.textDocuments, (doc: TextDocument) => {
-                return doc.fileName === message.file;
-            });
+            const document = _.find(workspace.textDocuments, (doc: TextDocument) => doc.fileName === message.file);
             if (document) {
                 let diagnostics = [];
                 if (!_.some(Array.from(diagnosticMap.keys()), (uri: Uri) => uri.fsPath === document.uri.fsPath)) {
@@ -64,30 +62,26 @@ export default class Diagnostics {
             }
         });
 
-        for (const uri of diagnosticMap.keys()) {
+        diagnosticMap.forEach((diagnostics, uri) => {
             this.diagnosticCollection.delete(uri);
             this.diagnosticCollection.set(uri, diagnosticMap.get(uri));
-        }
+        });
     }
 
     /**
      * Show markers in the editor gutter for error, info, and warning diagnostics
      * @param context    The extension context
      */
-    private static handleEditorDecorations(context: ExtensionContext) {
+    private static handleEditorDecorations(context: ExtensionContext): void {
         this.activeEditor = window.activeTextEditor;
 
-        const createDecoration = (iconPathLight: string, iconPathDark: string) => window.createTextEditorDecorationType({
-            light: {
-                gutterIconPath: iconPathLight
-            },
-            dark: {
-                gutterIconPath: iconPathDark
-            }
+        const createDecoration = (iconPathLight: string, iconPathDark: string): TextEditorDecorationType => window.createTextEditorDecorationType({
+            light: { gutterIconPath: iconPathLight },
+            dark: { gutterIconPath: iconPathDark }
         });
         this.errorDecorationType = createDecoration(context.asAbsolutePath('images/markers/error-light.svg'), context.asAbsolutePath('images/markers/error-dark.svg'));
 
-        const isSplFile = () => this.activeEditor && this.activeEditor.document.languageId === 'spl';
+        const isSplFile = (): boolean => this.activeEditor && this.activeEditor.document.languageId === 'spl';
 
         if (isSplFile()) {
             this.updateDecorations();
@@ -108,7 +102,7 @@ export default class Diagnostics {
 
         context.subscriptions.push(languages.onDidChangeDiagnostics((event: DiagnosticChangeEvent) => {
             if (isSplFile()) {
-                const uri = this.activeEditor.document.uri;
+                const { uri } = this.activeEditor.document;
                 const eventUris = event.uris;
                 if (eventUris.length) {
                     const eventUriFsPaths = eventUris.map((eventUri: Uri) => eventUri.fsPath);
@@ -123,15 +117,15 @@ export default class Diagnostics {
     /**
      * Set decorations in the active text editor
      */
-    private static updateDecorations() {
+    private static updateDecorations(): void {
         if (!this.activeEditor) {
             return;
         }
 
-        const uri = this.activeEditor.document.uri;
+        const { uri } = this.activeEditor.document;
         const diagnostics = languages.getDiagnostics(uri);
 
-        const getDiagnosticRanges = (severity: DiagnosticSeverity) => diagnostics
+        const getDiagnosticRanges = (severity: DiagnosticSeverity): Range[] => diagnostics
             .filter((diagnostic: Diagnostic) => diagnostic.severity === severity)
             .map((diagnostic: Diagnostic) => diagnostic.range);
 

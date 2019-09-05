@@ -9,18 +9,18 @@ enum Level { DEBUG, ERROR, INFO, SUCCESS, WARN }
  * Manages message logging to output channels
  */
 export default class Logger {
-    public static _mainOutputChannel: OutputChannel;
-    public static _outputChannels: object;
+    public static mainOutputChannel: OutputChannel;
+    public static outputChannels: object;
 
     /**
      * Perform initial configuration
      * @param context    The extension context
      */
     public static configure(): void {
-        this._outputChannels = {};
+        this.outputChannels = {};
 
         // Set up main output channel for logging
-        this._mainOutputChannel = this.registerOutputChannel(Constants.IBM_STREAMS, Constants.IBM_STREAMS);
+        this.mainOutputChannel = this.registerOutputChannel(Constants.IBM_STREAMS, Constants.IBM_STREAMS);
     }
 
     /**
@@ -30,12 +30,15 @@ export default class Logger {
      */
     public static registerOutputChannel(name: string, displayName: string): OutputChannel {
         let outputChannel = null;
-        if (this._outputChannels[name]) {
-            outputChannel = this._outputChannels[name].outputChannel;
+        const existingOutputChannel = this.outputChannels[name];
+        if (existingOutputChannel) {
+            outputChannel = existingOutputChannel.channel;
         } else {
-            const channelName = displayName === Constants.IBM_STREAMS ? displayName : `${Constants.IBM_STREAMS}: ${displayName}`;
+            const channelName = displayName === Constants.IBM_STREAMS
+                ? displayName
+                : `${Constants.IBM_STREAMS}: ${displayName}`;
             outputChannel = window.createOutputChannel(channelName);
-            this._outputChannels[name] = {
+            this.outputChannels[name] = {
                 displayName,
                 outputChannel
             };
@@ -51,7 +54,13 @@ export default class Logger {
      * @param showOutputChannel    Whether to switch focus to the output channel
      * @param hideLogTypePrefix    Whether to hide log type prefix in output channel message
      */
-    public static debug(outputChannel: OutputChannel, message: string, showNotification?: boolean, showOutputChannel?: boolean, hideLogTypePrefix?: boolean): void {
+    public static debug(
+        outputChannel: OutputChannel,
+        message: string,
+        showNotification?: boolean,
+        showOutputChannel?: boolean,
+        hideLogTypePrefix?: boolean
+    ): void {
         this.handleMessage(outputChannel, message, Level.DEBUG, showNotification, showOutputChannel, hideLogTypePrefix);
     }
 
@@ -62,7 +71,12 @@ export default class Logger {
      * @param showNotification     Whether to show a notification to the user
      * @param showOutputChannel    Whether to switch focus to the output channel
      */
-    public static error(outputChannel: OutputChannel, message: string, showNotification?: boolean, showOutputChannel?: boolean): void {
+    public static error(
+        outputChannel: OutputChannel,
+        message: string,
+        showNotification?: boolean,
+        showOutputChannel?: boolean
+    ): void {
         this.handleMessage(outputChannel, message, Level.ERROR, showNotification, showOutputChannel);
     }
 
@@ -73,7 +87,12 @@ export default class Logger {
      * @param showNotification     Whether to show a notification to the user
      * @param showOutputChannel    Whether to switch focus to the output channel
      */
-    public static info(outputChannel: OutputChannel, message: string, showNotification?: boolean, showOutputChannel?: boolean): void {
+    public static info(
+        outputChannel: OutputChannel,
+        message: string,
+        showNotification?: boolean,
+        showOutputChannel?: boolean
+    ): void {
         this.handleMessage(outputChannel, message, Level.INFO, showNotification, showOutputChannel);
     }
 
@@ -84,7 +103,12 @@ export default class Logger {
      * @param showNotification     Whether to show a notification to the user
      * @param showOutputChannel    Whether to switch focus to the output channel
      */
-    public static success(outputChannel: OutputChannel, message: string, showNotification?: boolean, showOutputChannel?: boolean): void {
+    public static success(
+        outputChannel: OutputChannel,
+        message: string,
+        showNotification?: boolean,
+        showOutputChannel?: boolean
+    ): void {
         this.handleMessage(outputChannel, message, Level.SUCCESS, showNotification, showOutputChannel);
     }
 
@@ -95,7 +119,12 @@ export default class Logger {
      * @param showNotification     Whether to show a notification to the user
      * @param showOutputChannel    Whether to switch focus to the output channel
      */
-    public static warn(outputChannel: OutputChannel, message: string, showNotification?: boolean, showOutputChannel?: boolean): void {
+    public static warn(
+        outputChannel: OutputChannel,
+        message: string,
+        showNotification?: boolean,
+        showOutputChannel?: boolean
+    ): void {
         this.handleMessage(outputChannel, message, Level.WARN, showNotification, showOutputChannel);
     }
 
@@ -109,12 +138,18 @@ export default class Logger {
      * @param throwError           Whether to throw an error
      * @param hideLogTypePrefix    Whether to hide log type prefix in output channel message
      */
-    private static handleMessage(outputChannel: OutputChannel, message: string, logLevel: number, showNotification?: boolean, showOutputChannel?: boolean, hideLogTypePrefix?: boolean): void {
+    private static handleMessage(
+        outputChannel: OutputChannel,
+        message: string,
+        logLevel: number,
+        showNotification?: boolean,
+        showOutputChannel?: boolean,
+        hideLogTypePrefix?: boolean
+    ): void {
         if (!message || message.trim() === '') {
             return;
         }
 
-        console.log(message);
         if (showNotification) {
             switch (logLevel) {
                 case Level.DEBUG:
@@ -128,10 +163,12 @@ export default class Logger {
                 case Level.WARN:
                     window.showWarningMessage(message);
                     break;
+                default:
+                    break;
             }
         }
 
-        const channel = outputChannel ? outputChannel : this._mainOutputChannel;
+        const channel = outputChannel || this.mainOutputChannel;
         this.logToOutputChannel(channel, message, logLevel, showOutputChannel, hideLogTypePrefix);
     }
 
@@ -143,7 +180,13 @@ export default class Logger {
      * @param showOutputChannel    Whether to switch focus to the output channel
      * @param hideLogTypePrefix    Whether to hide log type prefix in output channel message
      */
-    private static logToOutputChannel(outputChannel: OutputChannel, message: string, logLevel: number, showOutputChannel?: boolean, hideLogTypePrefix?: boolean): void {
+    private static logToOutputChannel(
+        outputChannel: OutputChannel,
+        message: string,
+        logLevel: number,
+        showOutputChannel?: boolean,
+        hideLogTypePrefix?: boolean
+    ): void {
         if (!outputChannel) {
             return;
         }

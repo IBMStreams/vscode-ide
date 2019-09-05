@@ -12,6 +12,7 @@ import * as keytarType from 'keytar';
  * @param moduleName The module name
  */
 function getNodeModule<T>(moduleName: string): T | undefined {
+    // eslint-disable-next-line no-eval
     const vscodeRequire = eval('require');
     try {
         return vscodeRequire(`${vscode.env.appRoot}/node_modules.asar/${moduleName}`);
@@ -26,12 +27,12 @@ function getNodeModule<T>(moduleName: string): T | undefined {
     return undefined;
 }
 
-type Keytar = {
+interface Keytar {
     getPassword: typeof keytarType['getPassword'];
     setPassword: typeof keytarType['setPassword'];
     deletePassword: typeof keytarType['deletePassword'];
     findCredentials: typeof keytarType['findCredentials'];
-};
+}
 
 const failingKeytar: Keytar = {
     async getPassword(service, account) { throw new Error('System keychain unavailable'); },
@@ -53,7 +54,10 @@ export default class Keychain {
      * @param username    The username
      */
     public static getCredentials = async (username: string): Promise<string> => {
-        return systemKeychain!.getPassword(SERVICE_ID, username);
+        if (systemKeychain) {
+            return systemKeychain.getPassword(SERVICE_ID, username);
+        }
+        return null;
     }
 
     /**
@@ -62,7 +66,9 @@ export default class Keychain {
      * @param password    The password
      */
     public static addCredentials = async (username: string, password: string): Promise<void> => {
-        await systemKeychain!.setPassword(SERVICE_ID, username, password);
+        if (systemKeychain) {
+            await systemKeychain.setPassword(SERVICE_ID, username, password);
+        }
     }
 
     /**
@@ -70,15 +76,20 @@ export default class Keychain {
      * @param username    The username
      */
     public static deleteCredentials = async (username: string): Promise<void> => {
-        await systemKeychain!.deletePassword(SERVICE_ID, username);
+        if (systemKeychain) {
+            await systemKeychain.deletePassword(SERVICE_ID, username);
+        }
     }
 
     /**
      * Get all the stored credentials from the keychain
      */
-    public static getAllCredentials = async (): Promise<Array<{ account: string, password: string}>> => {
-        const creds = await systemKeychain!.findCredentials(SERVICE_ID);
-        return creds;
+    public static getAllCredentials = async (): Promise<{ account: string, password: string}[]> => {
+        if (systemKeychain) {
+            const creds = await systemKeychain.findCredentials(SERVICE_ID);
+            return creds;
+        }
+        return null;
     }
 
     /**

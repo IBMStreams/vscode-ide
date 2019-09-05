@@ -4,7 +4,7 @@ import { commands, OutputChannel, window } from 'vscode';
 import { Commands } from '../commands';
 import { Logger } from '../utils';
 
-interface INotificationButton {
+interface NotificationButton {
     label: string;
     callbackFn: () => any;
 }
@@ -44,7 +44,7 @@ export default class MessageHandler {
             showNotification?: boolean,
             showConsoleMessage?: boolean,
             notificationAutoDismiss?: true,
-            notificationButtons?: INotificationButton[]
+            notificationButtons?: NotificationButton[]
         } = {}
     ): Thenable<void> {
         if (showConsoleMessage) {
@@ -90,17 +90,9 @@ export default class MessageHandler {
             showConsoleMessage?: boolean,
             consoleErrorLog?: boolean,
             notificationAutoDismiss?: boolean,
-            notificationButtons?: INotificationButton[]
+            notificationButtons?: NotificationButton[]
         } = {}
     ): Thenable<void> {
-        if (consoleErrorLog) {
-            if (stack) {
-                console.error(message, stack);
-            } else {
-                console.error(message);
-            }
-        }
-
         if (showConsoleMessage) {
             const outputChannel = this._getOutputChannel();
             const detailMessage = this.joinMessageArray(detail);
@@ -144,7 +136,7 @@ export default class MessageHandler {
             showNotification?: boolean,
             showConsoleMessage?: boolean,
             notificationAutoDismiss?: boolean,
-            notificationButtons?: INotificationButton[]
+            notificationButtons?: NotificationButton[]
         } = {}
     ): Thenable<void> {
         if (showConsoleMessage) {
@@ -180,12 +172,12 @@ export default class MessageHandler {
     }
 
     /**
-     * Handle the scenario where the IBM Cloud Private for Data URL is not specified, is invalid, or is unreachable
+     * Handle the scenario where the IBM Cloud Pak for Data URL is not specified, is invalid, or is unreachable
      * @param callbackFn    The callback function to execute after the user sets their URL
      */
     public handleIcp4dUrlNotSet(callbackFn: () => void): Thenable<void> {
-        return this.handleError('IBM Cloud Private for Data URL is not specified, is invalid, or is unreachable', {
-            detail: 'Specify the IBM Cloud Private for Data URL or build with IBM Cloud Streaming Analytics in the extension settings.',
+        return this.handleError('IBM Cloud Pak for Data URL is not specified, is invalid, or is unreachable', {
+            detail: 'Specify the IBM Cloud Pak for Data URL or build with IBM Cloud Streaming Analytics in the extension settings.',
             notificationButtons: [{
                 callbackFn: () => commands.executeCommand(Commands.SET_ICP4D_URL, callbackFn),
                 label: 'Set URL'
@@ -203,10 +195,10 @@ export default class MessageHandler {
      * Retrieve the button labels to display
      * @param buttons    The notification buttons to display
      */
-    private _processButtons(buttons: INotificationButton[]): string[] {
+    private _processButtons(buttons: NotificationButton[]): string[] {
         let labels = [];
         if (Array.isArray(buttons)) {
-            labels = _.map(buttons, (obj: INotificationButton) => obj.label);
+            labels = _.map(buttons, (obj: NotificationButton) => obj.label);
         }
         return labels;
     }
@@ -227,7 +219,7 @@ export default class MessageHandler {
     /**
      * Not supported in VS Code
      */
-    public dismissNotification() {
+    public dismissNotification(): null {
         return null;
     }
 
@@ -244,9 +236,9 @@ export default class MessageHandler {
      * @param buttons      The notification buttons to display
      * @param selection    The label of the button that the user clicked on
      */
-    private _handleNotificationButtonSelection(buttons: INotificationButton[], selection: string): void {
+    private _handleNotificationButtonSelection(buttons: NotificationButton[], selection: string): void {
         if (selection) {
-            const buttonObj = _.find(buttons, (obj: INotificationButton) => obj.label === selection);
+            const buttonObj = _.find(buttons, (obj: NotificationButton) => obj.label === selection);
             if (buttonObj && buttonObj.callbackFn) {
                 buttonObj.callbackFn();
             }
@@ -258,18 +250,17 @@ export default class MessageHandler {
      */
     private _getOutputChannel(): OutputChannel {
         if (!this._info) {
-            return Logger._mainOutputChannel;
+            return Logger.mainOutputChannel;
         }
 
         const { appRoot, filePath } = this._info;
-        const channelObj = Logger._outputChannels[filePath];
+        const channelObj = Logger.outputChannels[filePath];
         if (!channelObj) {
             const displayPath = `${path.basename(appRoot)}${path.sep}${path.relative(appRoot, filePath)}`;
             const outputChannel = Logger.registerOutputChannel(filePath, displayPath);
             outputChannel.show();
             return outputChannel;
-        } else {
-            return channelObj.outputChannel;
         }
+        return channelObj.outputChannel;
     }
 }
