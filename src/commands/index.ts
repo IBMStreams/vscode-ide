@@ -58,6 +58,7 @@ export function initialize(context: ExtensionContext): void {
                     }
                 });
             }
+            return executionResult;
         }));
     });
 }

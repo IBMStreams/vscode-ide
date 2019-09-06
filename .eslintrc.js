@@ -2,12 +2,13 @@ module.exports = {
   env: {
     browser: true,
     es6: true,
-    node: true
+    node: true,
+    mocha: true
   },
   extends: ['airbnb'],
   overrides: [
     {
-      files: ['**/*.ts', '**/*.d.ts'],
+      files: ['src/**/*.ts', 'src/**/*.d.ts'],
       parser: '@typescript-eslint/parser',
       plugins: ['@typescript-eslint'],
       extends: ['plugin:@typescript-eslint/recommended'],
@@ -19,7 +20,6 @@ module.exports = {
         'no-empty-function': ['error', { allow: ['constructors'] }],
         'no-useless-constructor': 'off',
         'object-curly-newline': ['error', { multiline: true, minProperties: 5 }],
-        'semi': 'off',
         '@typescript-eslint/explicit-function-return-type': ['error', { allowExpressions: true }],
         '@typescript-eslint/explicit-member-accessibility': ['error', { overrides: { constructors: 'no-public' } }],
         '@typescript-eslint/member-delimiter-style': ['error', {
@@ -44,6 +44,18 @@ module.exports = {
         '@typescript-eslint/no-parameter-properties': ['error', { allows: ['public'] }],
         '@typescript-eslint/no-unused-vars': ['error', { args: 'none' }],
         '@typescript-eslint/no-useless-constructor': 'error'
+      }
+    },
+    {
+      files: ['test/**/*.test.ts'],
+      parser: '@typescript-eslint/parser',
+      plugins: ['mocha'],
+      extends: ['plugin:mocha/recommended'],
+      rules: {
+        'mocha/no-hooks-for-single-case': 'off',
+        'mocha/prefer-arrow-callback': 'error',
+        'no-unused-expressions': 'off',
+        'prefer-arrow-callback': 'off'
       }
     }
   ],
@@ -75,10 +87,11 @@ module.exports = {
     'prefer-destructuring': ['error', { array: false }],
     'react/jsx-filename-extension': ['error', { extensions: ['.js', '.jsx'] }],
     'react/jsx-one-expression-per-line': 'off',
+    'semi': 'off',
     'space-before-function-paren': ['error', {
-      'anonymous': 'always',
-      'named': 'never',
-      'asyncArrow': 'always'
+      anonymous: 'never',
+      named: 'never',
+      asyncArrow: 'always'
     }],
     'template-curly-spacing': 'off'
   },

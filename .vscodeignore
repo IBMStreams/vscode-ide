@@ -1,8 +1,11 @@
 .git/**
 .vscode/**
+.vscode-test/**
 images/docs/**
 node_modules/!(@ibmstreams)
+out/**
 src/**
+test/**
 toolkitsCache/**
 .eslintrc.js
 .gitignore

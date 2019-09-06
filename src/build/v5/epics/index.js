@@ -84,7 +84,7 @@ const buildAppEpic = (action, state) => action.pipe(
       );
     }),
     catchError(error => of(handleError(a, error)))
-  ))
+  )), catchError((error) => of(handleError(action, error)))
 );
 
 /**
@@ -125,7 +125,7 @@ const sourceArchiveCreatedEpic = (action, state) => {
         }
       }),
       catchError(error => of(handleError(sourceArchiveResponse, error)))
-    ))
+    )), catchError(error => of(handleError(action, error)))
   );
 };
 
@@ -140,10 +140,10 @@ const startBuildEpic = (action, state) => {
     ofType(actions.START_BUILD),
     withLatestFrom(state),
     mergeMap(([a, s]) => StreamsRestUtils.build.start(s, a.buildId).pipe(
-      delay(1000),
+      delay(1000), // delay necessary to make sure the build is ready to be started
       map(() => getBuildStatus(a.buildId)),
       catchError(error => of(handleError(a, error)))
-    ))
+    )), catchError(error => of(handleError(action, error)))
   );
 };
 
@@ -164,7 +164,13 @@ const buildStatusEpic = (action, state) => action.pipe(
   // passes on [BUILD_STATUS_FULFILLED, BUILD_LOG_FULFILLED]
   mergeMap(([a, s]) => zip(
     StreamsRestUtils.build.getStatus(s, a.buildId).pipe(
-      map(response => getBuildStatusFulfilled(ResponseSelector.getBuildStatus(response))),
+      map(response => {
+        const buildStatusResponse = ResponseSelector.getBuildStatus(response);
+        if (buildStatusResponse instanceof Error) {
+          throw buildStatusResponse;
+        }
+        return getBuildStatusFulfilled(buildStatusResponse);
+      }),
       catchError(error => of(handleError(a, error)))
     ),
     StreamsRestUtils.build.getLogMessages(s, a.buildId).pipe(
@@ -173,7 +179,8 @@ const buildStatusEpic = (action, state) => action.pipe(
     )
   )),
   // emit [BUILD_STATUS_FULFILLED, BUILD_LOG_FULFILLED, BUILD_STATUS_RECEIVED]
-  mergeMap(([statusFulfilledAction, logFulfilledAction]) => [statusFulfilledAction, logFulfilledAction, buildStatusReceived(statusFulfilledAction.buildId)])
+  mergeMap(([statusFulfilledAction, logFulfilledAction]) => [statusFulfilledAction, logFulfilledAction, buildStatusReceived(statusFulfilledAction.buildId)]),
+  catchError(error => of(handleError(action, error)))
 );
 
 const buildStatusLoopEpic = (action, state) => action.pipe(
@@ -192,7 +199,7 @@ const buildStatusLoopEpic = (action, state) => action.pipe(
       map(() => getBuildArtifacts(a.buildId)),
       catchError(error => of(handleError(a, error)))
     )
-  ))
+  )), catchError(error => of(handleError(action, error)))
 );
 
 const shouldGetBuildStatusHelperObservable = (action, state) => {
@@ -219,7 +226,7 @@ const getBuildArtifactsEpic = (action, state) => action.pipe(
   mergeMap(([a, s]) => StreamsRestUtils.artifact.getArtifacts(s, a.buildId).pipe(
     map(artifactResponse => getBuildArtifactsFulfilled(a.buildId, ResponseSelector.getBuildArtifacts(artifactResponse))),
     catchError(error => of(handleError(a, error)))
-  ))
+  )), catchError(error => of(handleError(action, error)))
 );
 
 const getBuildArtifactsFulfilledEpic = (action, state) => action.pipe(
@@ -229,7 +236,7 @@ const getBuildArtifactsFulfilledEpic = (action, state) => action.pipe(
     const { buildId } = a;
     StatusUtils.downloadOrSubmit(s, buildId);
   }),
-  map(() => ({ type: actions.POST_GET_BUILD_ARTIFACTS_FULFILLED }))
+  map(() => ({ type: actions.POST_GET_BUILD_ARTIFACTS_FULFILLED })), catchError(error => of(handleError(action, error)))
 );
 
 const downloadArtifactsEpic = (action, state) => action.pipe(
@@ -261,7 +268,7 @@ const downloadArtifactsEpic = (action, state) => action.pipe(
       map(() => ({ type: actions.POST_DOWNLOAD_ARTIFACTS })),
       catchError(error => of(handleError(a, error)))
     );
-  })
+  }), catchError(error => of(handleError(action, error)))
 );
 
 const submitApplicationsEpic = (action, state) => action.pipe(
@@ -285,7 +292,7 @@ const submitApplicationsEpic = (action, state) => action.pipe(
       map(() => ({ type: actions.POST_SUBMIT_APPLICATIONS })),
       catchError(error => of(handleError(a, error)))
     );
-  })
+  }), catchError(error => of(handleError(action, error)))
 );
 
 const submitApplicationsFromBundleFilesEpic = (action, state) => action.pipe(
@@ -319,7 +326,7 @@ const openStreamsConsoleEpic = (action, state) => action.pipe(
   tap(([a, s]) => {
     MessageHandlerRegistry.openUrl(StateSelector.getStreamsConsoleUrl(s));
   }),
-  map(() => ({ type: actions.POST_OPEN_STREAMS_CONSOLE }))
+  map(() => ({ type: actions.POST_OPEN_STREAMS_CONSOLE })), catchError(error => of(handleError(action, error)))
 );
 
 const icp4dHostExistsEpic = (action, state) => action.pipe(
@@ -332,7 +339,7 @@ const icp4dHostExistsEpic = (action, state) => action.pipe(
       return of(handleError(a, error));
     })
   )),
-  map(() => ({ type: actions.POST_CHECK_ICP4D_HOST_EXISTS }))
+  map(() => ({ type: actions.POST_CHECK_ICP4D_HOST_EXISTS })), catchError(error => of(handleError(action, error)))
 );
 
 const icp4dAuthEpic = (action, state) => action.pipe(
@@ -362,7 +369,7 @@ const icp4dAuthEpic = (action, state) => action.pipe(
       return of(setIcp4dAuthError(statusCode));
     }),
     catchError(error => of(handleError(a, error)))
-  ))
+  )), catchError(error => of(handleError(action, error)))
 );
 
 const authDelayObservable = () => {
@@ -399,7 +406,7 @@ const streamsAuthEpic = (action, state) => action.pipe(
       return of(setStreamsAuthError(true));
     }),
     catchError(error => of(handleError(authAction, error)))
-  ))
+  )), catchError(error => of(handleError(action, error)))
 );
 
 const getStreamsInstancesEpic = (action, state) => action.pipe(
@@ -409,13 +416,13 @@ const getStreamsInstancesEpic = (action, state) => action.pipe(
     map(serviceInstancesResponse => ResponseSelector.getStreamsInstances(serviceInstancesResponse)),
     map(streamsInstances => setStreamsInstances(streamsInstances)),
     catchError(error => of(handleError(a, error)))
-  ))
+  )), catchError(error => of(handleError(action, error)))
 );
 
 const instanceSelectedEpic = (action, state) => action.pipe(
   ofType(actions.SET_SELECTED_INSTANCE),
   withLatestFrom(state),
-  map(([a, s]) => authenticateStreamsInstance(StateSelector.getSelectedInstanceName(s)))
+  map(([a, s]) => authenticateStreamsInstance(StateSelector.getSelectedInstanceName(s))), catchError(error => of(handleError(action, error)))
 );
 
 const refreshToolkitsEpic = (action, state) => action.pipe(
@@ -435,7 +442,7 @@ const refreshToolkitsEpic = (action, state) => action.pipe(
     map(() => ({ type: actions.POST_REFRESH_TOOLKITS })),
     tap(() => MessageHandlerRegistry.getDefault().handleSuccess('Toolkit indexes cached successfully', { notificationAutoDismiss: true })),
     catchError(error => of(handleError(a, error)))
-  ))
+  )), catchError(error => of(handleError(action, error)))
 );
 
 const packageActivatedEpic = (action, state) => action.pipe(
@@ -451,7 +458,7 @@ const packageActivatedEpic = (action, state) => action.pipe(
       }
     }
     return { type: actions.POST_PACKAGE_ACTIVATED };
-  })
+  }), catchError(error => of(handleError(action, error)))
 );
 
 const errorHandlingEpic = (action, state) => action.pipe(
@@ -465,7 +472,7 @@ const errorHandlingEpic = (action, state) => action.pipe(
       MessageHandlerRegistry.getDefault().handleError(a.error.message, { detail: `Error occurred during ${a.sourceAction.type}`, stack: a.error.stack });
     }
   }),
-  map(() => ({ type: actions.POST_ERROR }))
+  map(() => ({ type: actions.POST_ERROR })), catchError((error) => of(handleError(action, error)))
 );
 
 const executeCallbackEpic = (action, state) => action.pipe(
@@ -477,7 +484,7 @@ const executeCallbackEpic = (action, state) => action.pipe(
       queuedAction.callbackFn();
     }
   }),
-  map(() => ({ type: actions.POST_CALLBACK }))
+  map(() => ({ type: actions.POST_CALLBACK })), catchError((error) => of(handleError(action, error)))
 );
 
 const rootEpic = combineEpics(

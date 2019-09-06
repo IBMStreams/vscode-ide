@@ -1,6 +1,8 @@
 import MessageHandler from '../MessageHandler';
 import LintHandler from '../LintHandler';
 
+export const ibmCloudDashboardUrl: string;
+
 export class SplBuilder {
     public static BUILD_ACTION: { DOWNLOAD: number, SUBMIT: number };
     public static SPL_MSG_REGEX: RegExp;

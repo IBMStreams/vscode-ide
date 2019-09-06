@@ -75,9 +75,9 @@ export default class Keychain {
      * Delete the stored credentials from the keychain
      * @param username    The username
      */
-    public static deleteCredentials = async (username: string): Promise<void> => {
+    public static deleteCredentials = async (username: string): Promise<boolean> => {
         if (systemKeychain) {
-            await systemKeychain.deletePassword(SERVICE_ID, username);
+            return systemKeychain.deletePassword(SERVICE_ID, username);
         }
     }
 
@@ -85,7 +85,8 @@ export default class Keychain {
      * Get all the stored credentials from the keychain
      */
     public static getAllCredentials = async (): Promise<{ account: string, password: string}[]> => {
-        if (systemKeychain) {
+        if (systemKeychain && systemKeychain.findCredentials) {
+            console.log(systemKeychain);
             const creds = await systemKeychain.findCredentials(SERVICE_ID);
             return creds;
         }
@@ -97,9 +98,11 @@ export default class Keychain {
      */
     public static deleteAllCredentials = async (): Promise<void> => {
         const credentials = await Keychain.getAllCredentials();
-        credentials.forEach((credential: { account: string, password: string }) => {
-            Keychain.deleteCredentials(credential.account);
-        });
+        if (credentials) {
+            credentials.forEach((credential: { account: string, password: string }) => {
+                Keychain.deleteCredentials(credential.account);
+            });
+        }
     }
 
     /**
@@ -107,6 +110,6 @@ export default class Keychain {
      */
     public static credentialsExist = async (): Promise<boolean> => {
         const credentials = await Keychain.getAllCredentials();
-        return credentials.length > 0;
+        return credentials && credentials.length > 0;
     }
 }
