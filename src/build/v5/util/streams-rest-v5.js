@@ -5,7 +5,6 @@ import { Observable } from 'rxjs';
 
 import StateSelector from './state-selectors';
 import { inDebugMode, Logger } from '../../../utils';
-import { StateManager } from 'react-select/lib/stateManager';
 
 const request = require('request');
 
