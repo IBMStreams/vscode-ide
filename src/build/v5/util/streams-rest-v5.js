@@ -4,7 +4,8 @@ import * as fs from 'fs';
 import { Observable } from 'rxjs';
 
 import StateSelector from './state-selectors';
-import { inDebugMode } from '../../../utils';
+import { inDebugMode, Logger } from '../../../utils';
+import { StateManager } from 'react-select/lib/stateManager';
 
 const request = require('request');
 
@@ -29,21 +30,36 @@ function setTimeout(timeoutInSeconds) {
   baseRequest.defaults.timeout = timeoutInSeconds * 1000;
 }
 
+function getBuildUrl(state) {
+  const version = StateSelector.getServiceInstanceVersion(state).split('.');
+  const MAJOR=0;
+  const MINOR=1;
+
+  try {
+    if ( parseInt(version[MAJOR]) >= 5 && parseInt(version[MINOR]) >= 2 ) {
+      return StateSelector.getStreamsBuildRestUrl(state);
+    }
+  } catch {
+    Logger.error(null, 'Unable to determine service instance version');
+  }
+  return `${StateSelector.getStreamsBuildRestUrl(state)}/builds`;  
+}
+
 /**
  *  StreamsRestUtils.build
  */
 
 function getAll(state) {
   const options = {
-    url: `${StateSelector.getStreamsBuildRestUrl(state)}/builds`,
+    url: getBuildUrl(state),
     auth: getStreamsAuth(state)
   };
   return observableRequest(baseRequest, options);
 }
 
-function getStatus(state, buildId) {
+function getStatus(state, buildId) {  
   const options = {
-    url: `${StateSelector.getStreamsBuildRestUrl(state)}/builds/${buildId}`,
+    url: `${getBuildUrl(state)}/${buildId}`,
     auth: getStreamsAuth(state)
   };
   return observableRequest(baseRequest, options);
@@ -65,7 +81,7 @@ function create(
 ) {
   const options = {
     method: 'POST',
-    url: `${StateSelector.getStreamsBuildRestUrl(state)}/builds`,
+    url: getBuildUrl(state),
     auth: getStreamsAuth(state),
     body: {
       inactivityTimeout,
@@ -81,7 +97,7 @@ function create(
 function deleteBuild(state, buildId) {
   const options = {
     method: 'DELETE',
-    url: `${StateSelector.getStreamsBuildRestUrl(state)}/builds/${buildId}`,
+    url: `${getBuildUrl(state)}/${buildId}`,
     auth: getStreamsAuth(state),
     headers: {
       Accept: '*/*'
@@ -94,7 +110,7 @@ function uploadSource(state, buildId, sourceZipPath) {
   const options = {
     method: 'PUT',
     json: false,
-    url: `${StateSelector.getStreamsBuildRestUrl(state)}/builds/${buildId}`,
+    url: `${getBuildUrl(state)}/${buildId}`,
     auth: getStreamsAuth(state),
     headers: {
       'Content-Type': 'application/zip'
@@ -108,7 +124,7 @@ function uploadSource(state, buildId, sourceZipPath) {
 function updateSource(state, buildId, sourceZipPath) {
   const options = {
     method: 'PATCH',
-    url: `${StateSelector.getStreamsBuildRestUrl(state)}/builds/${buildId}`,
+    url: `${getBuildUrl(state)}/${buildId}`,
     auth: getStreamsAuth(state),
     headers: {
       'Content-Type': 'application/zip'
@@ -128,7 +144,7 @@ function updateSource(state, buildId, sourceZipPath) {
 
 function getLogMessages(state, buildId) {
   const options = {
-    url: `${StateSelector.getStreamsBuildRestUrl(state)}/builds/${buildId}/logmessages`,
+    url: `${getBuildUrl(state)}/${buildId}/logmessages`,
     auth: getStreamsAuth(state),
     json: false,
     headers: {
@@ -141,7 +157,7 @@ function getLogMessages(state, buildId) {
 function start(state, buildId, { buildConfigOverrides = {} } = {}) {
   const options = {
     method: 'POST',
-    url: `${StateSelector.getStreamsBuildRestUrl(state)}/builds/${buildId}/actions`,
+    url: `${getBuildUrl(state)}/${buildId}/actions`,
     auth: getStreamsAuth(state),
     body: {
       type: 'submit',
@@ -154,7 +170,7 @@ function start(state, buildId, { buildConfigOverrides = {} } = {}) {
 function cancel(state, buildId, { buildConfigOverrides = {} } = {}) {
   const options = {
     method: 'POST',
-    url: `${StateSelector.getStreamsBuildRestUrl(state)}/builds/${buildId}/actions`,
+    url: `${getBuildUrl(state)}/${buildId}/actions`,
     auth: getStreamsAuth(state),
     body: {
       type: 'cancel',
@@ -166,7 +182,7 @@ function cancel(state, buildId, { buildConfigOverrides = {} } = {}) {
 
 function getSnapshots(state) {
   const options = {
-    url: `${StateSelector.getStreamsBuildRestUrl(state)}/builds/snapshot`,
+    url: `${getBuildUrl(state)}/snapshot`,
     auth: getStreamsAuth(state)
   };
   return observableRequest(baseRequest, options);
@@ -178,7 +194,7 @@ function getSnapshots(state) {
 
 function getArtifacts(state, buildId) {
   const options = {
-    url: `${StateSelector.getStreamsBuildRestUrl(state)}/builds/${buildId}/artifacts`,
+    url: `${getBuildUrl(state)}/${buildId}/artifacts`,
     auth: getStreamsAuth(state)
   };
   return observableRequest(baseRequest, options);
@@ -186,7 +202,7 @@ function getArtifacts(state, buildId) {
 
 function getArtifact(state, buildId, artifactId) {
   const options = {
-    url: `${StateSelector.getStreamsBuildRestUrl(state)}/builds/${buildId}/artifacts/${artifactId}`,
+    url: `${getBuildUrl(state)}/${buildId}/artifacts/${artifactId}`,
     auth: getStreamsAuth(state)
   };
   return observableRequest(baseRequest, options);
@@ -194,7 +210,7 @@ function getArtifact(state, buildId, artifactId) {
 
 function getAdl(state, buildId, artifactId) {
   const options = {
-    url: `${StateSelector.getStreamsBuildRestUrl(state)}/builds/${buildId}/artifacts/${artifactId}/adl`,
+    url: `${getBuildUrl(state)}/${buildId}/artifacts/${artifactId}/adl`,
     auth: getStreamsAuth(state),
     headers: {
       Accept: 'text/xml'
@@ -205,7 +221,7 @@ function getAdl(state, buildId, artifactId) {
 
 function downloadApplicationBundle(state, buildId, artifactId) {
   const options = {
-    url: `${StateSelector.getStreamsBuildRestUrl(state)}/builds/${buildId}/artifacts/${artifactId}/applicationbundle`,
+    url: `${getBuildUrl(state)}/${buildId}/artifacts/${artifactId}/applicationbundle`,
     auth: getStreamsAuth(state),
     encoding: null,
     headers: {
@@ -274,7 +290,7 @@ function submitJob(
 
 function getToolkits(state) {
   const options = {
-    url: `${StateSelector.getStreamsBuildRestUrl(state)}/toolkits`,
+    url: `${getBuildUrl(state)}/toolkits`,
     auth: getStreamsAuth(state)
   };
   return observableRequest(baseRequest, options);
@@ -282,7 +298,7 @@ function getToolkits(state) {
 
 function getToolkit(state, toolkitId) {
   const options = {
-    url: `${StateSelector.getStreamsBuildRestUrl(state)}/toolkits/${toolkitId}`,
+    url: `${getBuildUrl(state)}/toolkits/${toolkitId}`,
     auth: getStreamsAuth(state)
   };
   return observableRequest(baseRequest, options);
@@ -291,7 +307,7 @@ function getToolkit(state, toolkitId) {
 function addToolkit(state, toolkitZipPath) {
   const options = {
     method: 'POST',
-    url: `${StateSelector.getStreamsBuildRestUrl(state)}/toolkits`,
+    url: `${getBuildUrl(state)}/toolkits`,
     auth: getStreamsAuth(state),
     headers: {
       'Content-Type': 'application/zip'
@@ -312,7 +328,7 @@ function addToolkit(state, toolkitZipPath) {
 function deleteToolkit(state, toolkitId) {
   const options = {
     method: 'DELETE',
-    url: `${StateSelector.getStreamsBuildRestUrl(state)}/toolkits/${toolkitId}`,
+    url: `${getBuildUrl(state)}/toolkits/${toolkitId}`,
     auth: getStreamsAuth(state)
   };
   return observableRequest(baseRequest, options);
@@ -320,7 +336,7 @@ function deleteToolkit(state, toolkitId) {
 
 function getToolkitIndex(state, toolkitId) {
   const options = {
-    url: `${StateSelector.getStreamsBuildRestUrl(state)}/toolkits/${toolkitId}/index`,
+    url: `${getBuildUrl(state)}/toolkits/${toolkitId}/index`,
     auth: getStreamsAuth(state),
     headers: {
       Accept: 'text/xml'

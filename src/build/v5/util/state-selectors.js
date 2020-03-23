@@ -74,6 +74,11 @@ const getServiceInstanceId = createSelector(
   (base = Map()) => base.getIn(['selectedInstance', 'serviceInstanceId'])
 );
 
+const getServiceInstanceVersion = createSelector(
+  getBase,
+  (base = Map()) => base.getIn(['selectedInstance', 'serviceInstanceVersion'])
+);
+
 const getStreamsInstances = createSelector(
   getBase,
   (base = Map()) => base.getIn(['streamsInstances'])
@@ -226,6 +231,10 @@ const getStreamsBuildRestUrl = createSelector(
     if (buildRestUrlStr.endsWith('/builds')) {
       buildRestUrlStr = buildRestUrlStr.substring(0, buildRestUrlStr.lastIndexOf('/builds'));
     }
+    // external build endpoint may contain an ending slash, which will need to be removed to match the api
+    if (buildRestUrlStr.endsWith('/')) {
+      buildRestUrlStr = buildRestUrlStr.substring(0, buildRestUrlStr.length - 1);
+    }
     return buildRestUrlStr;
   }
 );
@@ -260,7 +269,7 @@ const getStreamsJmxUrl = createSelector(
 const convertUrl = (icp4dUrlString, endpointUrlString) => {
   try {
     const icp4dUrl = new URL(icp4dUrlString);
-    const streamsRestUrl = new URL(endpointUrlString);
+    const streamsRestUrl = new URL(endpointUrlString, icp4dUrlString);
     streamsRestUrl.hostname = icp4dUrl.hostname;
     return streamsRestUrl.toString();
   } catch (err) {
@@ -294,6 +303,7 @@ const StateSelector = {
   getStreamsBearerToken,
   hasAuthenticatedToStreamsInstance,
   getSelectedInstanceName,
+  getServiceInstanceVersion,
   getServiceInstanceId,
   getStreamsInstances,
 
