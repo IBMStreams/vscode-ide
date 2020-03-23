@@ -30,11 +30,11 @@ function setTimeout(timeoutInSeconds) {
 }
 
 function getBuildUrl(state) {
-  const version = StateSelector.getServiceInstanceVersion(state).split('.');
   const MAJOR=0;
   const MINOR=1;
 
   try {
+    const version = StateSelector.getServiceInstanceVersion(state).split('.');
     if ( parseInt(version[MAJOR]) >= 5 && parseInt(version[MINOR]) >= 2 ) {
       return StateSelector.getStreamsBuildRestUrl(state);
     }
