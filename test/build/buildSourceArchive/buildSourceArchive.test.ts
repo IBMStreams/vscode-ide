@@ -1,37 +1,12 @@
+import { Registry, SourceArchiveUtils } from '@streams/common';
 import { expect } from 'chai';
 import * as fs from 'fs';
-import * as JSZip from 'jszip';
+import * as unzipper from 'unzipper';
 import { describe, it } from 'mocha';
 import * as path from 'path';
-import MessageHandlerRegistry from '../../../src/build/message-handler-registry';
+import StreamsBuild from '../../../src/build';
 import MessageHandler from '../../../src/build/MessageHandler';
-import { SourceArchiveUtils } from '../../../src/build/v5/util';
 import { Logger } from '../../../src/utils';
-
-function waitForArchive(condition: Function): Promise<void> {
-    let i = 0;
-    return new Promise((resolve) => {
-        const intervalId = setInterval(() => {
-            if (condition() || i === 10) {
-                clearInterval(intervalId);
-                resolve();
-            }
-            i += 1;
-        }, 1000);
-    });
-}
-
-function readFilePromise(file: string): Promise<Buffer> {
-    return new Promise((resolve, reject) => {
-        fs.readFile(file, (err, data) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(data);
-            }
-        });
-    });
-}
 
 function getFiles(dir: string, mainDir: string, folder: string, files_: string[]): string[] {
     const resultFiles = files_ || [];
@@ -43,7 +18,7 @@ function getFiles(dir: string, mainDir: string, folder: string, files_: string[]
             getFiles(name, mainDir, folder, files_);
         } else if (file.match(/.build_.*zip/) === null) {
             name = name.replace(mainDir, folder);
-            resultFiles.push(name);
+            resultFiles.push(path.format(path.parse(name)));
         }
     });
     return resultFiles;
@@ -70,33 +45,30 @@ describe('build source archive', function() {
             toolkitsPath = `${__dirname}${path.sep}..${path.sep}toolkits`;
 
             const messageHandler = new MessageHandler({ appRoot, filePath });
-            MessageHandlerRegistry.add(fqn, messageHandler);
+            Registry.addMessageHandler(fqn, messageHandler);
 
-            const displayPath = `${path.basename(appRoot)}${path.sep}${path.relative(appRoot, filePath)}`;
+            const displayPath = StreamsBuild.getDisplayPath(appRoot, filePath);
             Logger.registerOutputChannel(filePath, displayPath);
         });
 
         it('should build archive successfully', async function() {
-            const buildSourceArchiveOutput = await SourceArchiveUtils.buildSourceArchive({
+            archivePath = await SourceArchiveUtils.buildSourceArchive({
                 appRoot,
-                buildId: null,
                 fqn,
                 makefilePath: null,
-                toolkitCacheDir: null,
-                toolkitPathSetting: toolkitsPath
+                toolkitsCacheDir: null,
+                toolkitPathsSetting: toolkitsPath
             });
-            await waitForArchive(SourceArchiveUtils.checkArchiveDone);
-            archivePath = buildSourceArchiveOutput.archivePath;
-            expect(SourceArchiveUtils.checkArchiveDone()).to.be.true;
             expect(archivePath).to.match(expectedPathRegEx);
         });
 
         it('should have the correct files inside the archive', async function() {
-            const fileContent = await readFilePromise(archivePath);
-            const zip = await JSZip.loadAsync(fileContent);
-            const files = Object.keys(zip.files);
+            const archiveContents = await unzipper.Open.file(archivePath);
+            const archiveFilenames = archiveContents && archiveContents.files
+                ? archiveContents.files.map((fileEntry) => fileEntry.path)
+                : [];
             const expectedFiles = ['Makefile', 'simpleApp.spl'];
-            expect(files).to.have.members(expectedFiles);
+            expect(archiveFilenames).to.have.members(expectedFiles);
             fs.unlinkSync(archivePath);
         });
     });
@@ -111,37 +83,35 @@ describe('build source archive', function() {
             toolkitsPath = `${__dirname}${path.sep}toolkits${path.sep}streamsx.inet-2.9.6`;
 
             const messageHandler = new MessageHandler({ appRoot, filePath });
-            MessageHandlerRegistry.add(fqn, messageHandler);
+            Registry.addMessageHandler(fqn, messageHandler);
 
-            const displayPath = `${path.basename(appRoot)}${path.sep}${path.relative(appRoot, filePath)}`;
+            const displayPath = StreamsBuild.getDisplayPath(appRoot, filePath);
             Logger.registerOutputChannel(filePath, displayPath);
         });
 
         it('should build archive successfully', async function() {
-            const buildSourceArchiveOutput = await SourceArchiveUtils.buildSourceArchive({
+            this.timeout(7500);
+            archivePath = await SourceArchiveUtils.buildSourceArchive({
                 appRoot,
-                buildId: null,
                 fqn,
                 makefilePath: null,
-                toolkitCacheDir: null,
-                toolkitPathSetting: toolkitsPath
+                toolkitsCacheDir: null,
+                toolkitPathsSetting: toolkitsPath
             });
-            await waitForArchive(SourceArchiveUtils.checkArchiveDone);
-            archivePath = buildSourceArchiveOutput.archivePath;
-            expect(SourceArchiveUtils.checkArchiveDone()).to.be.true;
             expect(archivePath).to.match(expectedPathRegEx);
         });
 
         it('should have the correct files inside the archive', async function() {
+            this.timeout(15000);
             let expectedFiles = getFiles(appRoot, appRoot, 'withDependencies', []);
             expectedFiles.push('Makefile');
             expectedFiles.push('withDependencies/Makefile');
-            expectedFiles = getFiles(`${toolkitsPath}/com.ibm.streamsx.inet`, toolkitsPath, 'toolkits', expectedFiles);
-
-            const fileContent = await readFilePromise(archivePath);
-            const zip = await JSZip.loadAsync(fileContent, { base64: true });
-            const files = Object.keys(zip.files);
-            expect(files).to.have.members(expectedFiles);
+            expectedFiles = getFiles(`${toolkitsPath}${path.sep}com.ibm.streamsx.inet`, toolkitsPath, 'toolkits', expectedFiles).map((file) => path.format(path.parse(file)));
+            const archiveContents = await unzipper.Open.file(archivePath);
+            const archiveFilenames = archiveContents && archiveContents.files
+                ? archiveContents.files.map((fileEntry) => fileEntry.path.replace(/\/$/, ''))
+                : [];
+            expect(archiveFilenames).to.have.members(expectedFiles);
             fs.unlinkSync(archivePath);
         });
     });

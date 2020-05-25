@@ -1,50 +1,78 @@
 /**
- * Section identifiers
+ * Interval in minutes at which an IBM Streams instance is automatically refreshed
  */
-export const SECTION_ID = 'ibm-streams';
+export const ENV_REFRESH_INTERVAL = 'ibm-streams.environment.refreshInterval';
 
 /**
- * IBM Cloud Pak for Data URL. For example, if your web client URL is https://123.45.67.89:31843/zen, enter https://123.45.67.89:31843.
+ * Default value for the `refreshInterval` setting
  */
-export const ICP4D_URL = 'ibm-streams.icp4d.url';
+export const ENV_REFRESH_INTERVAL_DEFAULT = 5;
 
 /**
- * Use the host specified in the IBM Cloud Pak for Data URL for builds
+ * Timeout in seconds before a request times out
  */
-export const ICP4D_USE_MASTER_NODE_HOST = 'ibm-streams.icp4d.useMasterNodeHost';
+export const ENV_TIMEOUT_FOR_REQUESTS = 'ibm-streams.environment.timeoutForRequests';
 
 /**
- * Number of seconds before a request times out
+ * Default value for the `timeoutForRequests` setting
  */
-export const REQUEST_TIMEOUT = 'ibm-streams.requestTimeout';
+export const ENV_TIMEOUT_FOR_REQUESTS_DEFAULT = 30;
 
 /**
- * Credentials for an IBM Streaming Analytics service
+ * Paths to directories, comma or semicolon separated, containing additional IBM Streams toolkits
  */
-export const STREAMING_ANALYTICS_CREDENTIALS = 'ibm-streams.streamingAnalytics.credentials';
+export const ENV_TOOLKIT_PATHS = 'ibm-streams.environment.toolkitPaths';
 
 /**
- * Streams version to target for application builds and submissions
+ * Default value for the `toolkitPaths` setting
  */
-export const TARGET_VERSION = 'ibm-streams.targetVersion';
+export const ENV_TOOLKIT_PATHS_DEFAULT = '/path/to/toolkits/directory';
 
 /**
- * Options for Streams version to target for application builds and submissions
+ * Log level for the extension
  */
-export enum TARGET_VERSION_OPTION {
-    V4 = 'IBM Cloud: Streaming Analytics service',
-    V5 = 'IBM Cloud Pak for Data: Streams add-on'
-}
+export const LOG_LEVEL = 'ibm-streams.logLevel';
 
 /**
- * Paths to directories, comma or semicolon separated, containing IBM Streams toolkits
+ * Values for the `logLevel` setting
  */
-export const TOOLKIT_PATHS = 'ibm-streams.toolkitPaths';
+export const LOG_LEVEL_VALUE = {
+    OFF: 'off',
+    DEBUG: 'debug'
+};
 
 /**
- * Default value for the toolkitPaths setting
+ * Default value for the `logLevel` setting
  */
-export const TOOLKIT_PATHS_DEFAULT = '/path/to/toolkits/directory';
+export const LOG_LEVEL_DEFAULT = LOG_LEVEL_VALUE.OFF;
+
+/**
+ * Controls how the SPL language server runs
+ */
+export const SERVER_MODE = 'ibm-streams.server.mode';
+
+/**
+ * Values for the `server.mode` setting
+ */
+export const SERVER_MODE_VALUE = {
+    EMBEDDED: 'embedded',
+    SOCKET: 'socket'
+};
+
+/**
+ * Default value for the `server.mode` setting
+ */
+export const SERVER_MODE_DEFAULT = SERVER_MODE_VALUE.EMBEDDED;
+
+/**
+ * The port where the SPL language server runs when `server.mode` is `socket`
+ */
+export const SERVER_PORT = 'ibm-streams.server.port';
+
+/**
+ * Default value for the `server.port` setting
+ */
+export const SERVER_PORT_DEFAULT = 5007;
 
 /**
  * Traces the communication between VS Code and the SPL language server
@@ -52,6 +80,14 @@ export const TOOLKIT_PATHS_DEFAULT = '/path/to/toolkits/directory';
 export const TRACE_SERVER = 'ibm-streams.trace.server';
 
 /**
- * Default value for the trace.server setting
+ * Values for the `trace.server` setting
  */
-export const TRACE_SERVER_DEFAULT = 'off';
+export const TRACE_SERVER_VALUE = {
+    OFF: 'off',
+    VERBOSE: 'verbose'
+};
+
+/**
+ * Default value for the `trace.server` setting
+ */
+export const TRACE_SERVER_DEFAULT = TRACE_SERVER_VALUE.OFF;

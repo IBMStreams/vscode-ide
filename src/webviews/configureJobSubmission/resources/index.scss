@@ -1,0 +1,16 @@
+@import '../../styles/global.scss';
+
+// Carbon: components
+@import '~carbon-components/scss/components/accordion/accordion';
+@import '~carbon-components/scss/components/button/button';
+@import '~carbon-components/scss/components/dropdown/dropdown';
+@import '~carbon-components/scss/components/list-box/list-box';
+@import '~carbon-components/scss/components/list/list';
+@import '~carbon-components/scss/components/text-input/text-input';
+@import '~carbon-components/scss/components/tooltip/tooltip';
+
+// Webview styling
+@import '../../styles/app.scss';
+@import './styles/_submit-job-container.scss';
+@import './styles/_submit-params-container.scss';
+@import './styles/_job-config-container.scss';

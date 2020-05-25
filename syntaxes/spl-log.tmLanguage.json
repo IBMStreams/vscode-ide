@@ -11,47 +11,47 @@
 			"contentName": "meta.log.debug.body.splLog"
 		},
 		{
-			"begin": "(\\[.*\\]\\[(DEBUG)\\])",
+			"begin": "(\\[[0-9].*\\]\\[(DEBUG)\\])",
 			"beginCaptures": {
 				"1": {
 					"name": "meta.log.debug.header.splLog"
 				}
 			},
-			"end": "(?=\\[.*\\])",
+			"end": "(?=\\[[0-9].*\\])",
 			"patterns": [
 				{
 					"begin": "(?<=\\[DEBUG\\])",
-					"end": "(?=\\[.*\\])",
+					"end": "(?=\\[[0-9].*\\])",
 					"contentName": "meta.log.debug.body.splLog"
 				}
 			]
 		},
 		{
-			"begin": "(\\[.*\\]\\[(ERROR)\\])",
+			"begin": "(\\[[0-9].*\\]\\[(ERROR)\\])",
 			"beginCaptures": {
 				"1": {
 					"name": "meta.log.error.header.splLog"
 				}
 			},
-			"end": "(?=\\[.*\\])",
+			"end": "(?=\\[[0-9].*\\])",
 			"patterns": [
 				{
 					"begin": "(?<=\\[ERROR\\])",
-					"end": "(?=\\[.*\\])",
+					"end": "(?=\\[[0-9].*\\])",
 					"contentName": "meta.log.error.body.splLog"
 				}
 			]
 		},
 		{
-			"match": "\\[.*\\]\\[(INFO)\\]",
+			"match": "\\[[0-9].*\\]\\[(INFO)\\]",
 			"name": "meta.log.info.splLog"
 		},
 		{
-			"match": "\\[.*\\]\\[(SUCCESS)\\]",
+			"match": "\\[[0-9].*\\]\\[(SUCCESS)\\]",
 			"name": "meta.log.success.splLog"
 		},
 		{
-			"match": "\\[.*\\]\\[(WARN)\\]",
+			"match": "\\[[0-9].*\\]\\[(WARN)\\]",
 			"name": "meta.log.warn.splLog"
 		}
 	]	

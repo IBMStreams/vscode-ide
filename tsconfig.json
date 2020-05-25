@@ -8,7 +8,8 @@
         "outDir": "out",
         "resolveJsonModule": true,
         "sourceMap": true,
-        "target": "es6"
+        "target": "es6",
+        "esModuleInterop": true
     },
     "exclude": [
         "node_modules",

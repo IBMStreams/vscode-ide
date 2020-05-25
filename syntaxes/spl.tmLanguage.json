@@ -632,7 +632,7 @@
 		]
 	},
 	"tuple-type": {
-		"begin": "(?=tuple)",
+		"begin": "(?=tuple<)",
 		"end": "(>)",
 		"endCaptures": {
 				"0": {

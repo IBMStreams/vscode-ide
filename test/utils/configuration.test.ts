@@ -1,24 +1,21 @@
 import { expect } from 'chai';
 import { describe } from 'mocha';
-import { ConfigurationTarget, workspace } from 'vscode';
+import { workspace } from 'vscode';
 import { Configuration, Settings } from '../../src/utils';
 
 describe('configuration', function() {
-    const defaultIcp4dUrl = 'https://HOST:PORT';
-    const defaultRequestTimeout = 30;
-
     after(async function() {
-        await workspace.getConfiguration().update(Settings.ICP4D_URL, defaultIcp4dUrl, ConfigurationTarget.Global);
+        await Configuration.setSetting(Settings.ENV_TIMEOUT_FOR_REQUESTS, Settings.ENV_TIMEOUT_FOR_REQUESTS_DEFAULT);
     });
 
     it('settings should have correct default values', function() {
         const config = workspace.getConfiguration();
-        expect(config.inspect(Settings.ICP4D_URL).defaultValue).to.equal(defaultIcp4dUrl);
-        expect(config.inspect(Settings.ICP4D_USE_MASTER_NODE_HOST).defaultValue).to.be.true;
-        expect(config.inspect(Settings.REQUEST_TIMEOUT).defaultValue).to.equal(defaultRequestTimeout);
-        expect(config.inspect(Settings.STREAMING_ANALYTICS_CREDENTIALS).defaultValue).to.be.null;
-        expect(config.inspect(Settings.TARGET_VERSION).defaultValue).to.equal(Settings.TARGET_VERSION_OPTION.V4);
-        expect(config.inspect(Settings.TOOLKIT_PATHS).defaultValue).to.equal(Settings.TOOLKIT_PATHS_DEFAULT);
+        expect(config.inspect(Settings.ENV_REFRESH_INTERVAL).defaultValue).to.equal(Settings.ENV_REFRESH_INTERVAL_DEFAULT);
+        expect(config.inspect(Settings.ENV_TIMEOUT_FOR_REQUESTS).defaultValue).to.equal(Settings.ENV_TIMEOUT_FOR_REQUESTS_DEFAULT);
+        expect(config.inspect(Settings.ENV_TOOLKIT_PATHS).defaultValue).to.equal(Settings.ENV_TOOLKIT_PATHS_DEFAULT);
+        expect(config.inspect(Settings.LOG_LEVEL).defaultValue).to.equal(Settings.LOG_LEVEL_DEFAULT);
+        expect(config.inspect(Settings.SERVER_MODE).defaultValue).to.equal(Settings.SERVER_MODE_DEFAULT);
+        expect(config.inspect(Settings.SERVER_PORT).defaultValue).to.equal(Settings.SERVER_PORT_DEFAULT);
         expect(config.inspect(Settings.TRACE_SERVER).defaultValue).to.equal(Settings.TRACE_SERVER_DEFAULT);
     });
 
@@ -39,9 +36,9 @@ describe('configuration', function() {
     });
 
     it('#setSetting/getSetting()', async function() {
-        const testUrl = 'https://123.45.67.89:31843';
-        await Configuration.setSetting(Settings.ICP4D_URL, testUrl);
-        const value = Configuration.getSetting(Settings.ICP4D_URL);
-        expect(value).to.equal(testUrl);
+        const testValue = 10;
+        await Configuration.setSetting(Settings.ENV_TIMEOUT_FOR_REQUESTS, testValue);
+        const value = Configuration.getSetting(Settings.ENV_TIMEOUT_FOR_REQUESTS);
+        expect(value).to.equal(testValue);
     });
 });

@@ -26,20 +26,20 @@ export default class BuildCommand implements BaseCommand {
         let filePaths = null;
         if (args[0] && Array.isArray(args[0][1])) {
             filePaths = args[0][1].map((uri: Uri) => uri.fsPath);
-        } else {
+        } else if (window.activeTextEditor) {
             filePaths = [window.activeTextEditor.document.fileName];
         }
 
         switch (this.commandName) {
-            case Commands.BUILD_APP_DOWNLOAD:
-            case Commands.BUILD_APP_SUBMIT:
+            case Commands.BUILD.APP_DOWNLOAD:
+            case Commands.BUILD.APP_SUBMIT:
                 return StreamsBuild.buildApp(filePaths[0], this._buildType)
                     .catch((error) => { throw error; });
-            case Commands.BUILD_MAKE_DOWNLOAD:
-            case Commands.BUILD_MAKE_SUBMIT:
+            case Commands.BUILD.MAKE_DOWNLOAD:
+            case Commands.BUILD.MAKE_SUBMIT:
                 return StreamsBuild.buildMake(filePaths[0], this._buildType)
                     .catch((error) => { throw error; });
-            case Commands.SUBMIT:
+            case Commands.BUILD.SUBMIT:
                 return StreamsBuild.submit(filePaths)
                     .catch((error) => { throw error; });
             default:

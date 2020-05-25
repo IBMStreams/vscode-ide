@@ -1,0 +1,149 @@
+// Unset default VS Code styles
+body {
+  background-color: unset;
+  color: unset;
+  font-family: unset;
+  font-weight: unset;
+  font-size: unset;
+  margin: unset;
+  padding: unset;
+}
+
+img {
+  max-width: unset;
+  max-height: unset;
+}
+
+a {
+  color: unset;
+}
+
+a:hover {
+  color: unset;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  outline: unset;
+  outline-offset: unset;
+}
+
+code {
+  color: unset;
+}
+
+blockquote {
+  background: unset;
+  border-color: unset;
+}
+
+kbd {
+  color: unset;
+  border-radius: unset;
+  vertical-align: unset;
+  padding: unset;
+
+  background-color: unset;
+  border: unset;
+  border-bottom-color: unset;
+  box-shadow: unset;
+}
+.vscode-light kbd {
+  background-color: unset;
+  border: unset;
+  border-bottom-color: unset;
+  box-shadow: unset;
+}
+
+// Carbon: feature flags
+$feature-flags: (
+  grid-columns-16: true
+);
+
+// Carbon: global styles
+@import '~carbon-components/scss/globals/scss/css--helpers';
+@import '~carbon-components/scss/globals/grid/grid';
+@import '~carbon-components/scss/globals/scss/theme';
+$carbon--theme--custom: map-merge(
+  $carbon--theme--white, (
+    // Override core color tokens
+    ui-background: var(--color-uiBackground),
+    interactive-01: var(--color-interactive01),
+    interactive-02: var(--color-interactive02),
+    interactive-03: var(--color-interactive03),
+    interactive-04: var(--color-interactive04),
+    danger: var(--color-danger),
+    ui-01: var(--color-ui01),
+    ui-02: var(--color-ui02),
+    ui-03: var(--color-ui03),
+    ui-04: var(--color-ui04),
+    ui-05: var(--color-ui05),
+    text-01: var(--color-text01),
+    text-02: var(--color-text02),
+    text-03: var(--color-text03),
+    text-04: var(--color-text04),
+    text-05: var(--color-text05),
+    text-error: var(--color-textError),
+    link-01: var(--color-link01),
+    inverse-link: var(--color-inverseLink),
+    icon-01: var(--color-icon01),
+    icon-02: var(--color-icon02),
+    icon-03: var(--color-icon03),
+    field-01: var(--color-field01),
+    field-02: var(--color-field02),
+    inverse-01: var(--color-inverse01),
+    inverse-02: var(--color-inverse02),
+    support-01: var(--color-support01),
+    support-02: var(--color-support02),
+    support-03: var(--color-support03),
+    support-04: var(--color-support04),
+    inverse-support-01: var(--color-inverseSupport01),
+    inverse-support-02: var(--color-inverseSupport02),
+    inverse-support-03: var(--color-inverseSupport03),
+    inverse-support-04: var(--color-inverseSupport04),
+    overlay-01: var(--color-overlay01),
+    // Override interactive color tokens
+    focus: var(--color-focus),
+    inverse-focus-ui: var(--color-inverseFocusUi),
+    hover-primary: var(--color-hoverPrimary),
+    hover-primary-text: var(--color-hoverPrimaryText),
+    hover-secondary: var(--color-hoverSecondary),
+    hover-tertiary: var(--color-hoverTertiary),
+    hover-ui: var(--color-hoverUI),
+    hover-field: var(--color-hoverUI),
+    hover-selected-ui: var(--color-hoverSelectedUI),
+    hover-danger: var(--color-hoverDanger),
+    hover-row: var(--color-hoverRow),
+    inverse-hover-ui: var(--color-inverseHoverUI),
+    active-primary: var(--color-activePrimary),
+    active-secondary: var(--color-activeSecondary),
+    active-tertiary: var(--color-activeTertiary),
+    active-ui: var(--color-activeUI),
+    active-danger: var(--color-activeDanger),
+    selected-ui: var(--color-selectedUI),
+    highlight: var(--color-highlight),
+    skeleton-01: var(--color-skeleton01),
+    skeleton-02: var(--color-skeleton02),
+    visited-link: var(--color-visitedLink),
+    disabled-01: var(--color-disabled01),
+    disabled-02: var(--color-disabled02),
+    disabled-03: var(--color-disabled03)
+  )
+) !default;
+$carbon--theme: $carbon--theme--custom;
+
+@import '~carbon-components/scss/globals/scss/vendor/@carbon/type/scss/font-family.scss';
+@import '~carbon-components/scss/globals/scss/vendor/@carbon/layout/scss/breakpoint.scss';
+@import '~carbon-components/scss/globals/scss/typography.scss';
+@import '~carbon-components/scss/globals/scss/vars.scss';
+
+// Need grid option to not add page gutters at large viewports, to also use when nesting grids
+// @link https://github.com/carbon-design-system/carbon/issues/2792
+@media (min-width: 42rem) {
+  .bx--grid--no-gutter {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}

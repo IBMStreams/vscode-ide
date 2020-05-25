@@ -1,14 +1,11 @@
-import * as _ from 'lodash';
+import { EditorAction, Logger as StreamsLogger, store, ToolkitUtils } from '@streams/common';
+import _forEach from 'lodash/forEach';
+import _isEqual from 'lodash/isEqual';
 import {
-    ConfigurationChangeEvent,
-    ConfigurationTarget,
-    ExtensionContext,
-    Memento,
-    workspace
+    ConfigurationChangeEvent, ConfigurationTarget, ExtensionContext, Memento, workspace
 } from 'vscode';
 import { DidChangeConfigurationNotification } from 'vscode-languageserver-protocol';
-import { Logger, Settings } from '.';
-import { StreamsToolkitsUtils } from '../build/v5/util';
+import { EXTENSION_ID, Logger, Settings } from '.';
 import SplLanguageClient from '../languageClient';
 
 /**
@@ -58,39 +55,24 @@ export default class Configuration {
     private static migrateOldSettings(): void {
         // Migrate settings that have changed names
         const settingNamesMap = {
-            'ibm-streams.streamingAnalyticsCredentials': {
-                name: Settings.STREAMING_ANALYTICS_CREDENTIALS,
-                default: null
+            'ibm-streams.toolkitPaths': {
+                name: Settings.ENV_TOOLKIT_PATHS,
+                default: Settings.ENV_TOOLKIT_PATHS_DEFAULT
             },
             'ibm-streams.toolkitsPath': {
-                name: Settings.TOOLKIT_PATHS,
-                default: Settings.TOOLKIT_PATHS_DEFAULT
+                name: Settings.ENV_TOOLKIT_PATHS,
+                default: Settings.ENV_TOOLKIT_PATHS_DEFAULT
             },
             'spl.trace.server': {
                 name: Settings.TRACE_SERVER,
                 default: Settings.TRACE_SERVER_DEFAULT
             }
         };
-        _.forEach(settingNamesMap, (newSetting: any, oldName: string) => {
+        _forEach(settingNamesMap, (newSetting: any, oldName: string) => {
             const oldSettingValue = this.getSetting(oldName);
             const newSettingValue = this.getSetting(newSetting.name);
-            if (oldSettingValue && _.isEqual(newSettingValue, newSetting.default)) {
-                this.setSetting(newSetting.name, this.getSetting(oldName));
-                this.setSetting(oldName, null);
-            }
-        });
-
-        // Migrate settings that have changed values
-        const settingValuesMap = {
-            [Settings.TARGET_VERSION]: {
-                oldValue: 'IBM Cloud Private for Data: Streams add-on',
-                newValue: Settings.TARGET_VERSION_OPTION.V5
-            }
-        };
-        _.forEach(settingValuesMap, (settingValues: any, settingName: string) => {
-            const settingValue = this.getSetting(settingName);
-            if (_.isEqual(settingValue, settingValues.oldValue)) {
-                this.setSetting(settingName, settingValues.newValue);
+            if (oldSettingValue !== undefined && _isEqual(newSettingValue, newSetting.default)) {
+                this.setSetting(newSetting.name, oldSettingValue);
             }
         });
     }
@@ -99,15 +81,20 @@ export default class Configuration {
      * Get a snapshot of the configuration settings
      */
     private static getSettingsSnapshot(): object {
-        return {
-            [Settings.ICP4D_URL]: this.getSetting(Settings.ICP4D_URL),
-            [Settings.ICP4D_USE_MASTER_NODE_HOST]: this.getSetting(Settings.ICP4D_USE_MASTER_NODE_HOST),
-            [Settings.REQUEST_TIMEOUT]: this.getSetting(Settings.REQUEST_TIMEOUT),
-            [Settings.STREAMING_ANALYTICS_CREDENTIALS]: this.getSetting(Settings.STREAMING_ANALYTICS_CREDENTIALS),
-            [Settings.TARGET_VERSION]: this.getSetting(Settings.TARGET_VERSION),
-            [Settings.TOOLKIT_PATHS]: this.getSetting(Settings.TOOLKIT_PATHS),
-            [Settings.TRACE_SERVER]: this.getSetting(Settings.TRACE_SERVER)
-        };
+        const settings = [
+            Settings.ENV_REFRESH_INTERVAL,
+            Settings.ENV_TIMEOUT_FOR_REQUESTS,
+            Settings.ENV_TOOLKIT_PATHS,
+            Settings.LOG_LEVEL,
+            Settings.SERVER_MODE,
+            Settings.SERVER_PORT,
+            Settings.TRACE_SERVER
+        ]
+        const snapshot = {};
+        settings.forEach((setting: string) => {
+            snapshot[setting] = this.getSetting(setting);
+        });
+        return snapshot;
     }
 
     /**
@@ -115,35 +102,54 @@ export default class Configuration {
      */
     private static watchSettings(): void {
         this.context.subscriptions.push(workspace.onDidChangeConfiguration((event: ConfigurationChangeEvent) => {
-            if (!event.affectsConfiguration(Settings.SECTION_ID)) {
+            if (!event.affectsConfiguration(EXTENSION_ID)) {
                 return;
             }
 
             let changedSettingName = null;
-            if (event.affectsConfiguration(Settings.ICP4D_URL)) {
-                changedSettingName = Settings.ICP4D_URL;
-            } else if (event.affectsConfiguration(Settings.ICP4D_USE_MASTER_NODE_HOST)) {
-                changedSettingName = Settings.ICP4D_USE_MASTER_NODE_HOST;
-            } else if (event.affectsConfiguration(Settings.REQUEST_TIMEOUT)) {
-                changedSettingName = Settings.REQUEST_TIMEOUT;
-            } else if (event.affectsConfiguration(Settings.STREAMING_ANALYTICS_CREDENTIALS)) {
-                changedSettingName = Settings.STREAMING_ANALYTICS_CREDENTIALS;
-            } else if (event.affectsConfiguration(Settings.TARGET_VERSION)) {
-                changedSettingName = Settings.TARGET_VERSION;
-            } else if (event.affectsConfiguration(Settings.TOOLKIT_PATHS)) {
-                changedSettingName = Settings.TOOLKIT_PATHS;
+            if (event.affectsConfiguration(Settings.ENV_REFRESH_INTERVAL)) {
+                const refreshSetting = Configuration.getSetting(Settings.ENV_REFRESH_INTERVAL);
+                if (refreshSetting && typeof refreshSetting === 'number' && refreshSetting >= 1) {
+                    changedSettingName = Settings.ENV_REFRESH_INTERVAL;
+                }
+            } else if (event.affectsConfiguration(Settings.ENV_TIMEOUT_FOR_REQUESTS)) {
+                const timeoutSetting = Configuration.getSetting(Settings.ENV_TIMEOUT_FOR_REQUESTS);
+                if (timeoutSetting && typeof timeoutSetting === 'number' && timeoutSetting >= 1) {
+                    changedSettingName = Settings.ENV_TIMEOUT_FOR_REQUESTS;
+                }
+            } else if (event.affectsConfiguration(Settings.ENV_TOOLKIT_PATHS)) {
+                changedSettingName = Settings.ENV_TOOLKIT_PATHS;
 
                 // Send added and removed toolkits to the LSP server
                 const currentToolkitPathsSetting = Configuration.getSetting(changedSettingName);
                 const previousToolkitPathsSetting = Configuration.getState(changedSettingName);
-                const { addedToolkitPaths, removedToolkitNames } = StreamsToolkitsUtils.getChangedLocalToolkits(previousToolkitPathsSetting, currentToolkitPathsSetting);
+                const { addedToolkitPaths, removedToolkitNames } = ToolkitUtils.getChangedLocalToolkits(previousToolkitPathsSetting, currentToolkitPathsSetting);
                 if (addedToolkitPaths && addedToolkitPaths.length) {
-                    const addParam = StreamsToolkitsUtils.getLangServerParamForAddToolkits(addedToolkitPaths);
+                    const addParam = ToolkitUtils.getLangServerParamForAddToolkits(addedToolkitPaths);
                     SplLanguageClient.getClient().sendNotification(DidChangeConfigurationNotification.type.method, addParam);
                 }
                 if (removedToolkitNames && removedToolkitNames.length) {
-                    const removeParam = StreamsToolkitsUtils.getLangServerParamForRemoveToolkits(removedToolkitNames);
+                    const removeParam = ToolkitUtils.getLangServerParamForRemoveToolkits(removedToolkitNames);
                     SplLanguageClient.getClient().sendNotification(DidChangeConfigurationNotification.type.method, removeParam);
+                }
+            } else if (event.affectsConfiguration(Settings.LOG_LEVEL)) {
+                changedSettingName = Settings.LOG_LEVEL;
+                const logLevel = Configuration.getSetting(changedSettingName);
+                if (logLevel === Settings.LOG_LEVEL_VALUE.OFF) {
+                    store.dispatch(EditorAction.setIsLoggingEnabled(false));
+                    StreamsLogger.disable();
+                } else if (logLevel === Settings.LOG_LEVEL_VALUE.DEBUG) {
+                    store.dispatch(EditorAction.setIsLoggingEnabled(true));
+                    StreamsLogger.enable();
+                }
+            } else if (event.affectsConfiguration(Settings.SERVER_MODE)) {
+                changedSettingName = Settings.SERVER_MODE;
+                SplLanguageClient.restart();
+            } else if (event.affectsConfiguration(Settings.SERVER_PORT)) {
+                changedSettingName = Settings.SERVER_PORT;
+                // Restart only if the server mode is set to socket
+                if (this.getSetting(Settings.SERVER_MODE) === Settings.SERVER_MODE_VALUE.SOCKET) {
+                    SplLanguageClient.restart();
                 }
             } else if (event.affectsConfiguration(Settings.TRACE_SERVER)) {
                 changedSettingName = Settings.TRACE_SERVER;

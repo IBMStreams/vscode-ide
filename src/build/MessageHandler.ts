@@ -1,8 +1,18 @@
-import * as _ from 'lodash';
-import * as path from 'path';
+import _find from 'lodash/find';
+import _map from 'lodash/map';
+import _pick from 'lodash/pick';
 import { commands, OutputChannel, window } from 'vscode';
-import { Commands } from '../commands';
+import StreamsBuild from '.';
+import { Streams, StreamsInstance } from '../streams';
 import { Logger } from '../utils';
+
+interface Message {
+    detail?: string | string[] | any;
+    stack?: string | string[] | any;
+    showNotification?: boolean;
+    notificationButtons?: NotificationButton[];
+    isButtonSelectionRequired?: boolean;
+}
 
 interface NotificationButton {
     label: string;
@@ -14,14 +24,12 @@ interface NotificationButton {
  */
 export default class MessageHandler {
     private _info: { appRoot: string, filePath: string };
-    private _timestampRegex: RegExp;
 
     /**
      * @param info    Information that identifies the build target
      */
     constructor(info: { appRoot: string, filePath: string }) {
         this._info = info;
-        this._timestampRegex = /^[0-9][\w-:.]+\s/;
     }
 
     /**
@@ -33,37 +41,45 @@ export default class MessageHandler {
         message: string,
         {
             detail = null,
-            description = null,
             showNotification = true,
-            showConsoleMessage = true,
-            notificationAutoDismiss = true,
-            notificationButtons = []
-        }: {
-            detail?: string | string[],
-            description?: string,
-            showNotification?: boolean,
-            showConsoleMessage?: boolean,
-            notificationAutoDismiss?: true,
-            notificationButtons?: NotificationButton[]
-        } = {}
+            notificationButtons = [],
+            isButtonSelectionRequired = true
+        }: Message = {}
     ): Thenable<void> {
-        if (showConsoleMessage) {
-            const outputChannel = this._getOutputChannel();
-            const detailMessage = this.joinMessageArray(detail);
-            const logMessage = `${message}${detailMessage ? `\n${detailMessage}` : ''}`;
-            if (logMessage !== '') {
-                Logger.info(outputChannel, logMessage, false, true);
-            }
+        // Log to output channel
+        this._logToOutputChannel(Logger.info, message, detail);
+
+        // Handle notification
+        if (message && showNotification) {
+            return this._displayNotification(window.showInformationMessage, message, notificationButtons, isButtonSelectionRequired);
         }
 
-        if (showNotification && typeof message === 'string') {
-            const buttons = this._processButtons(notificationButtons);
-            return window.showInformationMessage(message, ...buttons).then((selection: string) => {
-                this._handleNotificationButtonSelection(notificationButtons, selection);
-            });
+        return Promise.resolve();
+    }
+
+    /**
+     * Handle an warn message
+     * @param message    The message to display
+     * @param object     Information about the message
+     */
+    public handleWarn(
+        message: string,
+        {
+            detail = null,
+            showNotification = true,
+            notificationButtons = [],
+            isButtonSelectionRequired = true
+        }: Message = {}
+    ): Thenable<void> {
+        // Log to output channel
+        this._logToOutputChannel(Logger.warn, message, detail);
+
+        // Handle notification
+        if (message && showNotification) {
+            return this._displayNotification(window.showWarningMessage, message, notificationButtons, isButtonSelectionRequired);
         }
 
-        return null;
+        return Promise.resolve();
     }
 
     /**
@@ -74,46 +90,48 @@ export default class MessageHandler {
     public handleError(
         message: string,
         {
-            detail,
-            description,
-            stack,
+            detail = null,
+            stack = null,
             showNotification = true,
-            showConsoleMessage = true,
-            consoleErrorLog = true,
-            notificationAutoDismiss = false,
-            notificationButtons = []
-        }: {
-            detail?: string | string[],
-            description?: string,
-            stack?: string[],
-            showNotification?: boolean,
-            showConsoleMessage?: boolean,
-            consoleErrorLog?: boolean,
-            notificationAutoDismiss?: boolean,
-            notificationButtons?: NotificationButton[]
-        } = {}
+            notificationButtons = [],
+            isButtonSelectionRequired = true
+        }: Message = {}
     ): Thenable<void> {
-        if (showConsoleMessage) {
-            const outputChannel = this._getOutputChannel();
-            const detailMessage = this.joinMessageArray(detail);
-            const stackMessage = this.joinMessageArray(stack);
-            Logger.error(outputChannel, message);
-            if (typeof detailMessage === 'string' && detailMessage.length) {
-                Logger.error(outputChannel, detailMessage);
-            }
-            if (typeof stackMessage === 'string' && stackMessage.length) {
-                Logger.error(outputChannel, stackMessage);
-            }
+        // Log to output channel
+        const outputChannel = this._getOutputChannel();
+        const detailMessage = Streams.getErrorMessage(detail);
+        let stackMessage: string;
+        if (stack && stack.config && stack.status) {
+            const stackObj: any = _pick(stack.config, ['method', 'url']);
+            stackObj.status = stack.status;
+            stackMessage = JSON.stringify(stackObj, null, 2);
+        } else {
+            stackMessage = Logger.getLoggableMessage(stack);
         }
 
-        if (showNotification && typeof message === 'string') {
-            const buttons = this._processButtons(notificationButtons);
-            return window.showErrorMessage(message, ...buttons).then((selection: string) => {
-                this._handleNotificationButtonSelection(notificationButtons, selection);
-            });
+        const detailMessageIncludesMessage = detailMessage && detailMessage !== '' && detailMessage.includes(message);
+        const stackMessageIncludesMessage = stackMessage && stackMessage !== '' && stackMessage.includes(message);
+
+        if (stackMessageIncludesMessage) {
+            Logger.error(outputChannel, stackMessage, false, true);
+        } else if (detailMessageIncludesMessage) {
+            Logger.error(outputChannel, detailMessage, false, true);
+        } else {
+            Logger.error(outputChannel, this._sanitizeMessage(message));
+        }
+        if (detailMessage && detailMessage !== '' && !detailMessageIncludesMessage) {
+            Logger.error(outputChannel, detailMessage, false, true);
+        }
+        if (stackMessage && stackMessage !== '' && !stackMessageIncludesMessage) {
+            Logger.error(outputChannel, stackMessage, false, true);
         }
 
-        return null;
+        // Handle notification
+        if (message && showNotification) {
+            return this._displayNotification(window.showErrorMessage, message, notificationButtons, isButtonSelectionRequired);
+        }
+
+        return Promise.resolve();
     }
 
     /**
@@ -125,63 +143,64 @@ export default class MessageHandler {
         message: string,
         {
             detail = null,
-            description = null,
             showNotification = true,
-            showConsoleMessage = true,
-            notificationAutoDismiss = false,
-            notificationButtons = []
-        }: {
-            detail?: string | string[],
-            description?: string,
-            showNotification?: boolean,
-            showConsoleMessage?: boolean,
-            notificationAutoDismiss?: boolean,
-            notificationButtons?: NotificationButton[]
-        } = {}
+            notificationButtons = [],
+            isButtonSelectionRequired = true
+        }: Message = {}
     ): Thenable<void> {
-        if (showConsoleMessage) {
-            const outputChannel = this._getOutputChannel();
-            const detailMessage = this.joinMessageArray(detail);
-            const logMessage = `${message}${detailMessage ? `\n${detailMessage}` : ''}`;
-            Logger.success(outputChannel, logMessage);
+        // Log to output channel
+        this._logToOutputChannel(Logger.success, message, detail);
+
+        // Handle notification
+        if (message && showNotification) {
+            return this._displayNotification(window.showInformationMessage, message, notificationButtons, isButtonSelectionRequired);
         }
 
-        if (showNotification && typeof message === 'string') {
-            const buttons = this._processButtons(notificationButtons);
-            return window.showInformationMessage(message, ...buttons).then((selection: string) => {
-                this._handleNotificationButtonSelection(notificationButtons, selection);
-            });
-        }
-
-        return null;
+        return Promise.resolve();
     }
 
     /**
-     * Handle the scenario where the Streaming Analytics service credentials are not specified
+     * Handle the scenario where a default Streams instance has not been set
      */
-    public handleCredentialsMissing(): Thenable<void> {
-        const notificationButtons = [{
-            callbackFn: () => commands.executeCommand(Commands.SET_SERVICE_CREDENTIALS),
-            label: 'Set credentials'
-        }];
-        const buttons = this._processButtons(notificationButtons);
-        const message = 'Copy and paste your Streaming Analytics service credentials';
-        return window.showErrorMessage(message, ...buttons).then((selection: string) => {
-            this._handleNotificationButtonSelection(notificationButtons, selection);
+    public handleDefaultInstanceNotSet(): Thenable<void> {
+        return this.handleWarn('A default Streams instance has not been set.', {
+            notificationButtons: [{
+                label: 'Set Default',
+                callbackFn: () => {
+                    window.showQuickPick(Streams.getQuickPickItems(Streams.getInstances()), {
+                        canPickMany: false,
+                        ignoreFocusOut: true,
+                        placeHolder: 'Select a Streams instance to set as the default'
+                    }).then(async (item: any): Promise<void> => {
+                        if (item) {
+                            StreamsInstance.setDefaultInstance(item);
+                        }
+                    });
+                }
+            }]
         });
     }
 
-    /**
-     * Handle the scenario where the IBM Cloud Pak for Data URL is not specified, is invalid, or is unreachable
-     * @param callbackFn    The callback function to execute after the user sets their URL
-     */
-    public handleIcp4dUrlNotSet(callbackFn: () => void): Thenable<void> {
-        return this.handleError('IBM Cloud Pak for Data URL is not specified, is invalid, or is unreachable', {
-            detail: 'Specify the IBM Cloud Pak for Data URL or build with IBM Cloud Streaming Analytics in the extension settings.',
-            notificationButtons: [{
-                callbackFn: () => commands.executeCommand(Commands.SET_ICP4D_URL, callbackFn),
-                label: 'Set URL'
-            }]
+    public promptForInput({
+        password,
+        placeHolder,
+        prompt,
+        value,
+        valueSelection
+    }: {
+        password?: boolean,
+        placeHolder?: string,
+        prompt?: string,
+        value?: string,
+        valueSelection?: [number, number]
+    }): Thenable<string> {
+        return window.showInputBox({
+            ignoreFocusOut: true,
+            password,
+            placeHolder,
+            prompt,
+            value,
+            valueSelection
         });
     }
 
@@ -192,57 +211,38 @@ export default class MessageHandler {
     }
 
     /**
-     * Retrieve the button labels to display
-     * @param buttons    The notification buttons to display
+     * Log a message to an output channel
+     * @param loggerFn    The logger function
+     * @param message     The message to display
+     * @param detail      The detail message
      */
-    private _processButtons(buttons: NotificationButton[]): string[] {
-        let labels = [];
-        if (Array.isArray(buttons)) {
-            labels = _.map(buttons, (obj: NotificationButton) => obj.label);
+    private _logToOutputChannel(loggerFn: Function, message: string, detail: string | string[]): void {
+        const outputChannel = this._getOutputChannel();
+        const detailMessage = Logger.getLoggableMessage(detail);
+        let logMessage = message ? this._sanitizeMessage(message) : '';
+        if (detailMessage) {
+            logMessage += `\n${detailMessage}`;
         }
-        return labels;
-    }
-
-    /**
-     * Convert an array of messages to a string
-     * @param msgArray    The messages
-     */
-    public joinMessageArray(msgArray: string | string[]): string {
-        if (Array.isArray(msgArray)) {
-            return msgArray
-                .map((msg: string) => msg.replace(this._timestampRegex, ''))
-                .join('\n').trimRight();
+        if (logMessage !== '') {
+            loggerFn(outputChannel, logMessage, false, true);
         }
-        return msgArray;
     }
 
     /**
-     * Not supported in VS Code
+     * Display a notification
+     * @param notificationFn               The show notification function
+     * @param message                      The message to display
+     * @param notificationButtons          The notification button objects
+     * @param isButtonSelectionRequired    Whether or not button selection is required
      */
-    public dismissNotification(): null {
-        return null;
-    }
-
-    /**
-     * Converts messages to a loggable string
-     * @param messages    The messages
-     */
-    public getLoggableMessage(messages: any[]): string {
-        return this.joinMessageArray(messages.map((outputMsg: any) => outputMsg.message_text));
-    }
-
-    /**
-     * Handle a notification button selection
-     * @param buttons      The notification buttons to display
-     * @param selection    The label of the button that the user clicked on
-     */
-    private _handleNotificationButtonSelection(buttons: NotificationButton[], selection: string): void {
-        if (selection) {
-            const buttonObj = _.find(buttons, (obj: NotificationButton) => obj.label === selection);
-            if (buttonObj && buttonObj.callbackFn) {
-                buttonObj.callbackFn();
-            }
+    private _displayNotification(notificationFn: Function, message: string, notificationButtons, isButtonSelectionRequired: boolean): Thenable<any> | Promise<any> {
+        const buttons = this._processButtons(notificationButtons);
+        const notificationPromise = notificationFn(this._sanitizeMessage(message), ...buttons)
+            .then((selection: string) => this._handleNotificationButtonSelection(notificationButtons, selection));
+        if (!isButtonSelectionRequired) {
+            return Promise.resolve();
         }
+        return buttons.length ? notificationPromise : Promise.resolve();
     }
 
     /**
@@ -256,11 +256,46 @@ export default class MessageHandler {
         const { appRoot, filePath } = this._info;
         const channelObj = Logger.outputChannels[filePath];
         if (!channelObj) {
-            const displayPath = `${path.basename(appRoot)}${path.sep}${path.relative(appRoot, filePath)}`;
+            const displayPath = StreamsBuild.getDisplayPath(appRoot, filePath);
             const outputChannel = Logger.registerOutputChannel(filePath, displayPath);
             outputChannel.show();
             return outputChannel;
         }
         return channelObj.outputChannel;
+    }
+
+    /**
+     * Sanitize a message
+     * @param message    The message to display
+     */
+    private _sanitizeMessage(message: string): string {
+        return message.trim();
+    }
+
+    /**
+     * Retrieve the button labels to display
+     * @param buttons    The notification buttons to display
+     */
+    private _processButtons(buttons: NotificationButton[]): string[] {
+        let labels = [];
+        if (Array.isArray(buttons)) {
+            labels = _map(buttons, (obj: NotificationButton) => obj.label);
+        }
+        return labels;
+    }
+
+    /**
+     * Handle a notification button selection
+     * @param buttons      The notification buttons to display
+     * @param selection    The label of the button that the user clicked on
+     */
+    private _handleNotificationButtonSelection(buttons: NotificationButton[], selection: string): Promise<void> {
+        if (selection) {
+            const buttonObj = _find(buttons, (obj: NotificationButton) => obj.label === selection);
+            if (buttonObj && buttonObj.callbackFn) {
+                return buttonObj.callbackFn();
+            }
+        }
+        return Promise.resolve();
     }
 }

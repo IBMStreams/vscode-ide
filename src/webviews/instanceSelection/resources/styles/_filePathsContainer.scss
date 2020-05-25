@@ -1,0 +1,23 @@
+.file-path-container-row {
+  display: flex;
+  flex-direction: row;
+  padding-top: $layout-01;
+}
+
+.file-path-container-col {
+  display: flex;
+  flex-direction: column;
+  padding-top: $layout-01;
+}
+
+.file-list {
+  display: flex;
+  flex-direction: column;
+  padding-left: $layout-01;
+  font-size: 1rem;
+  word-break: break-word;
+}
+
+.file-path-subtitle {
+  font-size: 1rem;
+}

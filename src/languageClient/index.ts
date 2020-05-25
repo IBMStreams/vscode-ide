@@ -1,63 +1,233 @@
+import { ToolkitUtils } from '@streams/common';
+import * as childProcess from 'child_process';
+import * as net from 'net';
 import * as os from 'os';
 import * as path from 'path';
 import { ExtensionContext, ProgressLocation, window, workspace } from 'vscode';
-import { LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-languageclient';
-import { StreamsToolkitsUtils } from '../build/v5/util';
-import { Configuration, Constants, Settings } from '../utils';
+import {
+    LanguageClient, LanguageClientOptions, ServerOptions, State, StreamInfo
+} from 'vscode-languageclient';
+import {
+    Configuration, EXTENSION_ID, EXTENSION_NAME, LANGUAGE_SERVER, LANGUAGE_SPL, Logger, TOOLKITS_CACHE_DIR, Settings
+} from '../utils';
+
+let client: LanguageClient = null;
+let clientState: State = null;
+let isClientReady = false;
+let serverProcess: childProcess.ChildProcess = null;
 
 /**
  * Language client that connects to the SPL LSP server
  */
 export default class SplLanguageClient {
-    private static client: LanguageClient;
+    private static _context: ExtensionContext;
 
     /**
-     * Create and start a language client
+     * Initialize the SPL language client and server
      * @param context    The extension context
      */
-    public static async create(context: ExtensionContext): Promise<LanguageClient> {
-        // Set up language server and client options
-        const launcher = os.platform() === 'win32' ? 'startSplLspServer.bat' : 'startSplLspServer';
-        const command = os.platform() === 'win32' ? launcher : `./${launcher}`;
-        const cwd = context.asAbsolutePath(path.join('node_modules', '@ibmstreams', 'spl-lsp', 'bin'));
+    public static async initialize(context: ExtensionContext): Promise<any> {
+        this._context = context;
+        await this.start();
+    }
 
-        const serverOptions: ServerOptions = {
-            run: { command, options: { cwd } },
-            debug: { command, args: ['-Xdebug', '-Xrunjdwp:transport=dt_socket,address=8998,server=y,suspend=n'], options: { cwd } }
-        };
+    /**
+     * Restart the SPL language client and server
+     */
+    public static async restart(): Promise<any> {
+        try {
+            // Stop language server
+            await this.cleanUp();
 
-        const toolkitsOption = StreamsToolkitsUtils.getLangServerOptionForInitToolkits(Constants.TOOLKITS_CACHE_DIR, Configuration.getSetting(Settings.TOOLKIT_PATHS));
-        const initOptions = { ...toolkitsOption };
+            // Start language server
+            await this.start();
+        } catch (err) {
+            const errorMsg = `An error occurred while restarting the ${LANGUAGE_SERVER}.\n${err.toString()}`;
+            Logger.error(null, errorMsg, false, true);
+        }
+    }
+
+    /**
+     * Start the SPL language client and server
+     */
+    public static async start(): Promise<any> {
+        // Configure language server options
+        let serverOptions: ServerOptions;
+        let launcher: string;
+        let command: string;
+        const getCommand = (launcherPath: string): string => (os.platform() === 'win32' ? launcherPath : `./${launcherPath}`);
+        const cwd = this._context.asAbsolutePath(path.join('node_modules', '@ibmstreams', 'spl-lsp', 'bin'));
+        const processOptions = { cwd, shell: true, env: { ...process.env } };
+
+        const mode = Configuration.getSetting(Settings.SERVER_MODE);
+        if (mode === Settings.SERVER_MODE_VALUE.EMBEDDED) {
+            launcher = os.platform() === 'win32' ? 'startSplLspServer.bat' : 'startSplLspServer';
+            command = getCommand(launcher);
+            serverOptions = {
+                run: { command, options: processOptions },
+                debug: { command, options: processOptions }
+            };
+        } else {
+            // Spawn a process for starting the language server in socket mode
+            const port = Configuration.getSetting(Settings.SERVER_PORT);
+
+            launcher = os.platform() === 'win32' ? 'startSplLspServerSocket.bat' : 'startSplLspServerSocket';
+            command = getCommand(launcher);
+            try {
+                serverProcess = childProcess.spawn(
+                    command,
+                    [`port=${port}`],
+                    { ...processOptions, windowsHide: true }
+                );
+                if (serverProcess.stderr) {
+                    serverProcess.stderr.on('data', (data) => {
+                        if (data) {
+                            const errorMsg = 'An error occurred while starting the SPL language server in socket mode.\n';
+                            Logger.error(null, `${errorMsg}${data.toString()}`, false, true);
+                        }
+                    });
+                }
+                serverProcess.on('error', (err) => {
+                    if (err) {
+                        const errorMsg = 'Failed to start the SPL language server in socket mode. ';
+                        Logger.error(null, `${errorMsg}${err.toString()}`, true, true);
+                    }
+                });
+                serverProcess.on('close', (code) => {
+                    Logger.debug(null, `The SPL language server child process exited with code ${code}.`, false, false);
+                });
+            } catch (err) {
+                const errorMsg = 'Failed to start the SPL language server in socket mode.';
+                Logger.error(null, `${errorMsg} ${err.toString()}`, true, true);
+            }
+
+            const connectionInfo = { port };
+            serverOptions = (): Promise<StreamInfo> => {
+                // Connect to the language server via socket
+                const socket = net.connect(connectionInfo);
+                const result: StreamInfo = {
+                    writer: socket,
+                    reader: socket
+                };
+                return Promise.resolve(result);
+            };
+        }
+        // Configure language client options
+        const toolkitsOption = ToolkitUtils.getLangServerOptionForInitToolkits(TOOLKITS_CACHE_DIR, Configuration.getSetting(Settings.ENV_TOOLKIT_PATHS));
         const clientOptions: LanguageClientOptions = {
-            outputChannelName: 'IBM Streams SPL Language Server',
-            documentSelector: [{ scheme: 'file', language: 'spl' }],
+            outputChannel: Logger.languageServerOutputChannel,
+            documentSelector: [{ scheme: 'file', language: LANGUAGE_SPL }],
             synchronize: { fileEvents: workspace.createFileSystemWatcher('**/*.*') },
-            initializationOptions: () => initOptions
+            initializationOptions: () => toolkitsOption,
+            initializationFailedHandler: (err) => {
+                if (err) {
+                    Logger.languageServerOutputChannel.appendLine(err.toString());
+                }
+                Logger.error(null, `Failed to initialize the ${LANGUAGE_SERVER}.`, true, true);
+                return false;
+            }
         };
 
-        // Create the language client and start the client
-        const client = new LanguageClient('ibm-streams', Constants.IBM_STREAMS, serverOptions, clientOptions);
-        this.client = client;
+        // Create the language client and start it
+        client = new LanguageClient(EXTENSION_ID, EXTENSION_NAME, serverOptions, clientOptions);
 
         // Show progress in the status bar
-        window.withProgress({
+        const progress = window.withProgress({
             location: ProgressLocation.Window,
             title: 'Initializing SPL language features'
         }, () => new Promise((resolve, reject) => {
             client.onReady().then(
-                () => resolve(),
-                () => reject()
+                () => {
+                    isClientReady = true;
+                    resolve();
+                },
+                (err) => {
+                    const errorMsg = 'An error occurred while initializing SPL language features.';
+                    Logger.error(null, errorMsg, true, true);
+                    isClientReady = false;
+                    reject();
+                }
             );
         }));
 
-        // Push the disposable to the context's subscriptions so that the
-        // client can be deactivated on extension deactivation
-        context.subscriptions.push(client.start());
+        // Monitor language client state
+        client.onDidChangeState((event) => {
+            const { newState } = event;
+            clientState = newState;
+            let status: string;
+            switch (newState) {
+                case State.Stopped:
+                    status = 'has stopped';
+                    break;
+                case State.Starting:
+                    status = 'is starting';
+                    break;
+                case State.Running:
+                    status = 'is running';
+                    break;
+                default:
+                    break;
+            }
+            Logger.debug(null, `The ${LANGUAGE_SERVER} ${status}.`, false, false);
+        });
 
-        return client;
+        // Start the client (and launch the server)
+        if (mode === Settings.SERVER_MODE_VALUE.SOCKET) {
+            // Allow time for the server process to start
+            setTimeout(() => {
+                client.start();
+            }, 5000);
+        } else {
+            client.start();
+        }
+
+        return progress;
+    }
+
+    /**
+     * Clean up the SPL language server and client
+     */
+    public static cleanUp(): Promise<void> {
+        if (!client) {
+            return Promise.resolve();
+        }
+
+        // Kill child server process
+        if (serverProcess) {
+            serverProcess.kill();
+            serverProcess = null;
+        }
+
+        // Stop the client
+        if (clientState && clientState !== State.Stopped) {
+            client.stop();
+            client = null;
+            clientState = null;
+            isClientReady = false;
+        }
+        return Promise.resolve();
     }
 
     public static getClient(): LanguageClient {
-        return this.client;
+        return client;
+    }
+
+    public static createDebugEnv(): any {
+        return { JAVA_OPTS: '-Xdebug -Xrunjdwp:transport=dt_socket,address=8998,server=n,suspend=y', ...process.env };
+    }
+}
+
+/**
+ * Wait for the SPL language client to be ready
+ * @param callbackFn    The callback function to execute
+ */
+export function waitForLanguageClientReady(callbackFn: Function): void {
+    if (isClientReady) {
+        callbackFn();
+    } else {
+        // Try again in 2 seconds
+        setTimeout(() => {
+            waitForLanguageClientReady(callbackFn);
+        }, 2000);
     }
 }

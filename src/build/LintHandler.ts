@@ -1,7 +1,7 @@
+import { SPL_MSG_REGEX_V4, SPL_MSG_REGEX_V5 } from '@streams/common';
 import * as path from 'path';
 import { DiagnosticSeverity } from 'vscode';
 import { Diagnostics } from '../utils';
-import { StreamsUtils } from './v5/util';
 
 /**
  * Handles linting of source files
@@ -19,27 +19,24 @@ export default class LintHandler {
 
     /**
      * Parse a build response and lint source file(s)
-     * @param response    The build response
+     * @param messages    The build messages
      */
-    public lint(response: any): void {
-        if (!response) {
+    public lint(messages: string[]): void {
+        if (!messages) {
             return;
         }
 
-        let messages = [];
-        if (response.output) {
-            this._setV4();
-            messages = response.output.map((message: any) => message.message_text);
-        } else if (Array.isArray(response)) {
-            this._setV5();
-            messages = response;
-        }
+        if (Array.isArray(messages) && messages.length) {
+            if (messages[0].match(/^\d/)) {
+                this._setV5();
+            } else {
+                this._setV4();
+            }
 
-        if (Array.isArray(messages)) {
             const convertedMessages = messages
                 .filter((message: string) => message.match(this._msgRegex))
                 .map((message: string) => this._parseMessage(message));
-            Diagnostics.lintFiles(this._msgRegex, this._appRoot, convertedMessages);
+            Diagnostics.lintFiles(convertedMessages);
         }
     }
 
@@ -47,14 +44,14 @@ export default class LintHandler {
      * Target Streams API V4
      */
     private _setV4(): void {
-        this._msgRegex = StreamsUtils.SPL_MSG_REGEX;
+        this._msgRegex = SPL_MSG_REGEX_V4;
     }
 
     /**
      * Target Streams API V5
      */
     private _setV5(): void {
-        this._msgRegex = StreamsUtils.SPL_MSG_REGEX_V5;
+        this._msgRegex = SPL_MSG_REGEX_V5;
     }
 
     /**

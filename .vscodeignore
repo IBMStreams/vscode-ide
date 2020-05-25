@@ -1,15 +1,16 @@
-.git/**
-.vscode/**
-.vscode-test/**
-images/docs/**
-node_modules/!(@ibmstreams)
-out/**
-src/**
-test/**
-toolkitsCache/**
-.eslintrc.js
-.gitignore
-ibm-streams-*.vsix
-package-lock.json
-tsconfig.json
-webpack.config.js
+# Ignore everything
+*
+*/**
+**/.DS_Store
+*/**/.DS_Store
+
+# Whitelist
+!dist
+!images
+!language-configuration.json
+!LICENSE
+!node_modules/@ibmstreams/spl-lsp
+!package.json
+!README.md
+!syntaxes
+!themes

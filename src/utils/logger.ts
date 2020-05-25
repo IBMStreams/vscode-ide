@@ -1,7 +1,6 @@
-import * as moment from 'moment';
 import * as util from 'util';
 import { OutputChannel, window } from 'vscode';
-import { Constants } from '.';
+import { EXTENSION_NAME, LANGUAGE_SERVER } from '.';
 
 enum Level { DEBUG, ERROR, INFO, SUCCESS, WARN }
 
@@ -10,6 +9,7 @@ enum Level { DEBUG, ERROR, INFO, SUCCESS, WARN }
  */
 export default class Logger {
     public static mainOutputChannel: OutputChannel;
+    public static languageServerOutputChannel: OutputChannel;
     public static outputChannels: object;
 
     /**
@@ -17,10 +17,13 @@ export default class Logger {
      * @param context    The extension context
      */
     public static configure(): void {
-        this.outputChannels = {};
+        Logger.outputChannels = {};
 
         // Set up main output channel for logging
-        this.mainOutputChannel = this.registerOutputChannel(Constants.IBM_STREAMS, Constants.IBM_STREAMS);
+        Logger.mainOutputChannel = Logger.registerOutputChannel(EXTENSION_NAME, EXTENSION_NAME);
+
+        // Set up language server output channel for logging
+        Logger.languageServerOutputChannel = Logger.registerOutputChannel(LANGUAGE_SERVER, LANGUAGE_SERVER);
     }
 
     /**
@@ -30,20 +33,38 @@ export default class Logger {
      */
     public static registerOutputChannel(name: string, displayName: string): OutputChannel {
         let outputChannel = null;
-        const existingOutputChannel = this.outputChannels[name];
+        const existingOutputChannel = Logger.outputChannels[name];
         if (existingOutputChannel) {
             outputChannel = existingOutputChannel.channel;
         } else {
-            const channelName = displayName === Constants.IBM_STREAMS
+            const channelName = (displayName === EXTENSION_NAME || displayName === LANGUAGE_SERVER)
                 ? displayName
-                : `${Constants.IBM_STREAMS}: ${displayName}`;
+                : `${EXTENSION_NAME}: ${displayName}`;
             outputChannel = window.createOutputChannel(channelName);
-            this.outputChannels[name] = {
+            Logger.outputChannels[name] = {
                 displayName,
                 outputChannel
             };
         }
         return outputChannel;
+    }
+
+    /**
+     * Convert content to a loggable message
+     * @param content    The content to log
+     */
+    public static getLoggableMessage(content: any): string {
+        if (typeof content === 'string') {
+            return content;
+        }
+        if (Array.isArray(content)) {
+            const timestampRegex = /^[0-9][\w-:.+]+\s/;
+            return content
+                .map((msg: string) => (msg ? msg.replace(timestampRegex, '') : ''))
+                .join('\n')
+                .trimRight();
+        }
+        return content;
     }
 
     /**
@@ -61,7 +82,7 @@ export default class Logger {
         showOutputChannel?: boolean,
         hideLogTypePrefix?: boolean
     ): void {
-        this.handleMessage(outputChannel, message, Level.DEBUG, showNotification, showOutputChannel, hideLogTypePrefix);
+        Logger.handleMessage(outputChannel, message, Level.DEBUG, showNotification, showOutputChannel, hideLogTypePrefix);
     }
 
     /**
@@ -77,7 +98,7 @@ export default class Logger {
         showNotification?: boolean,
         showOutputChannel?: boolean
     ): void {
-        this.handleMessage(outputChannel, message, Level.ERROR, showNotification, showOutputChannel);
+        Logger.handleMessage(outputChannel, message, Level.ERROR, showNotification, showOutputChannel);
     }
 
     /**
@@ -93,7 +114,7 @@ export default class Logger {
         showNotification?: boolean,
         showOutputChannel?: boolean
     ): void {
-        this.handleMessage(outputChannel, message, Level.INFO, showNotification, showOutputChannel);
+        Logger.handleMessage(outputChannel, message, Level.INFO, showNotification, showOutputChannel);
     }
 
     /**
@@ -109,7 +130,7 @@ export default class Logger {
         showNotification?: boolean,
         showOutputChannel?: boolean
     ): void {
-        this.handleMessage(outputChannel, message, Level.SUCCESS, showNotification, showOutputChannel);
+        Logger.handleMessage(outputChannel, message, Level.SUCCESS, showNotification, showOutputChannel);
     }
 
     /**
@@ -125,7 +146,7 @@ export default class Logger {
         showNotification?: boolean,
         showOutputChannel?: boolean
     ): void {
-        this.handleMessage(outputChannel, message, Level.WARN, showNotification, showOutputChannel);
+        Logger.handleMessage(outputChannel, message, Level.WARN, showNotification, showOutputChannel);
     }
 
     /**
@@ -150,7 +171,7 @@ export default class Logger {
             return;
         }
 
-        if (showNotification) {
+        if (message && showNotification) {
             switch (logLevel) {
                 case Level.DEBUG:
                 case Level.INFO:
@@ -168,8 +189,8 @@ export default class Logger {
             }
         }
 
-        const channel = outputChannel || this.mainOutputChannel;
-        this.logToOutputChannel(channel, message, logLevel, showOutputChannel, hideLogTypePrefix);
+        const channel = outputChannel || Logger.mainOutputChannel;
+        Logger.logToOutputChannel(channel, message, logLevel, showOutputChannel, hideLogTypePrefix);
     }
 
     /**
@@ -192,14 +213,40 @@ export default class Logger {
         }
 
         const levelBufferWhitespace = new Array(Level[3].length - Level[logLevel].length + 1).join(' ');
-        const messageBufferWhitespace = message.includes('\n') ? '\n' : '  ';
+        const messageBufferWhitespace = message.trim().includes('\n') && message[0] !== '\n' ? '\n' : '  ';
         if (showOutputChannel) {
             outputChannel.show(true);
         }
         if (hideLogTypePrefix) {
             outputChannel.appendLine(message);
         } else {
-            outputChannel.appendLine(util.format('[%s][%s]%s%s%s', moment().format(), Level[logLevel], levelBufferWhitespace, messageBufferWhitespace, message));
+            outputChannel.appendLine(util.format('[%s][%s]%s%s%s', this.getCurrentDateTime(), Level[logLevel], levelBufferWhitespace, messageBufferWhitespace, message));
         }
+    }
+
+    /**
+     * Get the current date and time in ISO 8601 format (e.g., `2000-01-01T12:00:00-07:00`)
+     */
+    private static getCurrentDateTime(): string {
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = this.pad(date.getMonth() + 1);
+        const day = this.pad(date.getDate());
+        const hours = this.pad(date.getHours());
+        const minutes = this.pad(date.getMinutes());
+        const seconds = this.pad(date.getSeconds());
+        const timezoneOffset = -date.getTimezoneOffset();
+        const diff = timezoneOffset >= 0 ? '+' : '-';
+        const timezone = `${this.pad(timezoneOffset / 60)}:${this.pad(timezoneOffset % 60)}`;
+        return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${diff}${timezone}`;
+    }
+
+    /**
+     * Pad a number
+     * @param num    The number to pad
+     */
+    private static pad(num: number): string {
+        const norm = Math.floor(Math.abs(num));
+        return (norm < 10 ? '0' : '') + norm;
     }
 }

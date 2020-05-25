@@ -32,53 +32,17 @@ export default class SetConfigSettingCommand implements BaseCommand {
         let name = null;
         let prompt = null;
         let placeHolder = null;
-        let options = null;
         switch (this.commandName) {
-            case Commands.SET_SERVICE_CREDENTIALS:
-                name = Settings.STREAMING_ANALYTICS_CREDENTIALS;
-                prompt = 'Provide credentials for an IBM Streaming Analytics service';
-                placeHolder = '{ "apikey": ..., "v2_rest_url": ... }';
-                break;
-            case Commands.SET_ICP4D_URL:
-                name = Settings.ICP4D_URL;
-                prompt = 'Provide your IBM Cloud Pak for Data URL';
-                placeHolder = 'https://HOST:PORT';
-                break;
-            case Commands.SET_TOOLKITS_PATH:
-                name = Settings.TOOLKIT_PATHS;
-                prompt = 'Provide paths to directories, comma or semicolon separated, containing IBM Streams toolkits';
+            case Commands.ENVIRONMENT.TOOLKIT_PATHS_SET:
+                name = Settings.ENV_TOOLKIT_PATHS;
+                prompt = 'Provide paths to directories, comma or semicolon separated, containing additional IBM Streams toolkits';
                 placeHolder = '/path/to/first/toolkits/directory;/path/to/second/toolkits/directory';
-                break;
-            case Commands.SET_TARGET_VERSION:
-                name = Settings.TARGET_VERSION;
-                placeHolder = 'Select the IBM Streams version to target for builds and submissions';
-                options = Object.keys(Settings.TARGET_VERSION_OPTION).map((key: string) => Settings.TARGET_VERSION_OPTION[key]);
                 break;
             default:
                 break;
         }
 
         if (name && placeHolder) {
-            if (options) {
-                return window.showQuickPick(options, {
-                    ignoreFocusOut: true,
-                    placeHolder
-                }).then(async (selection: string) => {
-                    if (typeof selection === 'string') {
-                        try {
-                            await Configuration.setSetting(name, selection);
-                            const settingValue = Configuration.getSetting(name);
-                            if (callbackFn) {
-                                callbackFn(settingValue);
-                            }
-                            return settingValue;
-                        } catch (error) {
-                            throw error;
-                        }
-                    }
-                });
-            }
-
             return window.showInputBox({
                 ignoreFocusOut: true,
                 prompt,
@@ -88,9 +52,6 @@ export default class SetConfigSettingCommand implements BaseCommand {
                     let inputValue = input;
                     try {
                         inputValue = input.trim();
-                        if (this.commandName === Commands.SET_SERVICE_CREDENTIALS) {
-                            inputValue = JSON.parse(inputValue);
-                        }
                         if (inputValue === 'null') {
                             inputValue = null;
                         }
@@ -104,6 +65,7 @@ export default class SetConfigSettingCommand implements BaseCommand {
                         throw error;
                     }
                 }
+                return null;
             });
         }
 

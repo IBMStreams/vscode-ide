@@ -1,8 +1,10 @@
-import * as _ from 'lodash';
+import _each from 'lodash/each';
+import _find from 'lodash/find';
+import _some from 'lodash/some';
 import {
     Diagnostic, DiagnosticChangeEvent, DiagnosticCollection, DiagnosticSeverity, ExtensionContext, languages, Range, TextDocument, TextDocumentChangeEvent, TextEditor, TextEditorDecorationType, Uri, window, workspace
 } from 'vscode';
-import { Constants } from '.';
+import { EXTENSION_NAME, LANGUAGE_SPL } from '.';
 
 /**
  * Manages diagnostics for code errors
@@ -17,7 +19,7 @@ export default class Diagnostics {
      * @param context    The extension context
      */
     public static configure(context: ExtensionContext): void {
-        this.diagnosticCollection = languages.createDiagnosticCollection('spl');
+        this.diagnosticCollection = languages.createDiagnosticCollection(LANGUAGE_SPL);
         context.subscriptions.push(this.diagnosticCollection);
 
         this.handleEditorDecorations(context);
@@ -35,18 +37,16 @@ export default class Diagnostics {
 
     /**
      * Lint source file(s)
-     * @param regExp      The regular expression to use for matching
-     * @param appRoot     The application root path
      * @param messages    The build messages to use for matching
      */
-    public static lintFiles(regExp: RegExp, appRoot: string, messages: string[]): void {
+    public static lintFiles(messages: string[]): void {
         const diagnosticMap = new Map<Uri, Diagnostic[]>();
 
-        _.each(messages, (message: any) => {
-            const document = _.find(workspace.textDocuments, (doc: TextDocument) => doc.fileName === message.file);
+        _each(messages, (message: any) => {
+            const document = _find(workspace.textDocuments, (doc: TextDocument) => doc.fileName === message.file);
             if (document) {
                 let diagnostics = [];
-                if (!_.some(Array.from(diagnosticMap.keys()), (uri: Uri) => uri.fsPath === document.uri.fsPath)) {
+                if (!_some(Array.from(diagnosticMap.keys()), (uri: Uri) => uri.fsPath === document.uri.fsPath)) {
                     diagnosticMap.set(document.uri, diagnostics);
                 } else {
                     diagnostics = diagnosticMap.get(document.uri);
@@ -56,7 +56,7 @@ export default class Diagnostics {
                     severity: message.severity,
                     range: new Range(message.line - 1, message.column - 1, message.line - 1, message.column - 1),
                     message: `${message.code} ${message.description}`,
-                    source: Constants.IBM_STREAMS
+                    source: EXTENSION_NAME
                 };
                 diagnostics.push(diagnostic);
             }
@@ -81,7 +81,7 @@ export default class Diagnostics {
         });
         this.errorDecorationType = createDecoration(context.asAbsolutePath('images/markers/error-light.svg'), context.asAbsolutePath('images/markers/error-dark.svg'));
 
-        const isSplFile = (): boolean => this.activeEditor && this.activeEditor.document.languageId === 'spl';
+        const isSplFile = (): boolean => this.activeEditor && this.activeEditor.document.languageId === LANGUAGE_SPL;
 
         if (isSplFile()) {
             this.updateDecorations();

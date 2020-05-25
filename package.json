@@ -2,7 +2,7 @@
   "name": "ibm-streams",
   "displayName": "IBM Streams",
   "description": "IBM Streams Support for Visual Studio Code [Beta]",
-  "version": "0.5.0",
+  "version": "0.9.0",
   "publisher": "IBM",
   "license": "Apache-2.0",
   "icon": "images/ibm-streams.png",
@@ -12,11 +12,10 @@
     "url": "https://github.com/IBMStreams/vscode-ide.git"
   },
   "bugs": {
-    "url": "https://github.com/IBMStreams/vscode-ide/issues",
-    "email": "nicholls@ca.ibm.com"
+    "url": "https://github.com/IBMStreams/vscode-ide/issues"
   },
   "engines": {
-    "vscode": "^1.30.2"
+    "vscode": "^1.38.0"
   },
   "categories": [
     "Programming Languages",
@@ -39,39 +38,46 @@
       "type": "object",
       "title": "IBM Streams",
       "properties": {
-        "ibm-streams.icp4d.url": {
-          "type": "string",
-          "default": "https://HOST:PORT",
-          "markdownDescription": "IBM Cloud Pak for Data URL. For example, if your web client URL is `https://123.45.67.89:31843/zen`, enter `https://123.45.67.89:31843`."
+        "ibm-streams.environment.refreshInterval": {
+          "type": "number",
+          "default": 5,
+          "minimum": 1,
+          "description": "Interval in minutes at which an IBM Streams instance is automatically refreshed."
         },
-        "ibm-streams.icp4d.useMasterNodeHost": {
-          "type": "boolean",
-          "default": true,
-          "description": "Use the host specified in the IBM Cloud Pak for Data URL for builds."
-        },
-        "ibm-streams.requestTimeout": {
+        "ibm-streams.environment.timeoutForRequests": {
           "type": "number",
           "default": 30,
-          "description": "Number of seconds before a request times out."
+          "minimum": 1,
+          "description": "Timeout in seconds before a request times out."
         },
-        "ibm-streams.streamingAnalytics.credentials": {
-          "type": "object",
-          "default": null,
-          "description": "Credentials for an IBM Streaming Analytics service."
-        },
-        "ibm-streams.targetVersion": {
-          "type": "string",
-          "enum": [
-            "IBM Cloud: Streaming Analytics service",
-            "IBM Cloud Pak for Data: Streams add-on"
-          ],
-          "default": "IBM Cloud: Streaming Analytics service",
-          "description": "Streams version to target for application builds and submissions."
-        },
-        "ibm-streams.toolkitPaths": {
+        "ibm-streams.environment.toolkitPaths": {
           "type": "string",
           "default": "/path/to/toolkits/directory",
-          "description": "Paths to directories, comma or semicolon separated, containing IBM Streams toolkits."
+          "description": "Paths to directories, comma or semicolon separated, containing additional IBM Streams toolkits."
+        },
+        "ibm-streams.logLevel": {
+          "type": "string",
+          "enum": [
+            "off",
+            "debug"
+          ],
+          "default": "off",
+          "description": "Log level for the extension."
+        },
+        "ibm-streams.server.mode": {
+          "type": "string",
+          "enum": [
+            "embedded",
+            "socket"
+          ],
+          "default": "embedded",
+          "markdownDescription": "Controls how the SPL language server runs. Running the server in `embedded` mode is recommended unless you are experiencing issues with SPL language features."
+        },
+        "ibm-streams.server.port": {
+          "type": "number",
+          "default": 5007,
+          "minimum": 1000,
+          "markdownDescription": "The port where the SPL language server runs when `#ibm-streams.server.mode#` is `socket`."
         },
         "ibm-streams.trace.server": {
           "type": "string",
@@ -91,58 +97,8 @@
         "category": "IBM Streams"
       },
       {
-        "command": "ibm-streams.icp4d.openConsole",
-        "title": "Open IBM Streams Console",
-        "category": "IBM Streams"
-      },
-      {
-        "command": "ibm-streams.icp4d.openDashboard",
-        "title": "Open IBM Cloud Pak for Data Dashboard",
-        "category": "IBM Streams"
-      },
-      {
-        "command": "ibm-streams.icp4d.setUrl",
-        "title": "Set IBM Cloud Pak for Data URL",
-        "category": "IBM Streams"
-      },
-      {
         "command": "ibm-streams.removeOutputChannels",
         "title": "Remove Build Output Channels",
-        "category": "IBM Streams"
-      },
-      {
-        "command": "ibm-streams.setTargetVersion",
-        "title": "Set IBM Streams Target Version",
-        "category": "IBM Streams"
-      },
-      {
-        "command": "ibm-streams.streamingAnalytics.openConsole",
-        "title": "Open IBM Streaming Analytics Console",
-        "category": "IBM Streams"
-      },
-      {
-        "command": "ibm-streams.streamingAnalytics.openDashboard",
-        "title": "Open IBM Cloud Dashboard",
-        "category": "IBM Streams"
-      },
-      {
-        "command": "ibm-streams.streamingAnalytics.setServiceCredentials",
-        "title": "Set IBM Streaming Analytics Service Credentials",
-        "category": "IBM Streams"
-      },
-      {
-        "command": "ibm-streams.toolkits.list",
-        "title": "List available IBM Streams toolkits",
-        "category": "IBM Streams"
-      },
-      {
-        "command": "ibm-streams.toolkits.refresh",
-        "title": "Refresh IBM Streams Toolkits",
-        "category": "IBM Streams"
-      },
-      {
-        "command": "ibm-streams.toolkits.setPaths",
-        "title": "Set IBM Streams Toolkit Paths",
         "category": "IBM Streams"
       },
       {
@@ -169,6 +125,204 @@
         "command": "ibm-streams.build.submit",
         "title": "Submit Job",
         "category": "IBM Streams"
+      },
+      {
+        "command": "ibm-streams.environment.cloudPakForData.openConsole",
+        "title": "Open IBM Streams Console",
+        "category": "IBM Streams"
+      },
+      {
+        "command": "ibm-streams.environment.cloudPakForData.openDashboard",
+        "title": "Open IBM Cloud Pak for Data Dashboard",
+        "category": "IBM Streams"
+      },
+      {
+        "command": "ibm-streams.environment.streamingAnalytics.openConsole",
+        "title": "Open IBM Streaming Analytics Console",
+        "category": "IBM Streams"
+      },
+      {
+        "command": "ibm-streams.environment.streamingAnalytics.openDashboard",
+        "title": "Open IBM Cloud Dashboard",
+        "category": "IBM Streams"
+      },
+      {
+        "command": "ibm-streams.environment.streamsStandalone.openConsole",
+        "title": "Open IBM Streams Console",
+        "category": "IBM Streams"
+      },
+      {
+        "command": "ibm-streams.environment.showJobGraph",
+        "title": "Show Job Graph",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/branch.svg",
+          "dark": "images/icons/dark/branch.svg"
+        }
+      },
+      {
+        "command": "ibm-streams.environment.setToolkitPaths",
+        "title": "Set IBM Streams Toolkit Paths",
+        "category": "IBM Streams"
+      },
+      {
+        "command": "ibm-streams.environment.toolkits.list",
+        "title": "List Available IBM Streams Toolkits",
+        "category": "IBM Streams"
+      },
+      {
+        "command": "ibm-streams.environment.toolkits.refresh",
+        "title": "Refresh IBM Streams Toolkits",
+        "category": "IBM Streams"
+      },
+      {
+        "command": "ibm-streams.view.streamsExplorer.streamsInstances.addInstance",
+        "title": "Add Instance",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/add--alt.svg",
+          "dark": "images/icons/dark/add--alt.svg"
+        }
+      },
+      {
+        "command": "ibm-streams.view.streamsExplorer.streamsInstances.removeInstances",
+        "title": "Remove Instances",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/subtract--alt.svg",
+          "dark": "images/icons/dark/subtract--alt.svg"
+        }
+      },
+      {
+        "command": "ibm-streams.view.streamsExplorer.streamsInstances.refreshInstances",
+        "title": "Refresh Instances",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/renew.svg",
+          "dark": "images/icons/dark/renew.svg"
+        }
+      },
+      {
+        "command": "ibm-streams.view.streamsExplorer.streamsInstances.instance.authenticate",
+        "title": "Authenticate",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/login.svg",
+          "dark": "images/icons/dark/login.svg"
+        }
+      },
+      {
+        "command": "ibm-streams.view.streamsExplorer.streamsInstances.instance.openCpdDetails",
+        "title": "Open Cloud Pak for Data Instance Details",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/information.svg",
+          "dark": "images/icons/dark/information.svg"
+        }
+      },
+      {
+        "command": "ibm-streams.view.streamsExplorer.streamsInstances.instance.openConsole",
+        "title": "Open Streams Console",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/dashboard.svg",
+          "dark": "images/icons/dark/dashboard.svg"
+        }
+      },
+      {
+        "command": "ibm-streams.view.streamsExplorer.streamsInstances.instance.setDefault",
+        "title": "Set Instance as Default",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/checkmark--outline.svg",
+          "dark": "images/icons/dark/checkmark--outline.svg"
+        }
+      },
+      {
+        "command": "ibm-streams.view.streamsExplorer.streamsInstances.instance.remove",
+        "title": "Remove Instance",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/subtract--alt.svg",
+          "dark": "images/icons/dark/subtract--alt.svg"
+        }
+      },
+      {
+        "command": "ibm-streams.view.streamsExplorer.streamsInstances.instance.refresh",
+        "title": "Refresh Instance",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/renew.svg",
+          "dark": "images/icons/dark/renew.svg"
+        }
+      },
+      {
+        "command": "ibm-streams.view.streamsExplorer.streamsInstances.job.openCpdDetails",
+        "title": "Open Cloud Pak for Data Job Details",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/information.svg",
+          "dark": "images/icons/dark/information.svg"
+        }
+      },
+      {
+        "command": "ibm-streams.view.streamsExplorer.streamsInstances.job.openCpdProject",
+        "title": "Open Cloud Pak for Data Project",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/grid.svg",
+          "dark": "images/icons/dark/grid.svg"
+        }
+      },
+      {
+        "command": "ibm-streams.view.streamsExplorer.streamsInstances.job.downloadLogs",
+        "title": "Download Job Logs",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/document--download.svg",
+          "dark": "images/icons/dark/document--download.svg"
+        }
+      },
+      {
+        "command": "ibm-streams.view.streamsExplorer.streamsInstances.job.cancel",
+        "title": "Cancel Job",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/delete.svg",
+          "dark": "images/icons/dark/delete.svg"
+        }
+      },
+      {
+        "command": "ibm-streams.view.streamsExplorer.streamsDetails.showDetailsForItem",
+        "title": "Show Details for Item",
+        "category": "IBM Streams"
+      },
+      {
+        "command": "ibm-streams.view.streamsExplorer.streamsDetails.copyToClipboard",
+        "title": "Copy to Clipboard",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/copy.svg",
+          "dark": "images/icons/dark/copy.svg"
+        }
+      },
+      {
+        "command": "ibm-streams.view.streamsExplorer.streamsToolkits.refresh",
+        "title": "Refresh Toolkits",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/renew.svg",
+          "dark": "images/icons/dark/renew.svg"
+        }
+      },
+      {
+        "command": "ibm-streams.view.streamsExplorer.streamsToolkits.editLocalToolkits",
+        "title": "Edit Local Toolkits",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/edit.svg",
+          "dark": "images/icons/dark/edit.svg"
+        }
       }
     ],
     "configurationDefaults": {
@@ -213,43 +367,7 @@
           "command": "ibm-streams.createApplication"
         },
         {
-          "command": "ibm-streams.icp4d.openConsole",
-          "when": "config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'"
-        },
-        {
-          "command": "ibm-streams.icp4d.openDashboard",
-          "when": "config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'"
-        },
-        {
-          "command": "ibm-streams.icp4d.setUrl",
-          "when": "config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'"
-        },
-        {
           "command": "ibm-streams.removeOutputChannels"
-        },
-        {
-          "command": "ibm-streams.setTargetVersion"
-        },
-        {
-          "command": "ibm-streams.streamingAnalytics.openConsole",
-          "when": "config.ibm-streams.targetVersion == 'IBM Cloud: Streaming Analytics service'"
-        },
-        {
-          "command": "ibm-streams.streamingAnalytics.openDashboard",
-          "when": "config.ibm-streams.targetVersion == 'IBM Cloud: Streaming Analytics service'"
-        },
-        {
-          "command": "ibm-streams.streamingAnalytics.setServiceCredentials",
-          "when": "config.ibm-streams.targetVersion == 'IBM Cloud: Streaming Analytics service'"
-        },
-        {
-          "command": "ibm-streams.toolkits.list"
-        },
-        {
-          "command": "ibm-streams.toolkits.refresh"
-        },
-        {
-          "command": "ibm-streams.toolkits.setPaths"
         },
         {
           "command": "ibm-streams.build.appDownload",
@@ -270,6 +388,104 @@
         {
           "command": "ibm-streams.build.submit",
           "when": "resourceExtname == .sab"
+        },
+        {
+          "command": "ibm-streams.environment.cloudPakForData.openConsole",
+          "when": "defaultInstanceEnv == 'v5_cpd' && consoleEnabled == true"
+        },
+        {
+          "command": "ibm-streams.environment.cloudPakForData.openDashboard",
+          "when": "defaultInstanceEnv == 'v5_cpd'"
+        },
+        {
+          "command": "ibm-streams.environment.streamingAnalytics.openConsole",
+          "when": "defaultInstanceEnv == 'v4_streamingAnalytics'"
+        },
+        {
+          "command": "ibm-streams.environment.streamingAnalytics.openDashboard",
+          "when": "defaultInstanceEnv == 'v4_streamingAnalytics'"
+        },
+        {
+          "command": "ibm-streams.environment.streamsStandalone.openConsole",
+          "when": "defaultInstanceEnv == 'v5_standalone'"
+        },
+        {
+          "command": "ibm-streams.environment.showJobGraph",
+          "when": "defaultInstanceEnv =~ /(v5_cpd|v5_standalone)/"
+        },
+        {
+          "command": "ibm-streams.environment.setToolkitPaths"
+        },
+        {
+          "command": "ibm-streams.environment.toolkits.list"
+        },
+        {
+          "command": "ibm-streams.environment.toolkits.refresh"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.addInstance"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.removeInstances"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.refreshInstances"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.instance.authenticate",
+          "when": "false"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.instance.openCpdDetails",
+          "when": "false"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.instance.openConsole",
+          "when": "false"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.instance.setDefault",
+          "when": "false"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.instance.remove",
+          "when": "false"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.instance.refresh",
+          "when": "false"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.job.openCpdDetails",
+          "when": "false"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.job.openCpdProject",
+          "when": "false"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.job.downloadLogs",
+          "when": "false"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.job.cancel",
+          "when": "false"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsDetails.showDetailsForItem",
+          "when": "false"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsDetails.copyToClipboard",
+          "when": "false"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsToolkits.refresh",
+          "when": "false"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsToolkits.editLocalToolkits",
+          "when": "false"
         }
       ],
       "explorer/context": [
@@ -303,44 +519,54 @@
           "group": "STREAMS@4"
         },
         {
-          "command": "ibm-streams.icp4d.openDashboard",
-          "when": "resourceLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'",
+          "command": "ibm-streams.environment.cloudPakForData.openDashboard",
+          "when": "resourceLangId =~ /(spl|makefile)/ && defaultInstanceEnv == 'v5_cpd'",
           "group": "STREAMS2@1"
         },
         {
-          "command": "ibm-streams.icp4d.openConsole",
-          "when": "resourceLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'",
+          "command": "ibm-streams.environment.cloudPakForData.openConsole",
+          "when": "resourceLangId =~ /(spl|makefile)/ && defaultInstanceEnv == 'v5_cpd' && consoleEnabled == true",
           "group": "STREAMS2@2"
         },
         {
-          "command": "ibm-streams.streamingAnalytics.openDashboard",
-          "when": "resourceLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud: Streaming Analytics service'",
+          "command": "ibm-streams.environment.streamingAnalytics.openDashboard",
+          "when": "resourceLangId =~ /(spl|makefile)/ && defaultInstanceEnv == 'v4_streamingAnalytics'",
           "group": "STREAMS2@1"
         },
         {
-          "command": "ibm-streams.streamingAnalytics.openConsole",
-          "when": "resourceLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud: Streaming Analytics service'",
+          "command": "ibm-streams.environment.streamingAnalytics.openConsole",
+          "when": "resourceLangId =~ /(spl|makefile)/ && defaultInstanceEnv == 'v4_streamingAnalytics'",
           "group": "STREAMS2@2"
         },
         {
-          "command": "ibm-streams.icp4d.openDashboard",
-          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'",
+          "command": "ibm-streams.environment.streamsStandalone.openConsole",
+          "when": "resourceLangId =~ /(spl|makefile)/ && defaultInstanceEnv == 'v5_standalone'",
           "group": "STREAMS2@1"
         },
         {
-          "command": "ibm-streams.icp4d.openConsole",
-          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'",
-          "group": "STREAMS2@2"
-        },
-        {
-          "command": "ibm-streams.streamingAnalytics.openDashboard",
-          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud: Streaming Analytics service'",
+          "command": "ibm-streams.environment.cloudPakForData.openDashboard",
+          "when": "resourceExtname == .sab && defaultInstanceEnv == 'v5_cpd'",
           "group": "STREAMS2@1"
         },
         {
-          "command": "ibm-streams.streamingAnalytics.openConsole",
-          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud: Streaming Analytics service'",
+          "command": "ibm-streams.environment.cloudPakForData.openConsole",
+          "when": "resourceExtname == .sab && defaultInstanceEnv == 'v5_cpd' && consoleEnabled == true",
           "group": "STREAMS2@2"
+        },
+        {
+          "command": "ibm-streams.environment.streamingAnalytics.openDashboard",
+          "when": "resourceExtname == .sab && defaultInstanceEnv == 'v4_streamingAnalytics'",
+          "group": "STREAMS2@1"
+        },
+        {
+          "command": "ibm-streams.environment.streamingAnalytics.openConsole",
+          "when": "resourceExtname == .sab && defaultInstanceEnv == 'v4_streamingAnalytics'",
+          "group": "STREAMS2@2"
+        },
+        {
+          "command": "ibm-streams.environment.streamsStandalone.openConsole",
+          "when": "resourceExtname == .sab && defaultInstanceEnv == 'v5_standalone'",
+          "group": "STREAMS2@1"
         }
       ],
       "editor/context": [
@@ -374,44 +600,54 @@
           "group": "STREAMS@4"
         },
         {
-          "command": "ibm-streams.icp4d.openDashboard",
-          "when": "editorLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'",
+          "command": "ibm-streams.environment.cloudPakForData.openDashboard",
+          "when": "editorLangId =~ /(spl|makefile)/ && defaultInstanceEnv == 'v5_cpd'",
           "group": "STREAMS2@1"
         },
         {
-          "command": "ibm-streams.icp4d.openConsole",
-          "when": "editorLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'",
+          "command": "ibm-streams.environment.cloudPakForData.openConsole",
+          "when": "editorLangId =~ /(spl|makefile)/ && defaultInstanceEnv == 'v5_cpd' && consoleEnabled == true",
           "group": "STREAMS2@2"
         },
         {
-          "command": "ibm-streams.streamingAnalytics.openDashboard",
-          "when": "editorLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud: Streaming Analytics service'",
+          "command": "ibm-streams.environment.streamingAnalytics.openDashboard",
+          "when": "editorLangId =~ /(spl|makefile)/ && defaultInstanceEnv == 'v4_streamingAnalytics'",
           "group": "STREAMS2@1"
         },
         {
-          "command": "ibm-streams.streamingAnalytics.openConsole",
-          "when": "editorLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud: Streaming Analytics service'",
+          "command": "ibm-streams.environment.streamingAnalytics.openConsole",
+          "when": "editorLangId =~ /(spl|makefile)/ && defaultInstanceEnv == 'v4_streamingAnalytics'",
           "group": "STREAMS2@2"
         },
         {
-          "command": "ibm-streams.icp4d.openDashboard",
-          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'",
+          "command": "ibm-streams.environment.streamsStandalone.openConsole",
+          "when": "editorLangId =~ /(spl|makefile)/ && defaultInstanceEnv == 'v5_standalone'",
           "group": "STREAMS2@1"
         },
         {
-          "command": "ibm-streams.icp4d.openConsole",
-          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'",
-          "group": "STREAMS2@2"
-        },
-        {
-          "command": "ibm-streams.streamingAnalytics.openDashboard",
-          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud: Streaming Analytics service'",
+          "command": "ibm-streams.environment.cloudPakForData.openDashboard",
+          "when": "resourceExtname == .sab && defaultInstanceEnv == 'v5_cpd'",
           "group": "STREAMS2@1"
         },
         {
-          "command": "ibm-streams.streamingAnalytics.openConsole",
-          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud: Streaming Analytics service'",
+          "command": "ibm-streams.environment.cloudPakForData.openConsole",
+          "when": "resourceExtname == .sab && defaultInstanceEnv == 'v5_cpd' && consoleEnabled == true",
           "group": "STREAMS2@2"
+        },
+        {
+          "command": "ibm-streams.environment.streamingAnalytics.openDashboard",
+          "when": "resourceExtname == .sab && defaultInstanceEnv == 'v4_streamingAnalytics'",
+          "group": "STREAMS2@1"
+        },
+        {
+          "command": "ibm-streams.environment.streamingAnalytics.openConsole",
+          "when": "resourceExtname == .sab && defaultInstanceEnv == 'v4_streamingAnalytics'",
+          "group": "STREAMS2@2"
+        },
+        {
+          "command": "ibm-streams.environment.streamsStandalone.openConsole",
+          "when": "resourceExtname == .sab && defaultInstanceEnv == 'v5_standalone'",
+          "group": "STREAMS2@1"
         }
       ],
       "editor/title/context": [
@@ -445,44 +681,147 @@
           "group": "STREAMS@4"
         },
         {
-          "command": "ibm-streams.icp4d.openDashboard",
-          "when": "resourceLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'",
+          "command": "ibm-streams.environment.cloudPakForData.openDashboard",
+          "when": "resourceLangId =~ /(spl|makefile)/ && defaultInstanceEnv == 'v5_cpd'",
           "group": "STREAMS2@1"
         },
         {
-          "command": "ibm-streams.icp4d.openConsole",
-          "when": "resourceLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'",
+          "command": "ibm-streams.environment.cloudPakForData.openConsole",
+          "when": "resourceLangId =~ /(spl|makefile)/ && defaultInstanceEnv == 'v5_cpd' && consoleEnabled == true",
           "group": "STREAMS2@2"
         },
         {
-          "command": "ibm-streams.streamingAnalytics.openDashboard",
-          "when": "resourceLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud: Streaming Analytics service'",
+          "command": "ibm-streams.environment.streamingAnalytics.openDashboard",
+          "when": "resourceLangId =~ /(spl|makefile)/ && defaultInstanceEnv == 'v4_streamingAnalytics'",
           "group": "STREAMS2@1"
         },
         {
-          "command": "ibm-streams.streamingAnalytics.openConsole",
-          "when": "resourceLangId =~ /(spl|makefile)/ && config.ibm-streams.targetVersion == 'IBM Cloud: Streaming Analytics service'",
+          "command": "ibm-streams.environment.streamingAnalytics.openConsole",
+          "when": "resourceLangId =~ /(spl|makefile)/ && defaultInstanceEnv == 'v4_streamingAnalytics'",
           "group": "STREAMS2@2"
         },
         {
-          "command": "ibm-streams.icp4d.openDashboard",
-          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'",
+          "command": "ibm-streams.environment.streamsStandalone.openConsole",
+          "when": "resourceLangId =~ /(spl|makefile)/ && defaultInstanceEnv == 'v5_standalone'",
           "group": "STREAMS2@1"
         },
         {
-          "command": "ibm-streams.icp4d.openConsole",
-          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud Pak for Data: Streams add-on'",
-          "group": "STREAMS2@2"
-        },
-        {
-          "command": "ibm-streams.streamingAnalytics.openDashboard",
-          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud: Streaming Analytics service'",
+          "command": "ibm-streams.environment.cloudPakForData.openDashboard",
+          "when": "resourceExtname == .sab && defaultInstanceEnv == 'v5_cpd'",
           "group": "STREAMS2@1"
         },
         {
-          "command": "ibm-streams.streamingAnalytics.openConsole",
-          "when": "resourceExtname == .sab && config.ibm-streams.targetVersion == 'IBM Cloud: Streaming Analytics service'",
+          "command": "ibm-streams.environment.cloudPakForData.openConsole",
+          "when": "resourceExtname == .sab && defaultInstanceEnv == 'v5_cpd' && consoleEnabled == true",
           "group": "STREAMS2@2"
+        },
+        {
+          "command": "ibm-streams.environment.streamingAnalytics.openDashboard",
+          "when": "resourceExtname == .sab && defaultInstanceEnv == 'v4_streamingAnalytics'",
+          "group": "STREAMS2@1"
+        },
+        {
+          "command": "ibm-streams.environment.streamingAnalytics.openConsole",
+          "when": "resourceExtname == .sab && defaultInstanceEnv == 'v4_streamingAnalytics'",
+          "group": "STREAMS2@2"
+        },
+        {
+          "command": "ibm-streams.environment.streamsStandalone.openConsole",
+          "when": "resourceExtname == .sab && defaultInstanceEnv == 'v5_standalone'",
+          "group": "STREAMS2@1"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.refreshInstances",
+          "when": "view == streamsInstances",
+          "group": "navigation@1"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.addInstance",
+          "when": "view == streamsInstances",
+          "group": "navigation@2"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.removeInstances",
+          "when": "view == streamsInstances",
+          "group": "navigation@3"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsToolkits.refresh",
+          "when": "view == streamsToolkits",
+          "group": "navigation@1"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.instance.authenticate",
+          "when": "view == streamsInstances && viewItem =~ /notAuth_.*_instanceTreeItem/",
+          "group": "inline@1"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.instance.setDefault",
+          "when": "view == streamsInstances && viewItem =~ /notDefault_.*_instanceTreeItem/",
+          "group": "inline@2"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.instance.refresh",
+          "when": "view == streamsInstances && viewItem =~ /auth_.*_instanceTreeItem/",
+          "group": "inline@3"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.instance.remove",
+          "when": "view == streamsInstances && viewItem =~ /instanceTreeItem/",
+          "group": "inline@4"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.instance.openCpdDetails",
+          "when": "view == streamsInstances && viewItem =~ /v5_cpd_instanceTreeItem/",
+          "group": "inline@5"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.instance.openConsole",
+          "when": "view == streamsInstances && viewItem =~ /consoleEnabled_.*_instanceTreeItem/",
+          "group": "inline@6"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.job.openCpdDetails",
+          "when": "view == streamsInstances && viewItem =~ /v5_cpd_.*jobTreeItem/",
+          "group": "inline@1"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.job.openCpdProject",
+          "when": "view == streamsInstances && viewItem == v5_cpd_cpdProject_jobTreeItem",
+          "group": "inline@2"
+        },
+        {
+          "command": "ibm-streams.environment.showJobGraph",
+          "when": "view == streamsInstances && viewItem =~ /(v5_cpd_.*jobTreeItem|v5_standalone_jobTreeItem)/",
+          "group": "inline@3"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.job.downloadLogs",
+          "when": "view == streamsInstances && viewItem =~ /jobTreeItem/",
+          "group": "inline@4"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.job.cancel",
+          "when": "view == streamsInstances && viewItem =~ /jobTreeItem/",
+          "group": "inline@5"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsDetails.showDetailsForItem",
+          "when": "view == streamsDetails && viewItem == detailTreeItem"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsDetails.copyToClipboard",
+          "when": "view == streamsDetails && viewItem == detailTreeItem",
+          "group": "inline@1"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsToolkits.editLocalToolkits",
+          "when": "view == streamsToolkits && viewItem == local_toolkitTreeItem",
+          "group": "inline@1"
         }
       ]
     },
@@ -497,105 +836,140 @@
         "uiTheme": "vs-dark",
         "path": "./themes/Streams_Dark.json"
       }
-    ]
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "streams-explorer",
+          "title": "Streams Explorer",
+          "icon": "images/ibm-streams-white.svg"
+        }
+      ]
+    },
+    "views": {
+      "streams-explorer": [
+        {
+          "id": "streamsInstances",
+          "name": "Instances"
+        },
+        {
+          "id": "streamsDetails",
+          "name": "Details"
+        },
+        {
+          "id": "streamsToolkits",
+          "name": "Toolkits"
+        },
+        {
+          "id": "streamsHelpfulResources",
+          "name": "Helpful Resources"
+        }
+      ]
+    }
   },
   "devDependencies": {
-    "@babel/cli": "^7.5.5",
-    "@babel/core": "^7.5.5",
+    "@babel/cli": "^7.6.4",
+    "@babel/core": "^7.6.4",
+    "@babel/node": "^7.5.5",
     "@babel/plugin-proposal-class-properties": "^7.5.5",
-    "@babel/plugin-proposal-object-rest-spread": "^7.5.5",
-    "@babel/plugin-transform-runtime": "^7.5.5",
-    "@babel/preset-env": "^7.5.5",
-    "@babel/preset-react": "^7.0.0",
-    "@babel/preset-typescript": "^7.3.3",
-    "@babel/runtime": "^7.5.5",
-    "@types/archiver": "^3.0.0",
-    "@types/chai": "^4.2.1",
-    "@types/clipboardy": "^2.0.1",
-    "@types/extract-zip": "^1.6.2",
+    "@babel/plugin-proposal-object-rest-spread": "^7.6.2",
+    "@babel/plugin-transform-runtime": "^7.6.2",
+    "@babel/polyfill": "^7.4.4",
+    "@babel/preset-env": "^7.6.3",
+    "@babel/preset-react": "^7.6.3",
+    "@babel/preset-typescript": "^7.6.0",
+    "@babel/runtime": "^7.6.3",
+    "@babel/types": "^7.5.5",
+    "@types/chai": "^4.2.3",
     "@types/fs-extra": "^8.0.0",
     "@types/glob": "^7.1.1",
-    "@types/jszip": "^3.1.6",
-    "@types/keytar": "^4.4.0",
-    "@types/lodash": "^4.14.138",
+    "@types/lodash": "^4.14.144",
     "@types/mocha": "^5.2.7",
-    "@types/react": "^16.9.2",
-    "@types/react-dom": "^16.9.0",
-    "@types/react-select": "^3.0.4",
-    "@types/remote-redux-devtools": "^0.5.3",
-    "@types/semver": "^6.0.2",
+    "@types/node": "^12.12.18",
+    "@types/react": "^16.9.5",
+    "@types/react-dom": "^16.9.1",
     "@types/shelljs": "^0.8.5",
-    "@types/sinon": "^7.0.13",
-    "@types/xmldoc": "^1.1.4",
-    "@typescript-eslint/eslint-plugin": "^2.1.0",
-    "@typescript-eslint/parser": "^2.1.0",
+    "@types/sinon": "^7.5.0",
+    "@types/unzipper": "^0.10.2",
+    "@types/vscode": "1.38.0",
+    "@types/webpack": "^4.39.1",
+    "@typescript-eslint/eslint-plugin": "^2.3.3",
+    "@typescript-eslint/parser": "^2.3.3",
     "babel-eslint": "^10.0.3",
     "babel-loader": "^8.0.6",
+    "babel-plugin-dynamic-import-node": "^2.3.0",
+    "babel-plugin-lodash": "^3.3.4",
     "chai": "^4.2.0",
     "css-loader": "^3.2.0",
-    "eslint": "^6.3.0",
+    "eslint": "^6.1.0",
     "eslint-config-airbnb": "^18.0.1",
-    "eslint-import-resolver-webpack": "^0.11.1",
+    "eslint-import-resolver-webpack": "0.12.0",
+    "eslint-plugin-babel": "^5.3.0",
+    "eslint-plugin-compat": "^3.3.0",
     "eslint-plugin-import": "^2.18.2",
     "eslint-plugin-jsx-a11y": "^6.2.3",
-    "eslint-plugin-mocha": "^6.1.0",
+    "eslint-plugin-mocha": "^6.1.1",
+    "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-react": "^7.14.3",
-    "extract-zip": "^1.6.7",
+    "eslint-plugin-react-hooks": "1.7.0",
+    "file-loader": "5.0.2",
     "fs-extra": "^8.1.0",
     "glob": "^7.1.4",
     "html-webpack-plugin": "^3.2.0",
-    "jszip": "^3.2.2",
-    "mocha": "^6.2.0",
+    "mocha": "^6.2.1",
+    "node-sass": "^4.12.0",
+    "npm-run-all": "^4.1.5",
+    "raw-loader": "4.0.0",
     "remote-redux-devtools": "^0.5.16",
-    "remotedev-server": "^0.3.1",
+    "rimraf": "^3.0.0",
+    "sass": "^1.23.3",
+    "sass-loader": "^8.0.0",
     "shelljs": "^0.8.3",
-    "sinon": "^7.4.2",
+    "sinon": "^7.5.0",
+    "source-map-loader": "^0.2.4",
     "style-loader": "^1.0.0",
-    "ts-node": "^8.3.0",
-    "typescript": "^3.6.2",
-    "vsce": "^1.66.0",
-    "vscode": "^1.1.36",
-    "vscode-test": "^1.2.0",
-    "webpack": "^4.39.3",
-    "webpack-cli": "^3.3.8"
+    "ts-node": "^8.4.1",
+    "typescript": "^3.6.4",
+    "unzipper": "^0.10.10",
+    "url-loader": "3.0.0",
+    "vsce": "^1.67.1",
+    "vscode-test": "^1.3.0",
+    "webpack": "4.41.3",
+    "webpack-cli": "^3.3.9"
   },
   "dependencies": {
-    "@ibmstreams/spl-lsp": "0.9.6",
-    "archiver": "^3.0.0",
-    "clipboardy": "^2.0.0",
-    "immutable": "^4.0.0-rc.12",
-    "lodash": "^4.17.13",
-    "moment": "^2.22.2",
+    "@carbon/icons-react": "^10.11.0",
+    "@carbon/themes": "^10.12.0",
+    "@ibmstreams/spl-lsp": "1.0.0",
+    "@streams/common": "0.0.46",
+    "@streams/graph": "0.3.0-rc9",
+    "axios": "^0.19.0",
+    "carbon-components": "^10.12.0",
+    "carbon-components-react": "^7.12.0",
+    "lodash": "^4.17.15",
     "prop-types": "^15.7.2",
     "react": "^16.8.6",
-    "react-bootstrap": "^1.0.0-beta.9",
     "react-dom": "^16.8.6",
-    "react-loading": "^2.0.3",
-    "react-select": "^3.0.4",
-    "redux": "^4.0.1",
-    "redux-observable": "^1.1.0",
-    "request": "^2.88.0",
-    "reselect": "^4.0.0",
-    "rxjs": "^6.4.0",
-    "semver": "^6.0.0",
+    "react-intl": "^4.3.1",
+    "react-redux": "^7.2.0",
     "vscode-languageclient": "^5.2.1",
-    "vscode-languageserver-protocol": "^3.14.1",
-    "xmldoc": "^1.1.2"
+    "vscode-languageserver-protocol": "^3.14.1"
   },
   "scripts": {
-    "clean": "rm -rf dist/ out/",
-    "compile": "webpack --mode development",
-    "installdeps": "rm -rf node_modules && npm install",
-    "lint": "eslint --ext .js,.ts,.d.ts .",
+    "clean": "rimraf dist out",
+    "compile": "npm-run-all clean webpack:dev",
+    "installdeps": "rimraf node_modules && yarn install",
     "lint:fix": "eslint --ext .js,.ts,.d.ts --fix .",
-    "package": "vsce package",
-    "postinstall": "vscode-install",
+    "lint": "eslint --ext .js,.ts,.d.ts .",
+    "package:ls": "npm-run-all clean installdeps && vsce ls --yarn",
+    "package": "npm-run-all clean installdeps && vsce package --yarn",
     "publish": "vsce publish",
-    "remotedev": "remotedev --hostname=localhost --port=8000",
-    "test": "npm run test:compile && node ./out/test/runTest.js",
-    "test:compile": "npm run clean && tsc -p ./ && ts-node test/copyStaticAssets.ts && npm run compile",
+    "test:compile": "yarn run compile && tsc -p ./ && ts-node test/copyStaticAssets.ts",
+    "test": "yarn run test:compile && node ./out/test/runTest.js",
     "typecheck": "tsc --noEmit --skipLibCheck",
-    "vscode:prepublish": "webpack --mode production",
-    "watch": "webpack --mode development --watch"
+    "vscode:prepublish": "yarn run webpack:prod",
+    "webpack:dev": "webpack --mode=development",
+    "webpack:dev-watch": "webpack --mode=development --watch",
+    "webpack:prod": "webpack --mode=production"
   }
 }

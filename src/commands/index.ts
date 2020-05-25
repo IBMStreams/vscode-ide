@@ -1,3 +1,4 @@
+import { PostBuildAction } from '@streams/common';
 import { commands, ExtensionContext } from 'vscode';
 import {
     BuildCommand,
@@ -7,9 +8,10 @@ import {
     OpenLinkCommand,
     RefreshToolkitsCommand,
     RemoveOutputChannelsCommand,
-    SetConfigSettingCommand
+    SetConfigSettingCommand,
+    ShowJobGraphCommand,
+    ShowSubmitJobDialogCommand
 } from '.';
-import { StreamsUtils } from '../build/v5/util';
 import { Logger } from '../utils';
 import * as Commands from './commands';
 
@@ -21,6 +23,8 @@ export { default as OpenLinkCommand } from './openLink';
 export { default as RefreshToolkitsCommand } from './refreshToolkits';
 export { default as RemoveOutputChannelsCommand } from './removeOutputChannels';
 export { default as SetConfigSettingCommand } from './setConfigSetting';
+export { default as ShowJobGraphCommand } from './showJobGraph';
+export { default as ShowSubmitJobDialogCommand } from './showJobSubmitDialog';
 export { Commands };
 
 /**
@@ -29,23 +33,23 @@ export { Commands };
  */
 export function initialize(context: ExtensionContext): void {
     const streamsCommands = new Array<BaseCommand>();
-    streamsCommands.push(new BuildCommand(Commands.BUILD_APP_DOWNLOAD, StreamsUtils.BUILD_ACTION.DOWNLOAD));
-    streamsCommands.push(new BuildCommand(Commands.BUILD_APP_SUBMIT, StreamsUtils.BUILD_ACTION.SUBMIT));
-    streamsCommands.push(new BuildCommand(Commands.BUILD_MAKE_DOWNLOAD, StreamsUtils.BUILD_ACTION.DOWNLOAD));
-    streamsCommands.push(new BuildCommand(Commands.BUILD_MAKE_SUBMIT, StreamsUtils.BUILD_ACTION.SUBMIT));
-    streamsCommands.push(new BuildCommand(Commands.SUBMIT));
     streamsCommands.push(new CreateApplicationCommand());
-    streamsCommands.push(new ListToolkitsCommand());
-    streamsCommands.push(new OpenLinkCommand(Commands.OPEN_CLOUD_DASHBOARD));
-    streamsCommands.push(new OpenLinkCommand(Commands.OPEN_ICP4D_DASHBOARD));
-    streamsCommands.push(new OpenLinkCommand(Commands.OPEN_STREAMING_ANALYTICS_CONSOLE));
-    streamsCommands.push(new OpenLinkCommand(Commands.OPEN_STREAMS_CONSOLE));
-    streamsCommands.push(new RefreshToolkitsCommand());
     streamsCommands.push(new RemoveOutputChannelsCommand());
-    streamsCommands.push(new SetConfigSettingCommand(Commands.SET_ICP4D_URL));
-    streamsCommands.push(new SetConfigSettingCommand(Commands.SET_SERVICE_CREDENTIALS));
-    streamsCommands.push(new SetConfigSettingCommand(Commands.SET_TARGET_VERSION));
-    streamsCommands.push(new SetConfigSettingCommand(Commands.SET_TOOLKITS_PATH));
+    streamsCommands.push(new BuildCommand(Commands.BUILD.APP_DOWNLOAD, PostBuildAction.Download));
+    streamsCommands.push(new BuildCommand(Commands.BUILD.APP_SUBMIT, PostBuildAction.Submit));
+    streamsCommands.push(new BuildCommand(Commands.BUILD.MAKE_DOWNLOAD, PostBuildAction.Download));
+    streamsCommands.push(new BuildCommand(Commands.BUILD.MAKE_SUBMIT, PostBuildAction.Submit));
+    streamsCommands.push(new BuildCommand(Commands.BUILD.SUBMIT));
+    streamsCommands.push(new OpenLinkCommand(Commands.ENVIRONMENT.CPD_OPEN_CONSOLE));
+    streamsCommands.push(new OpenLinkCommand(Commands.ENVIRONMENT.CPD_OPEN_DASHBOARD));
+    streamsCommands.push(new OpenLinkCommand(Commands.ENVIRONMENT.STREAMING_ANALYTICS_OPEN_CONSOLE));
+    streamsCommands.push(new OpenLinkCommand(Commands.ENVIRONMENT.STREAMING_ANALYTICS_OPEN_DASHBOARD));
+    streamsCommands.push(new OpenLinkCommand(Commands.ENVIRONMENT.STREAMS_STANDALONE_OPEN_CONSOLE));
+    streamsCommands.push(new ShowJobGraphCommand());
+    streamsCommands.push(new ShowSubmitJobDialogCommand());
+    streamsCommands.push(new SetConfigSettingCommand(Commands.ENVIRONMENT.TOOLKIT_PATHS_SET));
+    streamsCommands.push(new RefreshToolkitsCommand());
+    streamsCommands.push(new ListToolkitsCommand());
 
     streamsCommands.forEach((command: BaseCommand) => {
         context.subscriptions.push(commands.registerCommand(command.commandName, (...args) => {

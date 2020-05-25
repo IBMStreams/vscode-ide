@@ -1,96 +1,128 @@
-# IBM Streams Support for Visual Studio Code [Beta]
+# IBM Streams support for Visual Studio Code [Beta]
 
-This extension provides support for Streams Processing Language (SPL), a distributed data flow composition language that is used in [IBM Streams](https://www.ibm.com/cloud/streaming-analytics). Powered by the [IBM Streams SPL language server](https://www.npmjs.com/package/@ibmstreams/spl-lsp).
+This extension provides support for [IBM Streams](https://www.ibm.com/cloud/streaming-analytics) within the [Visual Studio Code](https://code.visualstudio.com) editor and works with the following Streams versions.
 
-Requires [Visual Studio Code 1.30.2](https://code.visualstudio.com/updates/v1_30) or later.
+- [__IBM Cloud Pak for Data deployment__](https://www.ibm.com/support/producthub/icpdata/docs/content/SSQNUZ_current/cpd/svc/streams/developing-intro.html): delivers a platform for combining streaming and stored data with AI to build solutions that impact business decisions in real time
+- [__IBM Streams standalone deployment__](https://www.ibm.com/support/knowledgecenter/en/SSCRJU_5.2.0/com.ibm.streams.welcome.doc/doc/kc-homepage.html) (on premises): delivers a programming language and IDE for applications, a runtime system and analytic toolkits to speed development
+- [__IBM Streaming Analytics on IBM Cloud__](https://cloud.ibm.com/docs/services/StreamingAnalytics?topic=StreamingAnalytics-gettingstarted): offers most of the features of IBM Streams on an agile, cloud-based platform
+
+[Visual Studio Code 1.38.0](https://code.visualstudio.com/updates/v1_38) or later is required.
 
 ## Beta
 
 This is the initial public release.
 
-## Setup Instructions
+## Setup instructions
 
-To install the extension, search for __IBM Streams__ in the VS Code [Extension Marketplace](https://code.visualstudio.com/docs/editor/extension-gallery).
+To install the extension, search for __IBM Streams__ in the VS Code [Extension Marketplace](https://marketplace.visualstudio.com/items?itemName=IBM.ibm-streams).
 
-### Build
+### Add Streams instances
 
-You may either build and run your Streams applications on an [IBM Cloud Streaming Analytics service](https://cloud.ibm.com/docs/services/StreamingAnalytics/index.html#gettingstarted) (V4.3) or an [IBM Cloud Pak for Data (ICP4D) Streams add-on](https://www.ibm.com/support/knowledgecenter/SSQNUZ_current/com.ibm.icpdata.doc/streams/intro.html) (V5).
+Before you can interact with Streams, you must add one or more Streams instances through the [Streams Explorer](#streams-explorer-view) view. The prerequisites for each of the supported Streams versions are detailed below.
 
-#### IBM Cloud: Streaming Analytics service
-
-A running IBM Streaming Analytics service is required. You must provide your service credentials (in JSON format) in order for this extension to connect to your service. Execute the `Set IBM Streaming Analytics Service Credentials` command from the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface) and enter your credentials.
-
-If you need to create a service, start [here](https://cloud.ibm.com/catalog/services/streaming-analytics) and follow the instructions to create an account. Then, navigate to your [Dashboard](https://cloud.ibm.com/resources?groups=resource-instance) and select the Streaming Analytics service you want to use. Ensure that it is running and then create a new set of credentials. Select the __Service credentials__ tab on the left and click on the __New credential__ button. Once created, click on the __View credentials__ action and click on the __Copy__ button in the top-right corner of the credentials snippet to copy them to the clipboard.
-
-#### IBM Cloud Pak for Data: Streams add-on
-
-A provisioned IBM Streams add-on is required. You must provide your IBM Cloud Pak for Data URL in order for this extension to connect to your add-on instance. Execute the `Set IBM Cloud Pak for Data URL` command from the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface) and enter your URL.
-
-If you need to provision an add-on, start [here](https://www.ibm.com/support/knowledgecenter/SSQNUZ_current/com.ibm.icpdata.doc/streams/intro.html) and follow the instructions.
+Streams version | Prerequisites
+--- | ---
+[IBM Cloud Pak for Data deployment](https://www.ibm.com/support/producthub/icpdata/docs/content/SSQNUZ_current/cpd/svc/streams/developing-intro.html) | A provisioned IBM Streams service instance is required. You must provide the following information in order for this extension to connect to your service instance. <br /> <ul><li>IBM Cloud Pak for Data version</li><li>IBM Cloud Pak for Data web client URL</li><li>IBM Cloud Pak for Data credentials</li></ul> If you need to provision a service instance, start [here](https://www.ibm.com/support/producthub/icpdata/docs/content/SSQNUZ_current/cpd/svc/streams/intro.html) and follow the instructions.
+[IBM Streams standalone deployment](https://www.ibm.com/support/knowledgecenter/en/SSCRJU_5.2.0/com.ibm.streams.welcome.doc/doc/kc-homepage.html) | An IBM Streams instance is required. You must provide the following information in order for this extension to connect to your instance. <br /> <ul><li>IBM Streams instance REST service URL</li><li>IBM Streams instance build service URL *(optional; if not specified, you will not be able to build your Streams applications)*</li><li>IBM Streams instance Console URL *(optional; if not specified, the Console URL will be retrieved from the Streams REST API)*</li><li>IBM Streams instance credentials</li></ul> If you need to install an instance, start [here](https://www.ibm.com/support/knowledgecenter/en/SSCRJU_5.2.0/com.ibm.streams.install.doc/doc/install-container.html) and follow the instructions.
+[IBM Streaming Analytics on IBM Cloud](https://cloud.ibm.com/docs/services/StreamingAnalytics?topic=StreamingAnalytics-gettingstarted) | An IBM Streaming Analytics service is required. You must provide your service credentials (in JSON format) in order for this extension to connect to your service. <br /><br /> If you need to create a service, start [here](https://cloud.ibm.com/catalog/services/streaming-analytics) and follow the instructions. You may add or view your credentials in the service details page.
 
 ### Toolkits
 
-The IBM Streams product toolkits are bundled with this package. If your Streams applications use additional toolkits, you must copy them to a folder or multiple folders on your workstation. Note that each toolkit must contain a `toolkit.xml` file in order in order to be included. Then, execute the `Set IBM Streams Toolkits Path` command from the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface) and enter the paths to your directories, comma or semicolon separated, containing the toolkits.
+The IBM Streams product toolkits are bundled with this extension. If your Streams applications use additional toolkits, you must copy them to a folder, or multiple folders, on your workstation. Note that a toolkit must contain a `toolkit.xml` file in order in order to be included. Then, execute the **Set IBM Streams Toolkit Paths** command from the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) and enter the paths to your toolkit directories, comma or semicolon separated, containing the toolkits.
 
 ## Features
 
-### Building and submitting SPL applications
+### Developing SPL applications
 
-![SPL application build](./images/docs/build.gif)
+This extension allows you to create Streams applications with SPL language support included. To get started, simply open a `.spl` file. Typical code editing features are supported, including content assist, code folding, find references, go to declaration, etc.
 
-### Color themes
+![Developing a SPL application](./images/docs/feature_developApplication.png)
 
-Two [color themes](https://code.visualstudio.com/docs/getstarted/themes) are provided for SPL files: `Streams Light` and `Streams Dark`.
+You may also create a minimal SPL application (containing a `.spl` file and an `info.xml` file) by executing the **Create an IBM Streams Application From Template** command.
 
-Note: To set a default color theme for `.spl` files to one of the included themes, you may want to search for a VS Code extension that provides that capability.
+For an enhanced development experience, it is recommended that you set the VS Code [color theme](https://code.visualstudio.com/docs/getstarted/themes) to one of the provided themes: __Streams Light__ (based on Streams Studio) or __Streams Dark__. Note: To set a default color theme for `.spl` files to one of the included themes, you may want to search for a VS Code extension that provides that capability.
 
 ![Themes](./images/docs/themes.png)
 
-### Code assistance
+### Building and submitting SPL applications
 
-This language extension supports typical code editing features including:
+To build an application, either:
 
-* Hover
-* Reference Highlighting
-* Diagnostics (syntax issues)
-* [Code Completion](https://code.visualstudio.com/docs/editor/codebasics#_intellisense)
-* [Go to Definition](https://code.visualstudio.com/docs/editor/editingevolved#_go-to-definition)
-* [Peek Definition](https://code.visualstudio.com/docs/editor/editingevolved#_peek)
-* [Find All References](https://code.visualstudio.com/docs/editor/editingevolved#_peek)
-* [Rename Symbol](https://code.visualstudio.com/docs/editor/editingevolved#_rename-symbol)
+- Right-click on a `.spl` or `Makefile` file in the [Explorer](https://code.visualstudio.com/docs/getstarted/userinterface#_explorer)
+- Right-click in the editor of an open `.spl` or `Makefile` file
+
+There are two build options:
+
+- __Build__: builds and downloads the application bundle(s)
+- __Build and Submit Job__: builds and submits the application(s) to a Streams instance
+
+![Building and submitting SPL application](./images/docs/feature_buildSubmitApplication.gif)
+
+To submit application bundles, right-click on one or more bundles in the [Explorer](https://code.visualstudio.com/docs/getstarted/userinterface#_explorer) and select __Submit Job__. For each bundle, you will prompted for the job configuration before the submission. For an advanced configuration, you may import a job overlay configuration file (in JSON format).
+
+### Streams Explorer view
+
+The Streams Explorer view (accessible from the [Activity Bar](https://code.visualstudio.com/docs/getstarted/userinterface#_basic-layout) on the left side) allows you to:
+
+- Easily manage your Streams instances
+- View details for Streams instances and jobs
+- See a list of Streams toolkits
+- Access helpful resources
+
+![Streams Explorer](./images/docs/feature_streamsExplorer.png)
+
+### Viewing job graphs
+
+Use job graphs to visualize and monitor your Streams jobs. Graphs allow you to monitor metrics and flow rates, view flowing data, and much more! You may launch a graph in one of two ways:
+
+- Execute the **Show Job Graph** command from the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette). This will display an empty graph in the context of the default Streams instance and you may select a job from the dropdown at the top.
+- In the [Streams Explorer](#streams-explorer) view, hover over a job node and then click on the **Show Job Graph** icon that appears on the right. This will display the graph for the selected job.
+
+Note that graphs are only supported for jobs in IBM Cloud Pak for Data deployments or IBM Streams standalone deployments (IBM Streaming Analytics on IBM Cloud is *not* supported).
+
+![Viewing job graph](./images/docs/feature_jobGraph.png)
 
 ## Commands
 
-The following commands can be executed via context menus or the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette).
+The following commands can be executed via context menus and/or the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette).
 
-### General Commands
+### General
 
-Command | Title | Description
---- | --- | --
-`ibm-streams.createApplication` | Create an IBM Streams Application from Template | Create a minimal application containing a source .spl file and an info.xml file.
-`ibm-streams.icp4d.openConsole` | Open IBM Streams Console | Open the IBM Streams Console in a web browser.<br>Only available when `ibm-streams.targetVersion == IBM Cloud Pak for Data: Streams add-on`.
-`ibm-streams.icp4d.openDashboard` | Open IBM Cloud Pak for Data Dashboard | Open the IBM Cloud Pak for Data Dashboard in a web browser.<br>Only available when `ibm-streams.targetVersion == IBM Cloud Pak for Data: Streams add-on`.
-`ibm-streams.icp4d.setUrl` | Set IBM Cloud Pak for Data URL | Update the `ibm-streams.icp4d.url` setting.<br>Only available when `ibm-streams.targetVersion == IBM Cloud Pak for Data: Streams add-on`.
-`ibm-streams.removeOutputChannels` | Remove Build Output Channels | Remove build output channels that are automatically created after executing build commands. These channels appear in the Output view.
-`ibm-streams.setTargetVersion` | Set IBM Streams Target Version | Update the `ibm-streams.targetVersion` setting.
-`ibm-streams.streamingAnalytics.openConsole` | Open IBM Streaming Analytics Console | Open the IBM Streaming Analytics Console in a web browser.<br>Only available when `ibm-streams.targetVersion == IBM Cloud: Streaming Analytics service`.
-`ibm-streams.streamingAnalytics.openDashboard` | Open IBM Cloud Dashboard | Open the IBM Cloud Dashboard in a web browser.<br>Only available when `ibm-streams.targetVersion == IBM Cloud: Streaming Analytics service`.
-`ibm-streams.streamingAnalytics.setServiceCredentials` | Set IBM Streaming Analytics Service Credentials | Update the `ibm-streams.streamingAnalytics.credentials` setting.<br>Only available when `ibm-streams.targetVersion == IBM Cloud: Streaming Analytics service`.
-`ibm-streams.toolkits.list` | List available IBM Streams toolkits | Display the build service toolkits and local toolkits specified in the `ibm-streams.toolkitPaths` setting.
-`ibm-streams.toolkits.refresh` | Refresh IBM Streams Toolkits | Pick up changes to the `ibm-streams.toolkitPaths` setting.
-`ibm-streams.toolkits.setPaths` | Set IBM Streams Toolkits Path | Update the `ibm-streams.toolkitPaths` setting.
+Name | Description
+--- | ---
+Create an IBM Streams Application from Template | Creates a minimal SPL application containing a `.spl` file and an `info.xml` file
+Remove Build Output Channels | Removes build output channels that are automatically created in the OUTPUT panel after executing build commands
 
-### Build Commands
+### Build
 
-Command | Title | Description
---- | --- | --
-`ibm-streams.build.appDownload` | Build | Build an application from source and download the Streams application bundle (`.sab`) to the local file system in the project's `output/` directory.<br>Only available for `.spl` files.
-`ibm-streams.build.appSubmit` | Build and Submit Job | Build an application from source and submit it to either an IBM Streaming Analytics service or IBM Cloud Pak for Data Streams add-on. There are two submission options: (1) submit with the default configuration; (2) use the Streaming Analytics Console to customize the submission-time configuration.<br>Only available for `.spl` files.
-`ibm-streams.build.makeDownload` | Build | Build application(s) defined in a Makefile and download the Streams application bundle(s) (`.sab`) to the local file system in the project's `output/` directory.<br>Only available for `Makefile` files.
-`ibm-streams.build.makeSubmit` | Build and Submit Job(s) | Build application(s) defined in a Makefile and submit them to either an IBM Streaming Analytics service or IBM Cloud Pak for Data Streams add-on. There are two submission options: (1) submit with the default configuration; (2) use the Streaming Analytics Console to customize the submission-time configuration.<br>Only available for `Makefile` files.
-`ibm-streams.build.submit` | Submit Job | Submit an application to either an IBM Streaming Analytics service or IBM Cloud Pak for Data Streams add-on. There are two submission options: (1) submit with the default configuration; (2) use the Streaming Analytics Console to customize the submission-time configuration..<br>Only available for `.sab` files.
+Name | Description
+--- | ---
+Build | <ul><li>Builds SPL application(s) from source</li><li>Downloads the Streams application bundle(s) (`.sab`) to the project's `output` directory</li><li>Only available for `.spl` and `Makefile` files</li></ul>
+Build and Submit Job(s) | <ul><li>Builds SPL application(s) from source</li><li>Submits the Streams application bundle(s) (`.sab`) to a Streams instance</li><li>Only available for `.spl` and `Makefile` files</li></ul>
+Submit Job(s) | <ul><li>Submits the Streams application bundle(s) (`.sab`) to a Streams instance</li><li>Only available for `.sab` files</li></ul>
 
-![Commands](./images/docs/commands.gif)
+### Environment
+
+Name | Description
+--- | ---
+Open IBM Streams Console | <ul><li>Opens the IBM Streams Console in a web browser</li><li>Only available when the version of the default Streams instance is: *IBM Cloud Pak for Data deployment* or *IBM Streams standalone deployment*</li></ul>
+Open IBM Streaming Analytics Console | <ul><li>Opens the IBM Streaming Analytics Console in a web browser</li><li>Only available when the version of the default Streams instance is: *IBM Streaming Analytics on IBM Cloud*</li></ul>
+Open IBM Cloud Pak for Data Dashboard | <ul><li>Opens the IBM Cloud Pak for Data Dashboard in a web browser</li><li>Only available when the version of the default Streams instance is: *IBM Cloud Pak for Data deployment*</li></ul>
+Open IBM Cloud Dashboard | <ul><li>Opens the IBM Cloud Dashboard in a web browser</li><li>Only available when the version of the default Streams instance is: *IBM Streaming Analytics on IBM Cloud*</li></ul>
+Show Job Graph | <ul><li>Shows the Streams job graph for monitoring jobs</li><li>Only available when the version of the default Streams instance is: *IBM Cloud Pak for Data deployment* or *IBM Streams standalone deployment*</li></ul>
+Set IBM Streams Toolkit Paths | Updates the *Environment: Toolkit Paths* setting
+List Available IBM Streams Toolkits | Displays the build service toolkits and local toolkits specified in the *Environment: Toolkit Paths* setting
+Refresh IBM Streams Toolkits | Fetches the build service toolkits and picks up changes to the *Environment: Toolkit Paths* setting
+
+### Streams Explorer
+
+Name | Description
+--- | ---
+Add Instance | Add a Streams instance to the [Streams Explorer](#streams-explorer-view) view
+Remove Instances | Remove a Streams instance from the [Streams Explorer](#streams-explorer-view) view
+Refresh Instances | Refresh the Streams instances in the [Streams Explorer](#streams-explorer-view) view
+
+![Commands](./images/docs/commands.png)
 
 ## Settings
 
@@ -98,12 +130,18 @@ The following [settings](https://code.visualstudio.com/docs/getstarted/settings)
 
 Name | Description | Default
 --- | --- | ---
-`ibm-streams.icp4d.url` | *(string)* Specifies the URL for an IBM Cloud Pak for Data instance. For example, if your web client URL is `https://123.45.67.89:31843/zen`, enter `https://123.45.67.89:31843`. | `https://HOST:PORT`
-`ibm-streams.icp4d.useMasterNodeHost` | *(boolean)* Specifies whether to use the host specified in the IBM Cloud Pak for Data URL for builds. | `true`
-`ibm-streams.requestTimeout` | *(number)* Number of seconds before a request times out. | `30`
-`ibm-streams.streamingAnalytics.credentials` | *(object)* Specifies the credentials for an IBM Streaming Analytics service. | `null`
-`ibm-streams.targetVersion` | *(string)* Specifies the Streams version to target for application builds and submissions.<br><ul><li>`IBM Cloud: Streaming Analytics service`</li><li>`IBM Cloud Pak for Data: Streams add-on`</li></ul> | `IBM Cloud: Streaming Analytics service`
-`ibm-streams.toolkitPaths` | *(string)* Specifies paths to directories, comma or semicolon separated, containing IBM Streams toolkits. | `/path/to/toolkits/directory`
-`ibm-streams.trace.server` | *(string)* Traces the communication between VS Code and the SPL language server.<br><ul><li>`off`: tracing turned off</li><li>`verbose`: tracing turned on</li></ul> | `off`
+Environment: Refresh Interval | *(number)* Interval in minutes at which an IBM Streams instance is automatically refreshed. | `5`
+Environment: Timeout for Requests | *(number)* Timeout in seconds before a request times out. | `30`
+Environment: Toolkit Paths | *(string)* Specifies paths to directories, comma or semicolon separated, containing additional IBM Streams toolkits. | `/path/to/toolkits/directory`
+Log Level | *(string)* Log level for the extension.<br><br><ul><li>`off`: no logging</li><li>`debug`: debug logging</li></ul> | `off`
+Server: Mode | *(string)* Controls how the SPL language server runs. Running the server in `embedded` mode is recommended unless you are experiencing issues with SPL language features.<br><br><ul><li>`embedded`: runs using an embedded server</li><li>`socket`: runs a separate server using a socket</li></ul><br>If you choose to run the server in `socket` mode *and* you have multiple VS Code windows open, you *must* use different port values for the **Server: Port** setting in the [workspace settings](https://code.visualstudio.com/docs/getstarted/settings) for each window. Otherwise, the SPL language server will fail to start. | `embedded`
+Server: Port | *(number)* The port where the SPL language server runs when **Server: Mode** is `socket`. | `5007`
+Trace: Server | *(string)* Traces the communication between VS Code and the SPL language server.<br><br><ul><li>`off`: tracing turned off</li><li>`verbose`: tracing turned on</li></ul> | `off`
 
-![Settings](./images/docs/settings.png)
+![Commands](./images/docs/settings.png)
+
+## Troubleshooting
+
+- If the _Initializing SPL language features_ message in the [Status Bar](https://code.visualstudio.com/docs/getstarted/userinterface) at the bottom of VS Code does not go away after some time, try updating the [**Server: Mode**](#settings) setting to `socket`. Refer to the setting description above for important usage information.
+
+  ![Initializing SPL language features](./images/docs/initializingLanguageFeatures.gif)

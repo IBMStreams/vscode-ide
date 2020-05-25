@@ -1,11 +1,30 @@
+import {
+    Build,
+    Editor,
+    EditorAction,
+    EditorSelector,
+    generateRandomId,
+    Instance,
+    InstanceSelector,
+    PostBuildAction,
+    Registry,
+    SourceArchiveUtils,
+    store,
+    StreamsInstanceType,
+    StreamsRest,
+    StreamsUtils,
+    SubmitJob,
+    ToolkitUtils
+} from '@streams/common';
 import * as fs from 'fs';
-import * as _ from 'lodash';
+import _map from 'lodash/map';
+import _omit from 'lodash/omit';
+import _some from 'lodash/some';
 import * as path from 'path';
-import { URL } from 'url';
 import {
     commands,
     ConfigurationChangeEvent,
-    Disposable,
+    env,
     ExtensionContext,
     Uri,
     window,
@@ -16,53 +35,31 @@ import { DidChangeConfigurationNotification } from 'vscode-languageserver-protoc
 import * as packageJson from '../../package.json';
 import { Commands } from '../commands';
 import SplLanguageClient from '../languageClient';
+import { getStreamsExplorer } from '../views';
+import { Streams, StreamsInstance } from '../streams';
 import {
+    Authentication,
+    BuiltInCommands,
     Configuration,
-    Constants,
-    inDebugMode,
+    EXTENSION_ID,
+    isLoggingEnabled,
     Keychain,
+    LANGUAGE_SPL,
     Logger,
-    Settings
+    Settings,
+    TOOLKITS_CACHE_DIR
 } from '../utils';
-import { ICP4DWebviewPanel } from '../webviews';
-import LintHandlerRegistry from './lint-handler-registry';
 import LintHandler from './LintHandler';
-import MessageHandlerRegistry from './message-handler-registry';
 import MessageHandler from './MessageHandler';
-import { SplBuilder, SplBuildCommonV4 } from './v4/spl-build-common';
-import {
-    checkIcp4dHostExists,
-    executeCallbackFn,
-    newBuild,
-    packageActivated,
-    queueAction,
-    refreshToolkits,
-    resetAuth,
-    setBuildOriginator,
-    setFormDataField,
-    setIcp4dUrl,
-    setRememberPassword,
-    setToolkitsCacheDir,
-    setToolkitsPathSetting,
-    setUseIcp4dMasterNodeHost,
-    setUsername,
-    submitApplicationsFromBundleFiles
-} from './v5/actions';
-import getStore from './v5/redux-store/configure-store';
-import {
-    SourceArchiveUtils, StateSelector, StreamsToolkitsUtils, StreamsUtils, StreamsRestUtils
-} from './v5/util';
 
 /**
  * Handles Streams builds and submissions
  */
 export default class StreamsBuild {
     private static _context: ExtensionContext;
-    private static _streamingAnalyticsCredentials: string;
+    public static _streamingAnalyticsCredentials: string;
     private static _toolkitPaths: string;
-    private static _apiVersion: string;
-    private static _originator: object;
-    private static _storeSubscription: any;
+    private static _defaultMessageHandler: MessageHandler;
     private static _openUrlHandler: (url: string, callback?: () => void) => void;
     private static _sendLspNotificationHandler: (param: object) => void;
 
@@ -70,292 +67,168 @@ export default class StreamsBuild {
      * Perform initial configuration
      * @param context    The extension context
      */
-    public static configure(context: ExtensionContext): void {
+    public static async configure(context: ExtensionContext): Promise<void> {
         this._context = context;
 
-        const credentialsSetting = Configuration.getSetting(Settings.STREAMING_ANALYTICS_CREDENTIALS);
-        this._streamingAnalyticsCredentials = credentialsSetting ? JSON.stringify(credentialsSetting) : null;
-
-        const toolkitPathsSetting = Configuration.getSetting(Settings.TOOLKIT_PATHS);
-        this._toolkitPaths = toolkitPathsSetting !== '' && toolkitPathsSetting !== Settings.TOOLKIT_PATHS_DEFAULT ? toolkitPathsSetting : null;
-        getStore().dispatch(setToolkitsPathSetting(this._toolkitPaths));
-
-        this._apiVersion = Configuration.getSetting(Settings.TARGET_VERSION);
-
-        this._originator = { originator: 'vscode', version: packageJson.version, type: 'spl' };
-
-        const timeout = Configuration.getSetting(Settings.REQUEST_TIMEOUT);
-        StreamsRestUtils.setTimeout(timeout);
-        SplBuildCommonV4.setTimeout(timeout);
-
-        this._storeSubscription = getStore().subscribe(() => {
-            if (inDebugMode()) {
-                // eslint-disable-next-line no-console
-                console.log('Store subscription updated state: ', getStore().getState());
-            }
-        });
-        context.subscriptions.push(new Disposable(() => {
-            this._storeSubscription();
-        }));
-
-        if (!StateSelector.getIcp4dUrl(getStore().getState())) {
-            this.updateIcp4dUrl(Configuration.getSetting(Settings.ICP4D_URL));
+        if (!fs.existsSync(TOOLKITS_CACHE_DIR)) {
+            fs.mkdirSync(TOOLKITS_CACHE_DIR);
         }
 
-        if (!StateSelector.getUseIcp4dMasterNodeHost(getStore().getState())) {
-            getStore().dispatch(setUseIcp4dMasterNodeHost(Configuration.getSetting(Settings.ICP4D_USE_MASTER_NODE_HOST)));
-        }
+        const toolkitPathsSetting = Configuration.getSetting(Settings.ENV_TOOLKIT_PATHS);
+        this._toolkitPaths = toolkitPathsSetting !== '' && toolkitPathsSetting !== Settings.ENV_TOOLKIT_PATHS_DEFAULT ? toolkitPathsSetting : null;
 
-        const username = Configuration.getState(`${Constants.EXTENSION_NAME}.username`);
-        const rememberPassword = Configuration.getState(`${Constants.EXTENSION_NAME}.rememberPassword`);
-        if (username) {
-            getStore().dispatch(setUsername(username));
-        }
-        if (rememberPassword) {
-            getStore().dispatch(setRememberPassword(rememberPassword));
-        }
+        const timeout = Configuration.getSetting(Settings.ENV_TIMEOUT_FOR_REQUESTS);
+        StreamsRest.setRequestTimeout(timeout);
 
-        if (!MessageHandlerRegistry.getDefault()) {
-            MessageHandlerRegistry.setDefault(new MessageHandler(null));
-        }
-
-        this._openUrlHandler = (url: string, callback?: () => void): Thenable<void> => commands.executeCommand('vscode.open', Uri.parse(url)).then(() => callback && callback());
-        MessageHandlerRegistry.setOpenUrlHandler(this._openUrlHandler);
-
-        this._sendLspNotificationHandler = (param: object) => SplLanguageClient.getClient().sendNotification(DidChangeConfigurationNotification.type.method, param);
-        MessageHandlerRegistry.setSendLspNotificationHandler(this._sendLspNotificationHandler);
-
-        if (!fs.existsSync(Constants.TOOLKITS_CACHE_DIR)) {
-            fs.mkdirSync(Constants.TOOLKITS_CACHE_DIR);
-        }
-        getStore().dispatch(setToolkitsCacheDir(Constants.TOOLKITS_CACHE_DIR));
-
-        getStore().dispatch(setBuildOriginator('vscode', packageJson.version));
-
-        // Monitor changes to configuration settings
-        this._context.subscriptions.push(workspace.onDidChangeConfiguration((event: ConfigurationChangeEvent) => {
-            if (!event.affectsConfiguration(Settings.SECTION_ID)) {
-                return;
-            }
-
-            if (event.affectsConfiguration(Settings.ICP4D_URL)) {
-                this.updateIcp4dUrl(Configuration.getSetting(Settings.ICP4D_URL));
-                getStore().dispatch(resetAuth());
-                ICP4DWebviewPanel.close();
-            }
-
-            if (event.affectsConfiguration(Settings.ICP4D_USE_MASTER_NODE_HOST)) {
-                const useHostSetting = Configuration.getSetting(Settings.ICP4D_USE_MASTER_NODE_HOST);
-                getStore().dispatch(setUseIcp4dMasterNodeHost(useHostSetting));
-            }
-
-            if (event.affectsConfiguration(Settings.ICP4D_USE_MASTER_NODE_HOST)) {
-                const timeoutSetting = Configuration.getSetting(Settings.REQUEST_TIMEOUT);
-                StreamsRestUtils.setTimeout(timeoutSetting);
-                SplBuildCommonV4.setTimeout(timeoutSetting);
-            }
-
-            if (event.affectsConfiguration(Settings.STREAMING_ANALYTICS_CREDENTIALS)) {
-                const currentCredentialsSetting = Configuration.getSetting(Settings.STREAMING_ANALYTICS_CREDENTIALS);
-                this._streamingAnalyticsCredentials = currentCredentialsSetting ? JSON.stringify(currentCredentialsSetting) : null;
-            }
-
-            if (event.affectsConfiguration(Settings.TARGET_VERSION)) {
-                this._apiVersion = Configuration.getSetting(Settings.TARGET_VERSION);
-            }
-
-            if (event.affectsConfiguration(Settings.TOOLKIT_PATHS)) {
-                const currentToolkitPathsSetting = Configuration.getSetting(Settings.TOOLKIT_PATHS);
-                this._toolkitPaths = currentToolkitPathsSetting !== '' && currentToolkitPathsSetting !== Settings.TOOLKIT_PATHS_DEFAULT ? currentToolkitPathsSetting : null;
-                getStore().dispatch(setToolkitsPathSetting(this._toolkitPaths));
-            }
-        }));
-
-        getStore().dispatch(packageActivated());
+        this.initUtilRegistry();
+        this.monitorConfigSettingChanges();
+        await this.initReduxState();
+        this.monitorOpenSplFile();
     }
 
     /**
      * Perform a build of an SPL file and either download the bundle or submit the application
      * @param filePath    The path to the SPL file
-     * @param action      The build action to take
+     * @param action      The post-build action to take
      */
-    public static async buildApp(filePath: string, action: number): Promise<void> {
+    public static async buildApp(filePath: string, action: PostBuildAction): Promise<void> {
+        const defaultInstance = Streams.checkDefaultInstance();
         if (filePath) {
-            const workspaceFolders = _.map(workspace.workspaceFolders, (folder: WorkspaceFolder) => folder.uri.fsPath);
-            const appRoot = SourceArchiveUtils.getApplicationRoot(workspaceFolders, filePath);
-            const { namespace, mainComposites }: any = StreamsUtils.getFqnMainComposites(filePath);
-            const compositeToBuild = await this.getCompositeToBuild(namespace, mainComposites);
-
-            let lintHandler = LintHandlerRegistry.get(appRoot);
-            if (!lintHandler) {
-                lintHandler = new LintHandler(appRoot);
-                LintHandlerRegistry.add(appRoot, lintHandler);
-            }
-
-            let messageHandler = MessageHandlerRegistry.get(compositeToBuild);
-            if (!messageHandler) {
-                messageHandler = new MessageHandler({ appRoot, filePath });
-                MessageHandlerRegistry.add(compositeToBuild, messageHandler);
-            }
-
-            const displayPath = `${path.basename(appRoot)}${path.sep}${path.relative(appRoot, filePath)}`;
-            const outputChannel = Logger.registerOutputChannel(filePath, displayPath);
-
-            const statusMessage = `Received request to build${action === SplBuilder.BUILD_ACTION.SUBMIT ? ' and submit' : ''}`;
-            Logger.info(outputChannel, statusMessage, false, true);
-            Logger.debug(outputChannel, `Selected: ${filePath}`);
-
-            if (this._apiVersion === Settings.TARGET_VERSION_OPTION.V5) {
-                const build = (): Promise<void> => this.buildAppV5(appRoot, compositeToBuild, action);
-                this.handleV5Action(build);
-            } else {
-                this.buildAppV4(appRoot, compositeToBuild, action, messageHandler);
-            }
+            const filePaths = [filePath];
+            const zeroInstancesCallbackFn = (): void => { this.runBuildApp(Streams.getDefaultInstance(), filePaths, action); };
+            const oneInstanceCallbackFn = (): void => { this.runBuildApp(defaultInstance, filePaths, action); };
+            const multipleInstancesCallbackFn = (): void => { this.showInstancePanel('build', filePaths, action); }
+            this.handleAction('build', zeroInstancesCallbackFn, oneInstanceCallbackFn, multipleInstancesCallbackFn);
         } else {
-            throw new Error('Unable to retrieve file path');
+            this._defaultMessageHandler.handleError('The build failed. Unable to retrieve the application file path.');
         }
     }
 
     /**
-     * Handle a build of an SPL file to Streams V4
-     * @param appRoot             The application root path
-     * @param compositeToBuild    The composite to build
-     * @param action              The build action to take
-     * @param messageHandler      The message handler object
+     * Handle building of an application
+     * @param targetInstance    The target Streams instance
+     * @param filePaths         The selected file paths
+     * @param action            The post-build action to take
      */
-    private static async buildAppV4(appRoot: string, compositeToBuild: string, action: number, messageHandler: MessageHandler): Promise<void> {
-        try {
-            return SourceArchiveUtils.buildSourceArchive({
-                appRoot,
-                buildId: null,
-                fqn: compositeToBuild,
-                makefilePath: null,
-                toolkitPathSetting: Configuration.getState(Settings.TOOLKIT_PATHS),
-                toolkitCacheDir: StateSelector.getToolkitsCacheDir(getStore().getState())
-            }).then((result: any) => {
-                if (result.archivePath) {
-                    const lintHandler = new LintHandler(appRoot);
-                    const builder = new SplBuilder(messageHandler, lintHandler, this._openUrlHandler, this._originator, { appRoot, fqn: compositeToBuild });
-                    builder.build(action, this._streamingAnalyticsCredentials, { filename: result.archivePath });
+    public static async runBuildApp(targetInstance: any, filePaths: string[], action: PostBuildAction): Promise<void> {
+        const { appRoot, compositeToBuild, messageHandler } = await this.initBuild('buildApp', filePaths[0], action);
+        const buildApp = (): void => {
+            if (targetInstance) {
+                const startBuildAction = Build.startBuild({
+                    appRoot,
+                    fqn: compositeToBuild,
+                    makefilePath: null,
+                    postBuildAction: action,
+                    targetInstance
+                });
+                if (!Authentication.isAuthenticated(targetInstance)) {
+                    const queuedActionId = generateRandomId('queuedAction');
+                    store.dispatch(EditorAction.addQueuedAction({
+                        id: queuedActionId,
+                        action: Editor.executeCallbackFn(buildApp)
+                    }));
+                    StreamsInstance.authenticate(targetInstance, false, queuedActionId);
+                } else {
+                    messageHandler.handleInfo(
+                        `Selected Streams instance: ${InstanceSelector.selectInstanceName(store.getState(), targetInstance.connectionId)}.`,
+                        { showNotification: false }
+                    );
+                    store.dispatch(startBuildAction)
+                        .then(() => {
+                            if (action === PostBuildAction.Submit) {
+                                setTimeout(() => StreamsInstance.refreshInstances(), 2000);
+                            }
+                        })
+                        .catch((err) => {
+                            if (action === PostBuildAction.Submit) {
+                                setTimeout(() => StreamsInstance.refreshInstances(), 2000);
+                            }
+                            let errorMsg: string;
+                            if (err && err.message && err.message.startsWith('Failed to build')) {
+                                errorMsg = err.message;
+                            } else {
+                                const instanceName = InstanceSelector.selectInstanceName(store.getState(), targetInstance.connectionId);
+                                errorMsg = `Failed to build${action === PostBuildAction.Submit ? ' and submit' : ''} the application ${compositeToBuild} using the Streams instance ${instanceName}.`;
+                            }
+                            this.handleError(err, messageHandler, errorMsg);
+                        });
                 }
-            });
-        } catch (error) {
-            throw error;
+            }
         }
-    }
-
-    /**
-     * Handle a build of an SPL file to Streams V5
-     * @param appRoot             The application root path
-     * @param compositeToBuild    The composite to build
-     * @param action              The build action to take
-     */
-    private static async buildAppV5(appRoot: string, compositeToBuild: string, action: number): Promise<void> {
-        const newBuildAction = newBuild({
-            appRoot,
-            fqn: compositeToBuild,
-            makefilePath: null,
-            postBuildAction: action,
-            toolkitRootPath: this._toolkitPaths
-        });
-
-        if (!StateSelector.hasAuthenticatedToStreamsInstance(getStore().getState())) {
-            getStore().dispatch(queueAction(newBuildAction));
-            this.showIcp4dAuthPanel();
-        } else {
-            getStore().dispatch(newBuildAction);
-        }
+        buildApp();
     }
 
     /**
      * Perform a build from a Makefile and either download the bundle(s) or submit the application(s)
      * @param filePath    The path to the Makefile
-     * @param action      The build action to take
+     * @param action      The post-build action to take
      */
-    public static async buildMake(filePath: string, action: number): Promise<void> {
+    public static async buildMake(filePath: string, action: PostBuildAction): Promise<void> {
+        const defaultInstance = Streams.checkDefaultInstance();
         if (filePath) {
-            const workspaceFolders = _.map(workspace.workspaceFolders, (folder: WorkspaceFolder) => folder.uri.fsPath);
-            const appRoot = SplBuilder.getApplicationRoot(workspaceFolders, filePath);
-
-            let lintHandler = LintHandlerRegistry.get(appRoot);
-            if (!lintHandler) {
-                lintHandler = new LintHandler(appRoot);
-                LintHandlerRegistry.add(appRoot, lintHandler);
-            }
-
-            let messageHandler = MessageHandlerRegistry.get(filePath);
-            if (!messageHandler) {
-                messageHandler = new MessageHandler({ appRoot, filePath });
-                MessageHandlerRegistry.add(filePath, messageHandler);
-            }
-
-            const displayPath = `${path.basename(appRoot)}${path.sep}${path.relative(appRoot, filePath)}`;
-            const outputChannel = Logger.registerOutputChannel(filePath, displayPath);
-
-            const statusMessage = `Received request to build from a Makefile${action === SplBuilder.BUILD_ACTION.SUBMIT ? ' and submit' : ''}`;
-            Logger.info(outputChannel, statusMessage, false, true);
-            Logger.debug(outputChannel, `Selected: ${filePath}`);
-
-            if (this._apiVersion === Settings.TARGET_VERSION_OPTION.V5) {
-                const build = (): Promise<void> => this.buildMakeV5(appRoot, filePath, action);
-                this.handleV5Action(build);
-            } else {
-                this.buildMakeV4(appRoot, filePath, action, messageHandler);
-            }
+            const filePaths = [filePath];
+            const zeroInstancesCallbackFn = (): void => { this.runBuildMake(Streams.getDefaultInstance(), filePaths, action); };
+            const oneInstanceCallbackFn = (): void => { this.runBuildMake(defaultInstance, filePaths, action); };
+            const multipleInstancesCallbackFn = (): void => { this.showInstancePanel('build-make', filePaths, action); }
+            this.handleAction('build', zeroInstancesCallbackFn, oneInstanceCallbackFn, multipleInstancesCallbackFn);
         } else {
-            throw new Error('Unable to retrieve file path');
+            this._defaultMessageHandler.handleError('The build failed. Unable to retrieve the Makefile file path.');
         }
     }
 
     /**
-     * Handle a build of a Makefile to Streams V4
-     * @param appRoot           The application root path
-     * @param filePath          The path to the Makefile
-     * @param action            The build action to take
-     * @param messageHandler    The message handler object
+     * Handle building of a Makefile
+     * @param targetInstance    The target Streams instance
+     * @param filePaths         The selected file paths
+     * @param action            The post-build action to take
      */
-    private static async buildMakeV4(appRoot: string, filePath: string, action: number, messageHandler: MessageHandler): Promise<void> {
-        try {
-            return SourceArchiveUtils.buildSourceArchive({
-                appRoot,
-                buildId: null,
-                fqn: null,
-                makefilePath: filePath,
-                toolkitPathSetting: Configuration.getState(Settings.TOOLKIT_PATHS),
-                toolkitCacheDir: StateSelector.getToolkitsCacheDir(getStore().getState())
-            }).then((result: any) => {
-                if (result.archivePath) {
-                    const lintHandler = new LintHandler(appRoot);
-                    const builder = new SplBuilder(messageHandler, lintHandler, this._openUrlHandler, this._originator, { appRoot, makefilePath: filePath });
-                    builder.build(action, this._streamingAnalyticsCredentials, { filename: result.archivePath });
+    public static async runBuildMake(targetInstance: any, filePaths: string[], action: PostBuildAction): Promise<void> {
+        const { appRoot, messageHandler } = await StreamsBuild.initBuild('buildMake', filePaths[0], action);
+        const buildMake = (): void => {
+            if (targetInstance) {
+                const startBuildAction = Build.startBuild({
+                    appRoot,
+                    fqn: null,
+                    makefilePath: filePaths[0],
+                    postBuildAction: action,
+                    targetInstance
+                });
+                if (!Authentication.isAuthenticated(targetInstance)) {
+                    const queuedActionId = generateRandomId('queuedAction');
+                    store.dispatch(EditorAction.addQueuedAction({
+                        id: queuedActionId,
+                        action: Editor.executeCallbackFn(buildMake)
+                    }));
+                    StreamsInstance.authenticate(targetInstance, false, queuedActionId);
+                } else {
+                    messageHandler.handleInfo(
+                        `Selected Streams instance: ${InstanceSelector.selectInstanceName(store.getState(), targetInstance.connectionId)}.`,
+                        { showNotification: false }
+                    );
+                    store.dispatch(startBuildAction)
+                        .then(() => {
+                            if (action === PostBuildAction.Submit) {
+                                setTimeout(() => StreamsInstance.refreshInstances(), 2000);
+                            }
+                        })
+                        .catch((err) => {
+                            if (action === PostBuildAction.Submit) {
+                                setTimeout(() => StreamsInstance.refreshInstances(), 2000);
+                            }
+                            let errorMsg: string;
+                            if (err && err.message && err.message.startsWith('Failed to build')) {
+                                errorMsg = err.message;
+                            } else {
+                                const identifier = `${path.basename(appRoot)}${path.sep}${path.relative(appRoot, filePaths[0])}`;
+                                const instanceName = InstanceSelector.selectInstanceName(store.getState(), targetInstance.connectionId);
+                                errorMsg = `Failed to build${action === PostBuildAction.Submit ? ' and submit' : ''} the application(s) in ${identifier} using the Streams instance ${instanceName}.`;
+                            }
+                            this.handleError(err, messageHandler, errorMsg);
+                        });
                 }
-            });
-        } catch (error) {
-            throw error;
+            }
         }
-    }
-
-    /**
-     * Handle a build of a Makefile to Streams V5
-     * @param appRoot     The application root path
-     * @param filePath    The path to the Makefile
-     * @param action      The build action to take
-     */
-    private static async buildMakeV5(appRoot: string, filePath: string, action: number): Promise<void> {
-        const newBuildAction = newBuild({
-            appRoot,
-            fqn: null,
-            makefilePath: filePath,
-            postBuildAction: action,
-            toolkitRootPath: this._toolkitPaths
-        });
-
-        if (!StateSelector.hasAuthenticatedToStreamsInstance(getStore().getState())) {
-            getStore().dispatch(queueAction(newBuildAction));
-            this.showIcp4dAuthPanel();
-        } else {
-            getStore().dispatch(newBuildAction);
-        }
+        buildMake();
     }
 
     /**
@@ -364,193 +237,87 @@ export default class StreamsBuild {
      */
     public static async submit(filePaths: string[]): Promise<void> {
         if (filePaths) {
-            if (this._apiVersion === Settings.TARGET_VERSION_OPTION.V5) {
-                const submit = (): Promise<void> => this.submitV5(filePaths);
-                this.handleV5Action(submit);
-            } else {
-                this.submitV4(filePaths[0]);
+            const defaultInstance = Streams.checkDefaultInstance();
+            const bundleFilePaths = this.initSubmit(filePaths);
+            if (!bundleFilePaths.length) {
+                this._defaultMessageHandler.handleInfo('There are no Streams application bundles to submit.');
+                return;
             }
+            const zeroInstancesCallbackFn = (): void => { this.runSubmit(Streams.getDefaultInstance(), bundleFilePaths); };
+            const oneInstanceCallbackFn = (): void => { this.runSubmit(defaultInstance, bundleFilePaths); };
+            const multipleInstancesCallbackFn = (): void => { this.showInstancePanel('submit', bundleFilePaths, null); }
+            this.handleAction('submission(s)', zeroInstancesCallbackFn, oneInstanceCallbackFn, multipleInstancesCallbackFn);
         } else {
-            throw new Error('Unable to retrieve file paths');
+            this._defaultMessageHandler.handleError('The submission failed. Unable to retrieve the application bundle file paths.');
         }
     }
 
     /**
-     * Handle a submission of an application bundle to Streams V4
-     * @param filePath    The path to the application bundle
+     * Handle submission of application bundles
+     * @param targetInstance    The target Streams instance
+     * @param filePaths         The selected file paths
      */
-    private static async submitV4(filePath: string): Promise<void> {
-        if (!filePath || !filePath.toLowerCase().endsWith('.sab')) {
-            return;
-        }
-
-        try {
-            const workspaceFolders = _.map(workspace.workspaceFolders, (folder: WorkspaceFolder) => folder.uri.fsPath);
-            const appRoot = SplBuilder.getApplicationRoot(workspaceFolders, filePath);
-
-            let messageHandler = MessageHandlerRegistry.get(filePath);
-            if (!messageHandler) {
-                messageHandler = new MessageHandler({ appRoot, filePath });
-                MessageHandlerRegistry.add(filePath, messageHandler);
-            }
-
-            const displayPath = `${path.basename(appRoot)}${path.sep}${path.relative(appRoot, filePath)}`;
-            const outputChannel = Logger.registerOutputChannel(filePath, displayPath);
-
-            const statusMessage = 'Received request to submit an application';
-            Logger.info(outputChannel, statusMessage, false, true);
-            Logger.debug(outputChannel, `Selected: ${filePath}`);
-
-            const lintHandler = new LintHandler(appRoot);
-            const builder = new SplBuilder(messageHandler, lintHandler, this._openUrlHandler, this._originator);
-            builder.submit(this._streamingAnalyticsCredentials, { filename: filePath });
-        } catch (error) {
-            throw error;
-        }
-    }
-
-    /**
-     * Handle a submission of application bundle(s) to Streams V5
-     * @param filePaths    The paths to the application bundle(s)
-     */
-    private static async submitV5(filePaths: string[]): Promise<void> {
-        const bundles = filePaths
-            .filter((filePath: string) => filePath.toLowerCase().endsWith('.sab'))
-            .map((filePath: string) => ({
-                bundlePath: filePath,
-                jobConfig: null,
-                jobGroup: 'default',
-                jobName: filePath.split(path.sep).pop().split('.sab')[0]
-            }));
-        const submitAction = submitApplicationsFromBundleFiles(bundles);
-
-        if (!StateSelector.hasAuthenticatedToStreamsInstance(getStore().getState())) {
-            getStore().dispatch(queueAction(submitAction));
-            this.showIcp4dAuthPanel();
-        } else {
-            getStore().dispatch(submitAction);
-        }
-    }
-
-    /**
-     * Open IBM Streaming Analytics Console
-     */
-    public static openStreamingAnalyticsConsole(): void {
-        if (this._apiVersion === Settings.TARGET_VERSION_OPTION.V4) {
-            try {
-                const builder = new SplBuilder(null, null, this._openUrlHandler, null);
-                const openConsole = (setting: any): void => {
-                    const streamingAnalyticsCredentials = setting ? JSON.stringify(setting) : null;
-                    builder.openStreamingAnalyticsConsole(streamingAnalyticsCredentials, (url: string) => Logger.info(null, `Streaming Analytics Console: ${url}`));
-                };
-
-                const credentialsSetting = Configuration.getSetting(Settings.STREAMING_ANALYTICS_CREDENTIALS);
-                if (!credentialsSetting) {
-                    window.showWarningMessage('IBM Streaming Analytics service credentials are not set', 'Set credentials').then((selection: string) => {
-                        if (selection) {
-                            commands.executeCommand(Commands.SET_SERVICE_CREDENTIALS, openConsole);
-                        }
-                    });
+    public static runSubmit(targetInstance: any, bundleFilePaths: string[]): void {
+        const submit = (): void => {
+            if (targetInstance) {
+                const startSubmitJobAction = SubmitJob.startSubmitJobFromApplicationBundles(bundleFilePaths, targetInstance);
+                if (!Authentication.isAuthenticated(targetInstance)) {
+                    const queuedActionId = generateRandomId('queuedAction');
+                    store.dispatch(EditorAction.addQueuedAction({
+                        id: queuedActionId,
+                        action: Editor.executeCallbackFn(submit)
+                    }));
+                    StreamsInstance.authenticate(targetInstance, false, queuedActionId);
                 } else {
-                    openConsole(credentialsSetting);
-                }
-            } catch (error) {
-                Logger.error(null, 'Error opening IBM Streaming Analytics Console', true);
-                if (error.stack) {
-                    Logger.error(null, error.stack);
-                }
-            }
-        }
-    }
-
-    /**
-     * Open IBM Cloud Dashboard
-     */
-    public static openCloudDashboard(): void {
-        if (this._apiVersion === Settings.TARGET_VERSION_OPTION.V4) {
-            try {
-                const builder = new SplBuilder(null, null, this._openUrlHandler, null);
-                builder.openCloudDashboard((url: string) => Logger.info(null, `Opened IBM Cloud Dashboard: ${url}`));
-            } catch (error) {
-                Logger.error(null, 'Error opening IBM Cloud Dashboard', true);
-                if (error.stack) {
-                    Logger.error(null, error.stack);
-                }
-            }
-        }
-    }
-
-    /**
-     * Open IBM Streams Console
-     */
-    public static openStreamsConsole(): void {
-        if (this._apiVersion === Settings.TARGET_VERSION_OPTION.V5) {
-            const openConsole = (): void => {
-                try {
-                    const openUrl = (): void => {
-                        const consoleUrl = StateSelector.getStreamsConsoleUrl(getStore().getState());
-                        this._openUrlHandler(
-                            consoleUrl,
-                            () => Logger.info(null, `Opened IBM Streams Console: ${consoleUrl}`)
-                        );
-                    };
-                    if (!StateSelector.hasAuthenticatedToStreamsInstance(getStore().getState())) {
-                        const callbackAction = executeCallbackFn(openUrl);
-                        getStore().dispatch(queueAction(callbackAction));
-                        this.showIcp4dAuthPanel();
-                    } else {
-                        openUrl();
-                    }
-                } catch (error) {
-                    Logger.error(null, 'Error opening IBM Streams Console', true);
-                    if (error.stack) {
-                        Logger.error(null, error.stack);
-                    }
-                }
-            };
-            this.handleV5Action(openConsole);
-        }
-    }
-
-    /**
-     * Open IBM Cloud Pak for Data Dashboard
-     */
-    public static openIcp4dDashboard(): void {
-        if (this._apiVersion === Settings.TARGET_VERSION_OPTION.V5) {
-            const openDashboard = (): void => {
-                try {
-                    const icp4dUrl = StateSelector.getIcp4dUrl(getStore().getState());
-                    const icp4dDashboard = `${icp4dUrl}/zen/#/homepage`;
-                    this._openUrlHandler(
-                        icp4dDashboard,
-                        () => Logger.info(null, `Opened IBM Cloud Pak for Data Dashboard: ${icp4dDashboard}`)
+                    this._defaultMessageHandler.handleInfo(
+                        `Selected Streams instance: ${InstanceSelector.selectInstanceName(store.getState(), targetInstance.connectionId)}.`,
+                        { showNotification: false }
                     );
-                } catch (error) {
-                    Logger.error(null, 'Error opening IBM Cloud Pak for Data Dashboard', true);
-                    if (error.stack) {
-                        Logger.error(null, error.stack);
-                    }
+                    store.dispatch(startSubmitJobAction)
+                        .then(() => {
+                            setTimeout(() => StreamsInstance.refreshInstances(), 2000);
+                        })
+                        .catch((err) => {
+                            setTimeout(() => StreamsInstance.refreshInstances(), 2000);
+                            let errorMsg: string;
+                            if (err && err.message && err.message.startsWith('Failed to submit')) {
+                                errorMsg = err.message;
+                            } else {
+                                const instanceName = InstanceSelector.selectInstanceName(store.getState(), targetInstance.connectionId);
+                                errorMsg = `Failed to submit the applications to the Streams instance ${instanceName}.`;
+                            }
+                            this.handleError(err, this._defaultMessageHandler, errorMsg);
+                        });
                 }
-            };
-            this.handleV5Action(openDashboard);
+            }
         }
+        submit();
+    }
+
+    /**
+     * Get display path for builds
+     * @param appRoot     The application root path
+     * @param filePath    The path to the SPL file or Makefile
+     */
+    public static getDisplayPath(appRoot: string, filePath: string): string {
+        return `${path.basename(appRoot)}${path.sep}${path.relative(appRoot, filePath)}`;
     }
 
     /**
      * List available toolkits
      */
     public static listToolkits(): void {
-        const cachedToolkits = StreamsToolkitsUtils.getCachedToolkits(StateSelector.getToolkitsCacheDir(getStore().getState())).map((tk: any) => tk.label);
-        const cachedToolkitsStr = `\nBuild service toolkits:${cachedToolkits.length ? `\n\n${cachedToolkits.join('\n')}` : ' none'}`;
+        const cachedToolkits = ToolkitUtils.getCachedToolkits(EditorSelector.selectToolkitsCacheDir(store.getState())).map((tk: any) => tk.label);
+        const cachedToolkitsStr = `\nBuild service toolkits:${cachedToolkits.length ? `\n  ${cachedToolkits.join('\n  ')}` : ' none'}`;
 
-        const localToolkitPathsSetting = Configuration.getSetting(Settings.TOOLKIT_PATHS);
+        const localToolkitPathsSetting = Configuration.getSetting(Settings.ENV_TOOLKIT_PATHS);
         let localToolkitsStr = '';
         if (localToolkitPathsSetting && localToolkitPathsSetting.length > 0) {
-            const localToolkits = StreamsToolkitsUtils.getLocalToolkits(localToolkitPathsSetting).map((tk: any) => tk.label);
-            localToolkitsStr = `\n\nLocal toolkits from ${localToolkitPathsSetting}:${localToolkits.length ? `\n\n${localToolkits.join('\n')}` : ' none'}`;
+            const localToolkits = ToolkitUtils.getLocalToolkits(localToolkitPathsSetting).map((tk: any) => tk.label);
+            localToolkitsStr = `\n\nLocal toolkits from ${localToolkitPathsSetting}:${localToolkits.length ? `\n  ${localToolkits.join('\n  ')}` : ' none'}`;
         }
         window.showInformationMessage('The available IBM Streams toolkits are displayed in the IBM Streams output channel.');
-        MessageHandlerRegistry.getDefault().handleInfo(
+        this._defaultMessageHandler.handleInfo(
             'Streams toolkits:',
             {
                 detail: `${cachedToolkitsStr}${localToolkitsStr}`,
@@ -560,57 +327,318 @@ export default class StreamsBuild {
     }
 
     /**
-     * Refresh toolkits on the LSP server
+     * Refresh toolkits
      */
-    public static refreshLspToolkits(): void {
-        if (this._apiVersion === Settings.TARGET_VERSION_OPTION.V5) {
-            const refresh = (): void => {
-                const toolkitPathsSetting = Configuration.getSetting(Settings.TOOLKIT_PATHS);
+    public static async refreshToolkits(): Promise<void> {
+        const defaultInstance = Streams.checkDefaultInstance();
+        if (!defaultInstance) {
+            return;
+        }
+
+        const { instanceType } = defaultInstance;
+        const isStreamsV5 = instanceType === StreamsInstanceType.V5_CPD || instanceType === StreamsInstanceType.V5_STANDALONE;
+        if (isStreamsV5) {
+            if (!Authentication.isAuthenticated(defaultInstance)) {
+                // Authenticating automatically refreshes the toolkits
+                StreamsInstance.authenticate(null, true, null);
+            } else {
+                const toolkitPathsSetting = Configuration.getSetting(Settings.ENV_TOOLKIT_PATHS);
                 if (typeof toolkitPathsSetting === 'string' && toolkitPathsSetting.length > 0) {
                     if (toolkitPathsSetting.match(/[,;]/)) {
                         const directories = toolkitPathsSetting.split(/[,;]/);
-                        const directoriesInvalid = _.some(directories, (dir: string) => dir !== Settings.TOOLKIT_PATHS_DEFAULT && !fs.existsSync(dir));
+                        const directoriesInvalid = _some(directories, (dir: string) => dir !== Settings.ENV_TOOLKIT_PATHS_DEFAULT && !fs.existsSync(dir));
                         if (directoriesInvalid) {
-                            MessageHandlerRegistry.getDefault().handleError(
+                            this._defaultMessageHandler.handleError(
                                 'One or more toolkit paths do not exist or are not valid. Verify the paths.',
                                 {
                                     detail: `Verify that the paths exist:\n${directories.join('\n')}`,
                                     notificationButtons: [{
-                                        label: 'Open settings',
-                                        callbackFn: () => MessageHandlerRegistry.getDefault().openSettingsPage()
+                                        label: 'Open Settings',
+                                        callbackFn: () => this._defaultMessageHandler.openSettingsPage()
                                     }]
                                 }
                             );
                             return;
                         }
-                    } else if (toolkitPathsSetting !== Settings.TOOLKIT_PATHS_DEFAULT && !fs.existsSync(toolkitPathsSetting)) {
-                        MessageHandlerRegistry.getDefault().handleError(
+                    } else if (toolkitPathsSetting !== Settings.ENV_TOOLKIT_PATHS_DEFAULT && !fs.existsSync(toolkitPathsSetting)) {
+                        this._defaultMessageHandler.handleError(
                             `The specified toolkit path ${toolkitPathsSetting} does not exist or is not valid. Verify the path.`,
                             {
                                 detail: `Verify that the path exists: ${toolkitPathsSetting}`,
                                 notificationButtons: [{
-                                    label: 'Open settings',
-                                    callbackFn: () => MessageHandlerRegistry.getDefault().openSettingsPage()
+                                    label: 'Open Settings',
+                                    callbackFn: () => this._defaultMessageHandler.openSettingsPage()
                                 }]
                             }
                         );
                         return;
                     }
-                    const toolkitsPath = toolkitPathsSetting !== '' && toolkitPathsSetting !== Settings.TOOLKIT_PATHS_DEFAULT ? toolkitPathsSetting : null;
-                    getStore().dispatch(setToolkitsPathSetting(toolkitsPath));
                 }
 
-                if (!StateSelector.hasAuthenticatedToStreamsInstance(getStore().getState())) {
-                    // Authenticating automatically refreshes the toolkits
-                    this.showIcp4dAuthPanel();
-                } else {
-                    getStore().dispatch(refreshToolkits());
-                }
-            };
-            this.handleV5Action(refresh);
-        } else {
-            StreamsToolkitsUtils.refreshLspToolkits(getStore().getState(), this._sendLspNotificationHandler);
+                await ToolkitUtils.refreshToolkits(defaultInstance.connectionId);
+                getStreamsExplorer().refreshToolkitsView();
+            }
         }
+    }
+
+    /**
+     * Initialize util registry
+     */
+    private static initUtilRegistry(): void {
+        if (!Registry.getDefaultMessageHandler()) {
+            this._defaultMessageHandler = new MessageHandler(null);
+            Registry.setDefaultMessageHandler(this._defaultMessageHandler);
+        }
+
+        Registry.setSystemKeychain(Keychain);
+
+        this._openUrlHandler = (url: string, callback?: () => void): Thenable<void> => commands.executeCommand(BuiltInCommands.Open, Uri.parse(url)).then(() => callback && callback());
+        Registry.setOpenUrlHandler(this._openUrlHandler);
+
+        this._sendLspNotificationHandler = (param: object) => SplLanguageClient.getClient().sendNotification(DidChangeConfigurationNotification.type.method, param);
+        Registry.setSendLspNotificationHandler(this._sendLspNotificationHandler);
+
+        const copyToClipboardHandler = (text: string): Thenable<void> => env.clipboard.writeText(text);
+        Registry.setCopyToClipboardHandler(copyToClipboardHandler);
+
+        const showJobGraphHandler = (properties: object): Thenable<void> => commands.executeCommand(Commands.ENVIRONMENT.SHOW_JOB_GRAPH, properties);
+        Registry.setShowJobGraphHandler(showJobGraphHandler);
+
+        const showJobSubmitDialogHandler = (opts: object): Thenable<void> => commands.executeCommand(Commands.BUILD.CONFIGURE_JOB_SUBMISSION, opts);
+        Registry.setShowJobSubmitHandler(showJobSubmitDialogHandler);
+    }
+
+    /**
+     * Initialize Redux state
+     */
+    private static async initReduxState(): Promise<void> {
+        store.dispatch(EditorAction.setIsActivated(true));
+        store.dispatch(EditorAction.setOriginatingTool({ tool: 'vscode', version: packageJson.version }));
+        store.dispatch(EditorAction.setToolkitPathsSetting(this._toolkitPaths));
+        store.dispatch(EditorAction.setToolkitsCacheDir(TOOLKITS_CACHE_DIR));
+        store.dispatch(EditorAction.setRefreshInterval(Configuration.getSetting(Settings.ENV_REFRESH_INTERVAL)));
+        store.dispatch(EditorAction.setUpdateStreamsInstancesHandler(async (instances: any[]) => {
+            instances = instances.map((instance: any) => _omit(instance, ['streamsInstance', 'streamsJobGroups', 'streamsJobs', 'zenJobs']));
+            await Streams.setInstances(instances);
+            getStreamsExplorer().refreshInstancesView();
+        }));
+
+        // Add stored instances
+        const storedInstances = Streams.getInstances();
+        if (isLoggingEnabled()) {
+            // eslint-disable-next-line no-console
+            console.log('Stored Streams instances in extension state', storedInstances);
+        }
+        // Default instance not set, so set to the first one by default
+        if (!Streams.getDefaultInstance() && storedInstances.length) {
+            storedInstances[0].isDefault = true;
+            await Streams.setInstances(storedInstances);
+            Streams.setDefaultInstanceEnvContext();
+            getStreamsExplorer().refreshInstancesView();
+        }
+        storedInstances.forEach((storedInstance: any) => {
+            store.dispatch(Instance.addStreamsInstanceWithoutAuthentication(storedInstance))
+                .catch((error) => {
+                    this._defaultMessageHandler.handleError(
+                        'An error occurred while adding Streams instances to the Redux state.',
+                        { showNotification: false, detail: error }
+                    );
+                });
+        });
+    }
+
+    /**
+     * Monitor changes to configuration settings
+     */
+    private static monitorConfigSettingChanges(): void {
+        this._context.subscriptions.push(workspace.onDidChangeConfiguration((event: ConfigurationChangeEvent) => {
+            if (!event.affectsConfiguration(EXTENSION_ID)) {
+                return;
+            }
+
+            if (event.affectsConfiguration(Settings.ENV_REFRESH_INTERVAL)) {
+                const refreshSetting = Configuration.getSetting(Settings.ENV_REFRESH_INTERVAL);
+                if (refreshSetting && typeof refreshSetting === 'number' && refreshSetting >= 1) {
+                    store.dispatch(Editor.updateRefreshInterval(refreshSetting));
+                }
+            }
+
+            if (event.affectsConfiguration(Settings.ENV_TIMEOUT_FOR_REQUESTS)) {
+                const timeoutSetting = Configuration.getSetting(Settings.ENV_TIMEOUT_FOR_REQUESTS);
+                if (timeoutSetting && typeof timeoutSetting === 'number' && timeoutSetting >= 1) {
+                    StreamsRest.setRequestTimeout(timeoutSetting);
+                }
+            }
+
+            if (event.affectsConfiguration(Settings.ENV_TOOLKIT_PATHS)) {
+                const currentToolkitPathsSetting = Configuration.getSetting(Settings.ENV_TOOLKIT_PATHS);
+                this._toolkitPaths = currentToolkitPathsSetting !== '' && currentToolkitPathsSetting !== Settings.ENV_TOOLKIT_PATHS_DEFAULT ? currentToolkitPathsSetting : null;
+                store.dispatch(EditorAction.setToolkitPathsSetting(this._toolkitPaths));
+                commands.executeCommand(Commands.VIEW.STREAMS_EXPLORER.STREAMS_TOOLKITS.REFRESH_TOOLKITS, false);
+            }
+        }));
+    }
+
+    /**
+     * Monitor when the active editor is an SPL file and update toolkits cache
+     */
+    private static monitorOpenSplFile(): void {
+        const checkToolkitsCache = (): void => {
+            const storedInstances = Streams.getInstances();
+            if (!storedInstances.length) {
+                return;
+            }
+
+            // Check if toolkits cache directory is empty
+            const isRefreshingToolkits = EditorSelector.selectIsRefreshingToolkits(store.getState());
+            const files = fs.readdirSync(TOOLKITS_CACHE_DIR).filter((file: any) => typeof file === 'string' && path.extname(file) === '.xml');
+            const isEmpty = files.length === 0;
+            if (!isRefreshingToolkits && isEmpty) {
+                const message = 'The available content assist and toolkits may not match what is available on the Streams build service.';
+                if (!Streams.getDefaultInstanceEnv()) {
+                    window.showWarningMessage(
+                        `${message} A default Streams instance has not been set.`,
+                        'Set Default'
+                    ).then((selection: string) => {
+                        if (selection) {
+                            window.showQuickPick(Streams.getQuickPickItems(Streams.getInstances()), {
+                                canPickMany: false,
+                                ignoreFocusOut: true,
+                                placeHolder: 'Select a Streams instance to set as the default'
+                            }).then(async (item: any): Promise<void> => {
+                                if (item) {
+                                    StreamsInstance.setDefaultInstance(item);
+                                }
+                            });
+                        }
+                        return null;
+                    });
+                } else {
+                    const defaultInstance = Streams.getDefaultInstance();
+                    const defaultIntanceName = InstanceSelector.selectInstanceName(store.getState(), defaultInstance.connectionId);
+                    const defaultInstanceType = Streams.getDefaultInstanceEnv();
+                    if ((defaultInstanceType === StreamsInstanceType.V5_CPD || defaultInstanceType === StreamsInstanceType.V5_STANDALONE) && !Authentication.isAuthenticated(defaultInstance)) {
+                        window.showWarningMessage(
+                            `${message} Authenticate to the ${defaultIntanceName} instance to update the available toolkits.`,
+                            'Authenticate'
+                        ).then((selection: string) => {
+                            if (selection) {
+                                StreamsInstance.authenticate(defaultInstance, false, null);
+                            }
+                        });
+                    }
+                }
+            }
+        };
+
+        // Check if current editor is an SPL file
+        const { activeTextEditor } = window;
+        if (activeTextEditor && activeTextEditor.document.languageId === LANGUAGE_SPL) {
+            checkToolkitsCache();
+        }
+    }
+
+    /**
+     * Handle build/submit action based on number of instances
+     * @param type                           the action type
+     * @param zeroInstancesCallbackFn        function to execute when there are no instances
+     * @param oneInstanceCallbackFn          function to execute when there is one instance
+     * @param multipleInstancesCallbackFn    function to execute when there are multiple instances
+     */
+    private static handleAction(type: string, zeroInstancesCallbackFn: Function, oneInstanceCallbackFn: Function, multipleInstancesCallbackFn: Function): void {
+        const storedInstances = Streams.getInstances();
+        if (!storedInstances.length) {
+            const notificationButtons = [{
+                label: 'Add Instance',
+                callbackFn: () => {
+                    const queuedActionId = generateRandomId('queuedAction');
+                    store.dispatch(EditorAction.addQueuedAction({
+                        id: queuedActionId,
+                        action: Editor.executeCallbackFn(zeroInstancesCallbackFn)
+                    }));
+                    StreamsInstance.authenticate(null, false, queuedActionId);
+                }
+            }];
+            this._defaultMessageHandler.handleInfo(`There are no Streams instances available. Add an instance to continue with the ${type}.`, { notificationButtons });
+        } else if (storedInstances.length === 1) {
+            oneInstanceCallbackFn();
+        } else {
+            multipleInstancesCallbackFn();
+        }
+    }
+
+    /**
+     * Show instance selection webview panel
+     * @param action             The build and/or submit action
+     * @param filePaths          The selected file paths
+     * @param postBuildAction    The post-build action
+     */
+    private static showInstancePanel(action: string, filePaths: string[], postBuildAction: any): void {
+        commands.executeCommand(Commands.ENVIRONMENT.SHOW_INSTANCE_WEBVIEW_PANEL, action, filePaths, postBuildAction);
+    }
+
+    /**
+     * Initialize a Streams build
+     * @param type        The build type (from SPL file or Makefile)
+     * @param filePath    The path to the SPL file or Makefile
+     * @param action      The post-build action to take
+     */
+    private static async initBuild(type: string, filePath: string, action: PostBuildAction): Promise<any> {
+        const workspaceFolders = _map(workspace.workspaceFolders, (folder: WorkspaceFolder) => folder.uri.fsPath);
+        const appRoot = SourceArchiveUtils.getApplicationRoot(workspaceFolders, filePath);
+
+        let lintHandler = Registry.getLintHandler(appRoot);
+        if (!lintHandler) {
+            lintHandler = new LintHandler(appRoot);
+            Registry.addLintHandler(appRoot, lintHandler);
+        }
+
+        let compositeToBuild: string;
+        let messageHandlerId: string;
+        if (type === 'buildApp') {
+            const { namespace, mainComposites }: any = StreamsUtils.getFqnMainComposites(filePath);
+            compositeToBuild = await this.getCompositeToBuild(namespace, mainComposites);
+            messageHandlerId = `${appRoot}:${compositeToBuild}`;
+        } else {
+            messageHandlerId = filePath;
+        }
+
+        let messageHandler = Registry.getMessageHandler(messageHandlerId);
+        if (!messageHandler) {
+            messageHandler = new MessageHandler({ appRoot, filePath });
+            Registry.addMessageHandler(messageHandlerId, messageHandler);
+        }
+
+        const displayPath = this.getDisplayPath(appRoot, filePath);
+        Logger.registerOutputChannel(filePath, displayPath);
+
+        let statusMessage: string;
+        if (type === 'buildApp') {
+            statusMessage = `Received request to build${action === PostBuildAction.Submit ? ' and submit.' : '.'}`;
+        } else {
+            statusMessage = `Received request to build from a Makefile${action === PostBuildAction.Submit ? ' and submit.' : '.'}`;
+        }
+        messageHandler.handleInfo(statusMessage, { showNotification: false });
+        messageHandler.handleInfo(`Selected: ${filePath}`, { showNotification: false });
+
+        if (type === 'buildApp') {
+            return { appRoot, compositeToBuild, messageHandler };
+        }
+        return { appRoot, messageHandler };
+    }
+
+    /**
+     * Initialize a Streams job submission
+     * @param filePaths    The paths to the application bundle(s)
+     */
+    private static initSubmit(filePaths: string[]): string[] {
+        const bundleFilePaths = filePaths.filter((filePath: string) => filePath.toLowerCase().endsWith('.sab'));
+
+        const statusMessage = `Received request to submit application bundle${bundleFilePaths.length > 1 ? 's.' : '.'}`;
+        this._defaultMessageHandler.handleInfo(statusMessage, { showNotification: false });
+        this._defaultMessageHandler.handleInfo(`Selected:\n${bundleFilePaths.join('\n')}`, { showNotification: false });
+
+        return bundleFilePaths;
     }
 
     /**
@@ -635,54 +663,10 @@ export default class StreamsBuild {
         });
     }
 
-    /**
-     * Handle a build or submission
-     * @param callbackFn    The callback function to execute
-     */
-    private static async handleV5Action(callbackFn: () => void): Promise<void> {
-        const icp4dUrl = StateSelector.getIcp4dUrl(getStore().getState());
-        if (icp4dUrl) {
-            const successFn = callbackFn;
-            const errorFn = (): void => this.handleIcp4dUrlNotSet(this.handleV5Action.bind(this, callbackFn));
-            getStore().dispatch(checkIcp4dHostExists(successFn, errorFn));
-        } else {
-            this.handleIcp4dUrlNotSet(this.handleV5Action.bind(this, callbackFn));
-        }
-    }
-
-    /**
-     * Update ICP4D URL in the Redux store
-     * @param urlString    The ICP4D URL
-     */
-    private static updateIcp4dUrl(urlString: string): void {
-        try {
-            const url = new URL(urlString);
-            const prunedUrl = `${url.protocol || 'https:'}//${url.host}`;
-            getStore().dispatch(setIcp4dUrl(prunedUrl));
-        } catch (err) {
-            getStore().dispatch(setIcp4dUrl(null));
-        }
-    }
-
-    /**
-     * Handle the scenario where the IBM Cloud Pak for Data URL is not specified
-     * @param callbackFn    The callback function to execute
-     */
-    private static handleIcp4dUrlNotSet(callbackFn: () => void): void {
-        MessageHandlerRegistry.getDefault().handleIcp4dUrlNotSet(callbackFn);
-    }
-
-    /**
-     * Show ICP4D authentication webview panel if not yet authenticated
-     */
-    private static showIcp4dAuthPanel(): void {
-        const username = StateSelector.getFormUsername(getStore().getState()) || StateSelector.getUsername(getStore().getState());
-        const rememberPassword = StateSelector.getFormRememberPassword(getStore().getState()) || StateSelector.getRememberPassword(getStore().getState());
-        if (username && rememberPassword) {
-            Keychain.getCredentials(username).then((password: string) => {
-                getStore().dispatch(setFormDataField('password', password));
-            });
-        }
-        commands.executeCommand(Commands.SHOW_ICP4D_SETTINGS_WEBVIEW_PANEL);
+    private static handleError(err: any, messageHandler: MessageHandler, errorMsg: string): void {
+        messageHandler.handleError(
+            errorMsg,
+            { detail: err.response || err.message || err, stack: err.response || err.stack }
+        );
     }
 }

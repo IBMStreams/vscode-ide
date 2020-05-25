@@ -4,9 +4,6 @@ import * as vscode from 'vscode';
 // on Linux they are managed by the Secret Service API/libsecret,
 // and on Windows they are managed by Credential Vault
 
-// keytar depends on a native module shipped in VS Code, so this is how we load it
-import * as keytarType from 'keytar';
-
 /**
  * Get the Node module from the VS Code application root folder
  * @param moduleName The module name
@@ -28,10 +25,10 @@ function getNodeModule<T>(moduleName: string): T | undefined {
 }
 
 interface Keytar {
-    getPassword: typeof keytarType['getPassword'];
-    setPassword: typeof keytarType['setPassword'];
-    deletePassword: typeof keytarType['deletePassword'];
-    findCredentials: typeof keytarType['findCredentials'];
+    getPassword: Function;
+    setPassword: Function;
+    deletePassword: Function;
+    findCredentials: Function;
 }
 
 const failingKeytar: Keytar = {
@@ -43,51 +40,53 @@ const failingKeytar: Keytar = {
 
 const systemKeychain = getNodeModule<Keytar>('keytar') || failingKeytar;
 
-const SERVICE_ID = 'ibm-icp4d-streams';
-
 /**
  * Manages credentials in the system keychain
  */
 export default class Keychain {
     /**
      * Get the stored credentials from the keychain
-     * @param username    The username
+     * @param serviceName    The service name
+     * @param username       The username
      */
-    public static getCredentials = async (username: string): Promise<string> => {
+    public static getCredentials = async (serviceName: string, username: string): Promise<string> => {
         if (systemKeychain) {
-            return systemKeychain.getPassword(SERVICE_ID, username);
+            return systemKeychain.getPassword(serviceName, username);
         }
         return null;
     }
 
     /**
      * Add a new set of credentials to the keychain
-     * @param username    The username
-     * @param password    The password
+     * @param serviceName    The service name
+     * @param username       The username
+     * @param password       The password
      */
-    public static addCredentials = async (username: string, password: string): Promise<void> => {
+    public static addCredentials = async (serviceName: string, username: string, password: string): Promise<void> => {
         if (systemKeychain) {
-            await systemKeychain.setPassword(SERVICE_ID, username, password);
+            await systemKeychain.setPassword(serviceName, username, password);
         }
     }
 
     /**
      * Delete the stored credentials from the keychain
-     * @param username    The username
+     * @param serviceName    The service name
+     * @param username       The username
      */
-    public static deleteCredentials = async (username: string): Promise<boolean> => {
+    public static deleteCredentials = async (serviceName: string, username: string): Promise<boolean> => {
         if (systemKeychain) {
-            return systemKeychain.deletePassword(SERVICE_ID, username);
+            return systemKeychain.deletePassword(serviceName, username);
         }
+        return null;
     }
 
     /**
      * Get all the stored credentials from the keychain
+     * @param serviceName    The service name
      */
-    public static getAllCredentials = async (): Promise<{ account: string, password: string}[]> => {
+    public static getAllCredentials = async (serviceName: string): Promise<{ account: string, password: string}[]> => {
         if (systemKeychain && systemKeychain.findCredentials) {
-            console.log(systemKeychain);
-            const creds = await systemKeychain.findCredentials(SERVICE_ID);
+            const creds = await systemKeychain.findCredentials(serviceName);
             return creds;
         }
         return null;
@@ -95,21 +94,14 @@ export default class Keychain {
 
     /**
      * Delete all the stored credentials from the keychain
+     * @param serviceName    The service name
      */
-    public static deleteAllCredentials = async (): Promise<void> => {
-        const credentials = await Keychain.getAllCredentials();
+    public static deleteAllCredentials = async (serviceName: string): Promise<void> => {
+        const credentials = await Keychain.getAllCredentials(serviceName);
         if (credentials) {
             credentials.forEach((credential: { account: string, password: string }) => {
-                Keychain.deleteCredentials(credential.account);
+                Keychain.deleteCredentials(serviceName, credential.account);
             });
         }
-    }
-
-    /**
-     * Check if credentials exist in the keychain
-     */
-    public static credentialsExist = async (): Promise<boolean> => {
-        const credentials = await Keychain.getAllCredentials();
-        return credentials && credentials.length > 0;
     }
 }

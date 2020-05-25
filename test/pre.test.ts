@@ -1,29 +1,28 @@
-import * as extractZip from 'extract-zip';
+import { Registry } from '@streams/common';
 import * as fse from 'fs-extra';
-import * as glob from 'glob';
 import * as https from 'https';
 import { before, describe, it } from 'mocha';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import MessageHandlerRegistry from '../src/build/message-handler-registry';
+import * as unzipper from 'unzipper';
 import MessageHandler from '../src/build/MessageHandler';
 import { Logger } from '../src/utils';
 
-describe('Pre Test', function() {
+import glob = require('glob');
+
+describe('pre-test', function() {
     let sandbox: sinon.SinonSandbox;
     let buildSourceArchiveToolkitsPath: string;
-    let buildUtilsToolkitsPath: string;
     let simpleSplAppPath: string;
     let inetToolkitUrl: string;
 
     before(function() {
         buildSourceArchiveToolkitsPath = `${__dirname}${path.sep}build${path.sep}buildSourceArchive${path.sep}toolkits`;
-        buildUtilsToolkitsPath = `${__dirname}${path.sep}build${path.sep}v5${path.sep}utils${path.sep}toolkits`;
         simpleSplAppPath = `${__dirname}${path.sep}resources${path.sep}splFiles${path.sep}simple`;
         inetToolkitUrl = 'https://codeload.github.com/IBMStreams/streamsx.inet/zip/v2.9.6';
 
         Logger.configure();
-        MessageHandlerRegistry.setDefault(new MessageHandler(null));
+        Registry.setDefaultMessageHandler(new MessageHandler(null));
 
         // Suppress console output
         sandbox = sinon.createSandbox();
@@ -36,13 +35,10 @@ describe('Pre Test', function() {
         sandbox.restore();
     });
 
-    it('Reset test directories and files', function(done) {
+    it('reset test directories and files', function(done) {
         try {
             if (fse.existsSync(buildSourceArchiveToolkitsPath)) {
                 fse.removeSync(buildSourceArchiveToolkitsPath);
-            }
-            if (fse.existsSync(buildUtilsToolkitsPath)) {
-                fse.removeSync(buildUtilsToolkitsPath);
             }
             glob('.build_test_*.zip', { cwd: simpleSplAppPath }, (err, files) => {
                 if (err) {
@@ -53,85 +49,27 @@ describe('Pre Test', function() {
             if (!fse.existsSync(buildSourceArchiveToolkitsPath)) {
                 fse.mkdirSync(buildSourceArchiveToolkitsPath);
             }
-            if (!fse.existsSync(buildUtilsToolkitsPath)) {
-                fse.mkdirSync(buildUtilsToolkitsPath);
-            }
             done();
         } catch (err) {
             done(err);
         }
     });
 
-    it('Set up toolkits for build/buildSourceArchive tests', function(done) {
+    it('set up toolkits for build/buildSourceArchive tests', async function() {
+        // Set timeout for this test to 10s to allow for slow download
+        this.timeout(10000);
         const toolkitXml = '<?xml version="1.0" encoding="UTF-8" standalone="no" ?>\n<toolkitModel xmlns="http://www.ibm.com/xmlns/prod/streams/spl/toolkit" productVersion="4.3.0.3" xmlns:common="http://www.ibm.com/xmlns/prod/streams/spl/common" xmlns:ti="http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><toolkit name="com.ibm.streamsx.inet" requiredProductVersion="4.0.1.0" version="2.9.6"></toolkit></toolkitModel>';
-        const download = (url: string, dest: string, cb: Function) => {
-            const file = fse.createWriteStream(dest);
-            file.on('open', () => {
-                https.get(url, (response) => {
-                    response.pipe(file);
-                    file.on('finish', () => {
-                        file.end();
-                        extractZip(`${buildSourceArchiveToolkitsPath}${path.sep}toolkit.zip`, { dir: buildSourceArchiveToolkitsPath }, (err) => {
-                            if (err) {
-                                cb(err.message);
-                            }
-                            fse.unlinkSync(`${buildSourceArchiveToolkitsPath}${path.sep}toolkit.zip`);
-                            fse.writeFileSync(`${buildSourceArchiveToolkitsPath}${path.sep}streamsx.inet-2.9.6${path.sep}com.ibm.streamsx.inet${path.sep}toolkit.xml`, toolkitXml);
-                            cb();
-                        });
-                    });
-                }).on('error', (err) => {
-                    fse.unlink(dest, null);
-                    if (cb) {
-                        cb(err.message);
-                    }
-                });
-            });
-        };
-        download(inetToolkitUrl, `${buildSourceArchiveToolkitsPath}/toolkit.zip`, (err) => {
-            if (err) {
-                done(err);
-            } else {
-                done();
-            }
-        });
-    });
 
-    it('Set up toolkits for build/utils tests', function(done) {
-        const toolkitXml = '<?xml version="1.0" encoding="UTF-8" standalone="no" ?>\n<toolkitModel xmlns="http://www.ibm.com/xmlns/prod/streams/spl/toolkit" productVersion="4.3.0.3" xmlns:common="http://www.ibm.com/xmlns/prod/streams/spl/common" xmlns:ti="http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><toolkit name="com.ibm.streamsx.inet" requiredProductVersion="4.0.1.0" version="2.9.6"></toolkit></toolkitModel>';
-        const toolkitXml2 = '<?xml version="1.0" encoding="UTF-8" standalone="no" ?>\n<toolkitModel xmlns="http://www.ibm.com/xmlns/prod/streams/spl/toolkit" productVersion="4.3.0.3" xmlns:common="http://www.ibm.com/xmlns/prod/streams/spl/common" xmlns:ti="http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><toolkit name="com.ibm.streamsx.inet2" requiredProductVersion="4.0.1.0" version="2.9.6"></toolkit></toolkitModel>';
-        const download = (url: string, dest: string, cb: Function) => {
-            const file = fse.createWriteStream(dest);
-            file.on('open', () => {
-                https.get(url, (response) => {
-                    response.pipe(file);
-                    file.on('finish', () => {
-                        file.end();
-                        extractZip(`${buildUtilsToolkitsPath}${path.sep}toolkit.zip`, { dir: buildUtilsToolkitsPath }, (err) => {
-                            if (err) {
-                                cb(err.message);
-                            }
-                            fse.unlinkSync(`${buildUtilsToolkitsPath}${path.sep}toolkit.zip`);
-                            fse.writeFileSync(`${buildUtilsToolkitsPath}${path.sep}streamsx.inet-2.9.6${path.sep}com.ibm.streamsx.inet${path.sep}toolkit.xml`, toolkitXml);
-                            fse.mkdirSync(`${buildUtilsToolkitsPath}${path.sep}streamsx.inet-2.9.6${path.sep}com.ibm.streamsx.inet2`);
-                            fse.writeFileSync(`${buildUtilsToolkitsPath}${path.sep}streamsx.inet-2.9.6${path.sep}com.ibm.streamsx.inet2${path.sep}toolkit.xml`, toolkitXml2);
-                            cb();
-                        });
-                    });
-                }).on('error', (err) => {
-                    fse.unlink(dest, null);
-                    if (cb) {
-                        cb(err.message);
-                    }
-                });
+        await new Promise((resolve, reject) => {
+            https.get(inetToolkitUrl, (response) => {
+                response.pipe(
+                    unzipper.Extract({ path: buildSourceArchiveToolkitsPath, concurrency: 5 })
+                        .on('close', () => {
+                            fse.writeFileSync(`${buildSourceArchiveToolkitsPath}${path.sep}streamsx.inet-2.9.6${path.sep}com.ibm.streamsx.inet${path.sep}toolkit.xml`, toolkitXml);
+                            resolve();
+                        })
+                );
             });
-        };
-        download(inetToolkitUrl, `${buildUtilsToolkitsPath}/toolkit.zip`, (err) => {
-            if (err) {
-                done(err);
-            } else {
-                done();
-            }
         });
     });
 });

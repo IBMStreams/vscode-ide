@@ -533,7 +533,7 @@
 			],
 			"settings": {
 				"fontStyle": "bold",
-				"foreground": "#666666"
+				"foreground": "#FF832B"
 			}
 		},
 		{
@@ -543,7 +543,7 @@
 			],
 			"settings": {
 				"fontStyle": "",
-				"foreground": "#939393"
+				"foreground": "#FF832B"
 			}
 		},
 		{
@@ -553,7 +553,7 @@
 			],
 			"settings": {
 				"fontStyle": "bold",
-				"foreground": "#D62D20"
+				"foreground": "#DA1E28"
 			}
 		},
 		{
@@ -563,7 +563,7 @@
 			],
 			"settings": {
 				"fontStyle": "",
-				"foreground": "#D62D20"
+				"foreground": "#DA1E28"
 			}
 		},
 		{
@@ -573,7 +573,7 @@
 			],
 			"settings": {
 				"fontStyle": "bold",
-				"foreground": "#0057E7"
+				"foreground": "#0043CE"
 			}
 		},
 		{
@@ -583,7 +583,7 @@
 			],
 			"settings": {
 				"fontStyle": "bold",
-				"foreground": "#008744"
+				"foreground": "#24A148"
 			}
 		},
 		{
@@ -593,7 +593,7 @@
 			],
 			"settings": {
 				"fontStyle": "bold",
-				"foreground": "#FFA700"
+				"foreground": "#F1C21B"
 			}
 		}
 	]

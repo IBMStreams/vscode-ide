@@ -7,13 +7,13 @@ import {
     workspace
 } from 'vscode';
 import { Commands, BaseCommand } from '.';
-import { Logger } from '../utils';
+import { BuiltInCommands, Logger } from '../utils';
 
 /**
  * Command that creates a simple Streams application from a template
  */
 export default class CreateApplicationCommand implements BaseCommand {
-    public readonly commandName: string = Commands.CREATE_APPLICATION;
+    public readonly commandName: string = Commands.GENERAL.CREATE_APPLICATION;
 
     /**
      * Execute the command
@@ -56,7 +56,7 @@ export default class CreateApplicationCommand implements BaseCommand {
 
         // Add the root folder to the workspace and open the main composite file
         workspace.updateWorkspaceFolders(workspace.workspaceFolders ? workspace.workspaceFolders.length : 0, null, { uri: rootUri });
-        commands.executeCommand('vscode.open', Uri.file(compositeFile));
+        commands.executeCommand(BuiltInCommands.Open, Uri.file(compositeFile));
 
         Logger.info(null, `Created ${namespace}::${composite}`);
     }
@@ -74,7 +74,7 @@ export default class CreateApplicationCommand implements BaseCommand {
             if (selected && selected.length === 1) {
                 return selected[0];
             }
-            throw new Error('Application creation canceled, a root folder was not selected');
+            throw new Error('Application creation canceled, a root folder was not selected.');
         });
     }
 
@@ -92,7 +92,7 @@ export default class CreateApplicationCommand implements BaseCommand {
             if (input && input.trim() !== '') {
                 return input;
             }
-            throw new Error(`Application creation canceled, a ${type} was not specified`);
+            throw new Error(`Application creation canceled, a ${type} was not specified.`);
         });
     }
 }

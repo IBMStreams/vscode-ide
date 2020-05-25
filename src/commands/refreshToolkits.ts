@@ -6,7 +6,7 @@ import StreamsBuild from '../build';
  * Command that allows a user to refresh the toolkits on the SPL LSP server
  */
 export default class RefreshToolkitsCommand implements BaseCommand {
-    public commandName: string = Commands.REFRESH_TOOLKITS;
+    public commandName: string = Commands.ENVIRONMENT.TOOLKITS_REFRESH;
 
     /**
      * Execute the command
@@ -14,6 +14,6 @@ export default class RefreshToolkitsCommand implements BaseCommand {
      * @param args       Array of arguments
      */
     public execute(context: ExtensionContext, ...args: any[]): any {
-        StreamsBuild.refreshLspToolkits();
+        StreamsBuild.refreshToolkits();
     }
 }

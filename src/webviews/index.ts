@@ -1,8 +1,12 @@
 import { commands, ExtensionContext } from 'vscode';
 import { Commands } from '../commands';
-import ICP4DWebviewPanel from './icp4d';
+import StreamsAuthenticationWebviewPanel from './streamsAuthentication';
+import InstanceSelectionWebviewPanel from './instanceSelection';
 
-export { default as ICP4DWebviewPanel } from './icp4d';
+export { default as ConfigureJobSubmissionWebviewPanel } from './configureJobSubmission';
+export { default as JobGraphWebviewPanel } from './jobGraph';
+export { default as StreamsAuthenticationWebviewPanel } from './streamsAuthentication';
+export { default as InstanceSelectionWebviewPanel } from './instanceSelection';
 
 /**
  * Initialize utilities
@@ -10,8 +14,12 @@ export { default as ICP4DWebviewPanel } from './icp4d';
  * @param client     The language client
  */
 export function initialize(context: ExtensionContext): void {
-    context.subscriptions.push(commands.registerCommand(Commands.SHOW_ICP4D_SETTINGS_WEBVIEW_PANEL, () => {
-        ICP4DWebviewPanel.createOrShow(context);
+    context.subscriptions.push(commands.registerCommand(Commands.ENVIRONMENT.SHOW_AUTHENTICATION_WEBVIEW_PANEL, (existingInstance: any, queuedActionId: string) => {
+        StreamsAuthenticationWebviewPanel.createOrShow(context, existingInstance, queuedActionId);
+    }));
+
+    context.subscriptions.push(commands.registerCommand(Commands.ENVIRONMENT.SHOW_INSTANCE_WEBVIEW_PANEL, (action: string, filePaths: string[], postBuildAction: any) => {
+        InstanceSelectionWebviewPanel.createOrShow(context, action, filePaths, postBuildAction);
     }));
 }
 

@@ -16,7 +16,11 @@
             "outFiles": [
                 "${workspaceFolder}/dist/**/*.js"
             ],
-            "preLaunchTask": "npm: watch"
+            "preLaunchTask": "npm: webpack:dev-watch",
+            "sourceMaps": true,
+            "skipFiles": [
+                "<node_internals>/**/*.js"
+              ]
         },
         {
             "name": "Launch Extension Tests",

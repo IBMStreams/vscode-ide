@@ -1,6 +1,7 @@
-import * as glob from 'glob';
-import * as Mocha from 'mocha';
 import * as path from 'path';
+
+import glob = require('glob');
+import Mocha = require('mocha');
 
 // eslint-disable-next-line import/prefer-default-export
 export function run(): Promise<void> {
@@ -17,9 +18,9 @@ export function run(): Promise<void> {
             const preTestFile = 'pre.test.js';
             const postTestFile = 'post.test.js';
             const testFiles = [
-                files.find(file => file === preTestFile),
-                ...files.filter(file => file !== preTestFile && file !== postTestFile),
-                files.find(file => file === postTestFile)
+                files.find((file) => file === preTestFile),
+                ...files.filter((file) => file !== preTestFile && file !== postTestFile),
+                files.find((file) => file === postTestFile)
             ];
 
             // Add files to the test suite
@@ -37,6 +38,7 @@ export function run(): Promise<void> {
             } catch (error) {
                 e(error);
             }
+            return null;
         });
     });
 }

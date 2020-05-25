@@ -1,0 +1,39 @@
+html, body, #root {
+  height: 100%;
+}
+
+.app-container {
+  background-color: $ui-background;
+  color: $text-01;
+  min-height: 100%;
+
+  .app-container__row {
+    padding-left: $layout-01;
+    padding-right: $layout-01;
+  }
+
+  .app-container__heading {
+    @include carbon--type-style('productive-heading-03');
+    padding-top: $layout-02;
+    padding-bottom: $layout-02;
+    overflow-wrap: break-word;
+  }
+
+  .app-container__list {
+    padding-left: $layout-01;
+    word-break: break-all;
+  }
+
+  .app-container__main-container {
+    padding-bottom: $layout-02;
+  }
+}
+
+.bx--loading-overlay {
+  background-color: $overlay-01;
+}
+
+.bx--text-area:disabled {
+  background-color: $disabled-01;
+  color: $disabled-02;
+}

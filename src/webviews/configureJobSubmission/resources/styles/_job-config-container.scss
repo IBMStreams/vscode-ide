@@ -1,0 +1,11 @@
+.job-config-container__config-input:first-of-type {
+  padding-top: $spacing-03;
+}
+
+.job-config-container__config-input:not(:last-of-type) {
+  padding-bottom: $layout-01;
+}
+
+.job-config-container__help-tooltip {
+  @include carbon--type-style('body-long-01');
+}
