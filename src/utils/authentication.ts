@@ -1,4 +1,4 @@
-import { InstanceSelector, store } from '@streams/common';
+import { InstanceSelector, store } from '@ibmstreams/common';
 import { commands } from 'vscode';
 import { Commands } from '../commands';
 import { Streams } from '../streams';

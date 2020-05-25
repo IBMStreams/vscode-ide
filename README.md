@@ -1,4 +1,4 @@
-# IBM Streams support for Visual Studio Code [Beta]
+# IBM Streams support for Visual Studio Code
 
 This extension provides support for [IBM Streams](https://www.ibm.com/cloud/streaming-analytics) within the [Visual Studio Code](https://code.visualstudio.com) editor and works with the following Streams versions.
 
@@ -7,10 +7,6 @@ This extension provides support for [IBM Streams](https://www.ibm.com/cloud/stre
 - [__IBM Streaming Analytics on IBM Cloud__](https://cloud.ibm.com/docs/services/StreamingAnalytics?topic=StreamingAnalytics-gettingstarted): offers most of the features of IBM Streams on an agile, cloud-based platform
 
 [Visual Studio Code 1.38.0](https://code.visualstudio.com/updates/v1_38) or later is required.
-
-## Beta
-
-This is the initial public release.
 
 ## Setup instructions
 
@@ -28,7 +24,7 @@ Streams version | Prerequisites
 
 ### Toolkits
 
-The IBM Streams product toolkits are bundled with this extension. If your Streams applications use additional toolkits, you must copy them to a folder, or multiple folders, on your workstation. Note that a toolkit must contain a `toolkit.xml` file in order in order to be included. Then, execute the **Set IBM Streams Toolkit Paths** command from the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) and enter the paths to your toolkit directories, comma or semicolon separated, containing the toolkits.
+A version of IBM Streams toolkits that are used in the IBM Streaming Analytics service  are bundled with this extension. If your Streams applications use additional toolkits, you must copy them to a folder, or multiple folders, on your workstation. Note that a toolkit must contain a `toolkit.xml` file in order in order to be included. Then, execute the **Set IBM Streams Toolkit Paths** command from the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) and enter the paths to your toolkit directories, comma or semicolon separated, containing the toolkits.
 
 ## Features
 

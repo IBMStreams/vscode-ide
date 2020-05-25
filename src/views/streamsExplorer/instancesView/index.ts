@@ -1,4 +1,4 @@
-import { InstanceSelector, observeStore, store } from '@streams/common';
+import { InstanceSelector, observeStore, store } from '@ibmstreams/common';
 import _omit from 'lodash/omit';
 import {
     commands,

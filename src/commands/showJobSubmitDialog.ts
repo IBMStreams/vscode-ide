@@ -1,4 +1,4 @@
-import { Editor, EditorAction, generateRandomId, store } from '@streams/common';
+import { Editor, EditorAction, generateRandomId, store } from '@ibmstreams/common';
 import { ExtensionContext } from 'vscode';
 import { BaseCommand, Commands } from '.';
 import { StreamsInstance } from '../streams';

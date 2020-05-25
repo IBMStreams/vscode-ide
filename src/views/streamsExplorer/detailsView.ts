@@ -1,4 +1,4 @@
-import { InstanceSelector, store, StreamsInstanceType } from '@streams/common';
+import { InstanceSelector, store, StreamsInstanceType } from '@ibmstreams/common';
 import _cloneDeep from 'lodash/cloneDeep';
 import _has from 'lodash/has';
 import _isEqual from 'lodash/isEqual';

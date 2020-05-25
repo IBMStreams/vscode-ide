@@ -1,4 +1,4 @@
-import { Registry, SourceArchiveUtils } from '@streams/common';
+import { Registry, SourceArchiveUtils } from '@ibmstreams/common';
 import { expect } from 'chai';
 import * as fs from 'fs';
 import * as unzipper from 'unzipper';

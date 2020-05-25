@@ -1,4 +1,4 @@
-import { addStreamsRequestAuth, store } from '@streams/common';
+import { addStreamsRequestAuth, store } from '@ibmstreams/common';
 import axios from 'axios';
 import * as fs from 'fs';
 import * as https from 'https';

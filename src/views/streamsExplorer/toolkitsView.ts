@@ -1,4 +1,4 @@
-import { EditorSelector, store, StreamsInstanceType, ToolkitUtils } from '@streams/common';
+import { EditorSelector, store, StreamsInstanceType, ToolkitUtils } from '@ibmstreams/common';
 import {
     Command, commands, Event, EventEmitter, TreeDataProvider, TreeItem, TreeItemCollapsibleState, window
 } from 'vscode';

@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import StreamsJobGraph from '@streams/graph';
+import StreamsJobGraph from '@ibmstreams/graph';
 import TitleHeader from '../components/TitleHeader/TitleHeader';
 import LoadingIcon from '../icons/LoadingIcon.svg';
 import MessageHandler from '../../../message.ts';

@@ -1,4 +1,4 @@
-import { SPL_MSG_REGEX_V4, SPL_MSG_REGEX_V5 } from '@streams/common';
+import { SPL_MSG_REGEX_V4, SPL_MSG_REGEX_V5 } from '@ibmstreams/common';
 import * as path from 'path';
 import { DiagnosticSeverity } from 'vscode';
 import { Diagnostics } from '../utils';

@@ -1,4 +1,4 @@
-import { SourceArchiveUtils } from '@streams/common';
+import { SourceArchiveUtils } from '@ibmstreams/common';
 import * as fs from 'fs';
 import _map from 'lodash/map';
 import * as path from 'path';

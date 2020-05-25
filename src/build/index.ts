@@ -15,7 +15,7 @@ import {
     StreamsUtils,
     SubmitJob,
     ToolkitUtils
-} from '@streams/common';
+} from '@ibmstreams/common';
 import * as fs from 'fs';
 import _map from 'lodash/map';
 import _omit from 'lodash/omit';

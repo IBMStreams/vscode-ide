@@ -1,4 +1,4 @@
-import { StreamsInstanceType } from '@streams/common';
+import { StreamsInstanceType } from '@ibmstreams/common';
 import * as path from 'path';
 import { Command, TreeItem, TreeItemCollapsibleState } from 'vscode';
 

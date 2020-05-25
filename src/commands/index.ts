@@ -1,4 +1,4 @@
-import { PostBuildAction } from '@streams/common';
+import { PostBuildAction } from '@ibmstreams/common';
 import { commands, ExtensionContext } from 'vscode';
 import {
     BuildCommand,

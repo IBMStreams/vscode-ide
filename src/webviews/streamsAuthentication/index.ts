@@ -1,6 +1,6 @@
 import {
     Editor, Instance, InstanceSelector, Registry, store, StreamsInstanceType, ToolkitUtils
-} from '@streams/common';
+} from '@ibmstreams/common';
 import * as fs from 'fs';
 import * as path from 'path';
 import _cloneDeep from 'lodash/cloneDeep';

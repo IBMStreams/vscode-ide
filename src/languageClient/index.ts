@@ -1,4 +1,4 @@
-import { ToolkitUtils } from '@streams/common';
+import { ToolkitUtils } from '@ibmstreams/common';
 import * as childProcess from 'child_process';
 import * as net from 'net';
 import * as os from 'os';

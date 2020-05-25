@@ -1,6 +1,6 @@
 import {
     InstanceSelector, Job, Registry, store, StreamsInstanceType, CloudPakForDataVersion
-} from '@streams/common';
+} from '@ibmstreams/common';
 import * as fs from 'fs';
 import _startCase from 'lodash/startCase';
 import * as path from 'path';

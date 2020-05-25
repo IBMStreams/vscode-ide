@@ -1,4 +1,4 @@
-import { EditorAction, Logger as StreamsLogger, store } from '@streams/common';
+import { EditorAction, Logger as StreamsLogger, store } from '@ibmstreams/common';
 import { env, ExtensionContext } from 'vscode';
 import { Configuration, Diagnostics, Logger } from '.';
 import * as Settings from './settings';

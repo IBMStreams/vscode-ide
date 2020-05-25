@@ -1,4 +1,4 @@
-import { Registry } from '@streams/common';
+import { Registry } from '@ibmstreams/common';
 import * as fse from 'fs-extra';
 import * as https from 'https';
 import { before, describe, it } from 'mocha';

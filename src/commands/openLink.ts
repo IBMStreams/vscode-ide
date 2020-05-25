@@ -1,4 +1,4 @@
-import { IBM_CLOUD_DASHBOARD_URL, InstanceSelector, store, StreamsInstanceType } from '@streams/common';
+import { IBM_CLOUD_DASHBOARD_URL, InstanceSelector, store, StreamsInstanceType } from '@ibmstreams/common';
 import { commands, ExtensionContext, Uri } from 'vscode';
 import { Commands, BaseCommand } from '.';
 import { Streams } from '../streams';

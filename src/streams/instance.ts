@@ -8,7 +8,7 @@ import {
     StreamsInstanceType,
     ToolkitUtils,
     CloudPakForDataVersion
-} from '@streams/common';
+} from '@ibmstreams/common';
 import _cloneDeep from 'lodash/cloneDeep';
 import { window } from 'vscode';
 import { Streams } from '.';

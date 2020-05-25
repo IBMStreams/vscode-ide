@@ -42,7 +42,7 @@ function getExtensionConfig(mode) {
       rules: [
         {
           test: /\.(j|t)sx?$/,
-          include: /@streams[\\\/]common/,
+          include: /@ibmstreams[\\\/]common/,
           enforce: 'pre',
           loader: 'source-map-loader'
         },
@@ -106,7 +106,7 @@ function getWebviewsConfig(mode) {
         },
         {
           test: /\.jsx?$/,
-          include: /@streams[\\\/]graph|@elyra[\\\/]canvas/,
+          include: /@ibmstreams[\\\/]graph|@elyra[\\\/]canvas/,
           enforce: 'pre',
           loader: 'source-map-loader'
         },

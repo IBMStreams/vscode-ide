@@ -1,6 +1,6 @@
 import {
     CloudPakForDataVersion, Instance, InstanceSelector, Registry, store, StreamsInstanceType
-} from '@streams/common';
+} from '@ibmstreams/common';
 import _invert from 'lodash/invert';
 import { ExtensionContext, QuickPickItem, window, WindowState } from 'vscode';
 import {

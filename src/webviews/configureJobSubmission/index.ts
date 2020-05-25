@@ -1,4 +1,4 @@
-import { getStreamsInstance, InstanceSelector, store } from '@streams/common';
+import { getStreamsInstance, InstanceSelector, store } from '@ibmstreams/common';
 import * as fs from 'fs';
 import * as path from 'path';
 import {

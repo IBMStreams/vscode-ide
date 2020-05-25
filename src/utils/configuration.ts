@@ -1,4 +1,4 @@
-import { EditorAction, Logger as StreamsLogger, store, ToolkitUtils } from '@streams/common';
+import { EditorAction, Logger as StreamsLogger, store, ToolkitUtils } from '@ibmstreams/common';
 import _forEach from 'lodash/forEach';
 import _isEqual from 'lodash/isEqual';
 import {

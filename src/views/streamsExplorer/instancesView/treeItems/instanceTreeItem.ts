@@ -1,4 +1,4 @@
-import { InstanceSelector, store } from '@streams/common';
+import { InstanceSelector, store } from '@ibmstreams/common';
 import _startCase from 'lodash/startCase';
 import * as path from 'path';
 import { commands, TreeItem, TreeItemCollapsibleState, Uri } from 'vscode';
