@@ -92,8 +92,6 @@ export default class StreamsBuild {
      * @param action      The post-build action to take
      */
     public static async buildApp(filePath: string, action: PostBuildAction): Promise<void> {
-        console.log('window', workspace.textDocuments)
-        console.log('path', filePath)
         let isFileDirty = false;
         let dirtyFile = null;
         for (let i = 0; i < workspace.textDocuments.length; i += 1) {
@@ -127,7 +125,6 @@ export default class StreamsBuild {
      * @param action            The post-build action to take
      */
     public static async runBuildApp(targetInstance: any, filePaths: string[], action: PostBuildAction): Promise<void> {
-        console.log('window', window.activeTextEditor.document)
         const { appRoot, compositeToBuild, messageHandler } = await this.initBuild('buildApp', filePaths[0], action);
         const buildApp = (): void => {
             if (targetInstance) {
@@ -181,7 +178,20 @@ export default class StreamsBuild {
      * @param action      The post-build action to take
      */
     public static async buildMake(filePath: string, action: PostBuildAction): Promise<void> {
-        console.log('window', window.activeTextEditor.document)
+        let isFileDirty = false;
+        let dirtyFile = null;
+        for (let i = 0; i < workspace.textDocuments.length; i += 1) {
+            if (workspace.textDocuments[i].fileName === filePath && workspace.textDocuments[i].isDirty) {
+                isFileDirty = true;
+                dirtyFile = workspace.textDocuments[i];
+            }
+        }
+        if (isFileDirty) {
+            const selection = await window.showWarningMessage('Do you want to save your file before you build?', ...['yes', 'no']);
+            if (selection === 'yes') {
+                dirtyFile.save();
+            }
+        }
         const defaultInstance = Streams.checkDefaultInstance();
         if (filePath) {
             const filePaths = [filePath];
