@@ -528,26 +528,6 @@
 			}
 		},
 		{
-			"name": "SPL Debug Log Message Header",
-			"scope": [
-				"meta.log.debug.header.splLog"
-			],
-			"settings": {
-				"fontStyle": "bold",
-				"foreground": "#FF832B"
-			}
-		},
-		{
-			"name": "SPL Debug Log Message Body",
-			"scope": [
-				"meta.log.debug.body.splLog"
-			],
-			"settings": {
-				"fontStyle": "",
-				"foreground": "#FF832B"
-			}
-		},
-		{
 			"name": "SPL Error Log Message Header",
 			"scope": [
 				"meta.log.error.header.splLog"
@@ -565,6 +545,16 @@
 			"settings": {
 				"fontStyle": "",
 				"foreground": "#FA4D56"
+			}
+		},
+		{
+			"name": "SPL Debug Log Message",
+			"scope": [
+				"meta.log.debug.splLog"
+			],
+			"settings": {
+				"fontStyle": "bold",
+				"foreground": "#FF832B"
 			}
 		},
 		{
