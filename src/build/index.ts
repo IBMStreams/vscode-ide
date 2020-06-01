@@ -92,20 +92,7 @@ export default class StreamsBuild {
      * @param action      The post-build action to take
      */
     public static async buildApp(filePath: string, action: PostBuildAction): Promise<void> {
-        let isFileDirty = false;
-        let dirtyFile = null;
-        for (let i = 0; i < workspace.textDocuments.length; i += 1) {
-            if (workspace.textDocuments[i].fileName === filePath && workspace.textDocuments[i].isDirty) {
-                isFileDirty = true;
-                dirtyFile = workspace.textDocuments[i];
-            }
-        }
-        if (isFileDirty) {
-            const selection = await window.showWarningMessage('Do you want to save your file before you build?', ...['yes', 'no']);
-            if (selection === 'yes') {
-                dirtyFile.save();
-            }
-        }
+        await this.checkIfDirty(filePath);
         const defaultInstance = Streams.checkDefaultInstance();
             if (filePath) {
                 const filePaths = [filePath];
@@ -178,20 +165,7 @@ export default class StreamsBuild {
      * @param action      The post-build action to take
      */
     public static async buildMake(filePath: string, action: PostBuildAction): Promise<void> {
-        let isFileDirty = false;
-        let dirtyFile = null;
-        for (let i = 0; i < workspace.textDocuments.length; i += 1) {
-            if (workspace.textDocuments[i].fileName === filePath && workspace.textDocuments[i].isDirty) {
-                isFileDirty = true;
-                dirtyFile = workspace.textDocuments[i];
-            }
-        }
-        if (isFileDirty) {
-            const selection = await window.showWarningMessage('Do you want to save your file before you build?', ...['yes', 'no']);
-            if (selection === 'yes') {
-                dirtyFile.save();
-            }
-        }
+        await this.checkIfDirty(filePath);
         const defaultInstance = Streams.checkDefaultInstance();
         if (filePath) {
             const filePaths = [filePath];
@@ -406,6 +380,24 @@ export default class StreamsBuild {
 
                 await ToolkitUtils.refreshToolkits(defaultInstance.connectionId);
                 getStreamsExplorer().refreshToolkitsView();
+            }
+        }
+    }
+
+    private static async checkIfDirty(filePath): Promise<void> {
+        let isFileDirty = false;
+        let dirtyFile = null;
+        const fileName = filePath.substring(filePath.lastIndexOf("/") + 1);
+        for (let i = 0; i < workspace.textDocuments.length; i += 1) {
+            if (workspace.textDocuments[i].fileName === filePath && workspace.textDocuments[i].isDirty) {
+                isFileDirty = true;
+                dirtyFile = workspace.textDocuments[i];
+            }
+        }
+        if (isFileDirty) {
+            const selection = await window.showWarningMessage(`There are unsaved changes in${fileName}(or makefile). Do you want to continue with the unsaved changes or save the file and continue with the build?`, ...['yes', 'no']);
+            if (selection === 'yes') {
+                dirtyFile.save();
             }
         }
     }
