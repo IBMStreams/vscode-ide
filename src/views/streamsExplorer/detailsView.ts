@@ -276,7 +276,7 @@ interface DetailTreeItem {
  */
 class DetailsProvider implements TreeDataProvider<DetailTreeItem> {
     private _onDidChangeTreeData: EventEmitter<any> = new EventEmitter<any>();
-    readonly onDidChangeTreeData: Event<any> = this._onDidChangeTreeData.event;
+    public readonly onDidChangeTreeData: Event<any> = this._onDidChangeTreeData.event;
     private _extensionPath: string;
     private _defaultTreeData = { label: 'Select an item in the Instances view to display its details.' };
     private _treeData: any;

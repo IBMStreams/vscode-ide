@@ -64,7 +64,7 @@ interface ToolkitTreeItem {
  */
 class ToolkitsProvider implements TreeDataProvider<ToolkitTreeItem> {
     private _onDidChangeTreeData: EventEmitter<any> = new EventEmitter<any>();
-    readonly onDidChangeTreeData: Event<any> = this._onDidChangeTreeData.event;
+    public readonly onDidChangeTreeData: Event<any> = this._onDidChangeTreeData.event;
 
     public getChildren(element?: ToolkitTreeItem): ToolkitTreeItem[] {
         return element ? element.children : this._createTreeItems(this._getToolkits());

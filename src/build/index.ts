@@ -418,8 +418,8 @@ export default class StreamsBuild {
         store.dispatch(EditorAction.setToolkitsCacheDir(TOOLKITS_CACHE_DIR));
         store.dispatch(EditorAction.setRefreshInterval(Configuration.getSetting(Settings.ENV_REFRESH_INTERVAL)));
         store.dispatch(EditorAction.setUpdateStreamsInstancesHandler(async (instances: any[]) => {
-            instances = instances.map((instance: any) => _omit(instance, ['streamsInstance', 'streamsJobGroups', 'streamsJobs', 'zenJobs']));
-            await Streams.setInstances(instances);
+            const newInstances = instances.map((instance: any) => _omit(instance, ['streamsInstance', 'streamsJobGroups', 'streamsJobs', 'zenJobs']));
+            await Streams.setInstances(newInstances);
             getStreamsExplorer().refreshInstancesView();
         }));
 

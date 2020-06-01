@@ -50,20 +50,16 @@ export default class SetConfigSettingCommand implements BaseCommand {
             }).then(async (input: string) => {
                 if (typeof input === 'string') {
                     let inputValue = input;
-                    try {
-                        inputValue = input.trim();
-                        if (inputValue === 'null') {
-                            inputValue = null;
-                        }
-                        await Configuration.setSetting(name, inputValue);
-                        const settingValue = Configuration.getSetting(name);
-                        if (callbackFn) {
-                            callbackFn(settingValue);
-                        }
-                        return settingValue;
-                    } catch (error) {
-                        throw error;
+                    inputValue = input.trim();
+                    if (inputValue === 'null') {
+                        inputValue = null;
                     }
+                    await Configuration.setSetting(name, inputValue);
+                    const settingValue = Configuration.getSetting(name);
+                    if (callbackFn) {
+                        callbackFn(settingValue);
+                    }
+                    return settingValue;
                 }
                 return null;
             });

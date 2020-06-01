@@ -60,7 +60,7 @@ describe('pre-test', function() {
         this.timeout(10000);
         const toolkitXml = '<?xml version="1.0" encoding="UTF-8" standalone="no" ?>\n<toolkitModel xmlns="http://www.ibm.com/xmlns/prod/streams/spl/toolkit" productVersion="4.3.0.3" xmlns:common="http://www.ibm.com/xmlns/prod/streams/spl/common" xmlns:ti="http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><toolkit name="com.ibm.streamsx.inet" requiredProductVersion="4.0.1.0" version="2.9.6"></toolkit></toolkitModel>';
 
-        await new Promise((resolve, reject) => {
+        await new Promise((resolve) => {
             https.get(inetToolkitUrl, (response) => {
                 response.pipe(
                     unzipper.Extract({ path: buildSourceArchiveToolkitsPath, concurrency: 5 })
