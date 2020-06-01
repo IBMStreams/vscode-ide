@@ -3,6 +3,7 @@ import {
 } from '@ibmstreams/common';
 import * as fs from 'fs';
 import _startCase from 'lodash/startCase';
+import * as os from 'os';
 import * as path from 'path';
 import {
     commands, TreeItem, TreeItemCollapsibleState, Uri, window
@@ -108,7 +109,7 @@ export default class JobTreeItem extends TreeItem {
                 }
 
                 const options = {
-                    defaultUri: Uri.file(`StreamsJobLogs-${instanceName}-job${this.jobId}-${new Date().getTime()}.tar.gz`),
+                    defaultUri: Uri.file(path.join(os.homedir(), `StreamsJobLogs-${instanceName}-job${this.jobId}-${new Date().getTime()}.tar.gz`)),
                     saveLabel: 'Save'
                 };
                 window.showSaveDialog(options).then((uri: Uri) => {
