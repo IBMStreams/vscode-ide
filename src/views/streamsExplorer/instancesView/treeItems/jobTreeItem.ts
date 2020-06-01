@@ -37,14 +37,14 @@ export default class JobTreeItem extends TreeItem {
         return `${instanceType}_${cpdProjectValue ? `${cpdProjectValue}_` : ''}${treeItemType}`;
     }
 
-    description = this.job ? _startCase(this.job.health) : null;
+    public description = this.job ? _startCase(this.job.health) : null;
 
-    iconPath = {
+    public iconPath = {
         light: path.join(this._extensionPath, 'images', 'icons', 'light', 'flow--stream.svg'),
         dark: path.join(this._extensionPath, 'images', 'icons', 'dark', 'flow--stream.svg')
     };
 
-    tooltip = this.job
+    public tooltip = this.job
         ? `Submitted by ${this.job.startedBy} on ${(new Date(this.job.submitTime)).toLocaleString()}`
         : undefined;
 

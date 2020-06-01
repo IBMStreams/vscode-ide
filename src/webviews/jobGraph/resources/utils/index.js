@@ -1,4 +1,1 @@
-'use babel';
-'use strict';
-
-export { default as StreamsUtils } from './streams-utils';
+export { default } from './streams-utils';

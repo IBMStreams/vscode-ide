@@ -16,11 +16,11 @@ export default class JobGroupTreeItem extends TreeItem {
         super(name, children ? TreeItemCollapsibleState.Expanded : TreeItemCollapsibleState.None);
     }
 
-    contextValue = 'jobGroupTreeItem';
+    public contextValue = 'jobGroupTreeItem';
 
-    tooltip = 'Job Group';
+    public tooltip = 'Job Group';
 
-    iconPath = {
+    public iconPath = {
         light: path.join(this._extensionPath, 'images', 'icons', 'light', 'folder.svg'),
         dark: path.join(this._extensionPath, 'images', 'icons', 'dark', 'folder.svg')
     };

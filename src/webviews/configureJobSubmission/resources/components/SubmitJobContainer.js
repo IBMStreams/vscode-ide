@@ -17,7 +17,7 @@ export default class SubmitJobContainer extends Component {
 
     const { params: { submissionTimeParameters } } = this.props;
     const submissionParameters = [];
-    submissionTimeParameters.map((param) => {
+    submissionTimeParameters.forEach((param) => {
       const strippedDefaultValue = param.defaultValue ? param.defaultValue.replace(/^"|"$|^\[|\]$/g, '') : '';
       submissionParameters.push({ name: `${param.compositeName}.${param.name}`, value: strippedDefaultValue });
     });
