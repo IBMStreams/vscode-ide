@@ -390,7 +390,7 @@ export default class StreamsBuild {
     private static async checkIfDirty(filePath: string): Promise<void> {
         let isFileDirty = false;
         let dirtyFile = null;
-        const fileName = filePath.substring(filePath.lastIndexOf("/") + 1);
+        const fileName = path.basename(filePath);
         for (let i = 0; i < workspace.textDocuments.length; i += 1) {
             if (workspace.textDocuments[i].fileName === filePath && workspace.textDocuments[i].isDirty) {
                 isFileDirty = true;
