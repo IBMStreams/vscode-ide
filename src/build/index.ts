@@ -185,7 +185,6 @@ export default class StreamsBuild {
      * @param action            The post-build action to take
      */
     public static async runBuildMake(targetInstance: any, filePaths: string[], action: PostBuildAction): Promise<void> {
-        console.log('window', window.activeTextEditor.document)
         const { appRoot, messageHandler } = await StreamsBuild.initBuild('buildMake', filePaths[0], action);
         const buildMake = (): void => {
             if (targetInstance) {
