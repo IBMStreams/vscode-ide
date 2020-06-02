@@ -383,7 +383,11 @@ export default class StreamsBuild {
         }
     }
 
-    private static async checkIfDirty(filePath): Promise<void> {
+    /**
+     * Check if a file is dirty (has unsaved changes)
+     * @param filePath     The path to the SPL file or Makefile
+     */
+    private static async checkIfDirty(filePath: string): Promise<void> {
         let isFileDirty = false;
         let dirtyFile = null;
         const fileName = filePath.substring(filePath.lastIndexOf("/") + 1);
