@@ -94,15 +94,15 @@ export default class StreamsBuild {
     public static async buildApp(filePath: string, action: PostBuildAction): Promise<void> {
         await this.checkIfDirty(filePath);
         const defaultInstance = Streams.checkDefaultInstance();
-            if (filePath) {
-                const filePaths = [filePath];
-                const zeroInstancesCallbackFn = (): void => { this.runBuildApp(Streams.getDefaultInstance(), filePaths, action); };
-                const oneInstanceCallbackFn = (): void => { this.runBuildApp(defaultInstance, filePaths, action); };
-                const multipleInstancesCallbackFn = (): void => { this.showInstancePanel('build', filePaths, action); }
-                this.handleAction('build', zeroInstancesCallbackFn, oneInstanceCallbackFn, multipleInstancesCallbackFn);
-            } else {
-                this._defaultMessageHandler.handleError('The build failed. Unable to retrieve the application file path.');
-            }
+        if (filePath) {
+            const filePaths = [filePath];
+            const zeroInstancesCallbackFn = (): void => { this.runBuildApp(Streams.getDefaultInstance(), filePaths, action); };
+            const oneInstanceCallbackFn = (): void => { this.runBuildApp(defaultInstance, filePaths, action); };
+            const multipleInstancesCallbackFn = (): void => { this.showInstancePanel('build', filePaths, action); }
+            this.handleAction('build', zeroInstancesCallbackFn, oneInstanceCallbackFn, multipleInstancesCallbackFn);
+        } else {
+            this._defaultMessageHandler.handleError('The build failed. Unable to retrieve the application file path.');
+        }
     }
 
     /**
