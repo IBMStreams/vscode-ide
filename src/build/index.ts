@@ -388,16 +388,9 @@ export default class StreamsBuild {
      * @param filePath     The path to the SPL file or Makefile
      */
     private static async checkIfDirty(filePath: string): Promise<void> {
-        let isFileDirty = false;
-        let dirtyFile = null;
         const fileName = path.basename(filePath);
-        for (let i = 0; i < workspace.textDocuments.length; i += 1) {
-            if (workspace.textDocuments[i].fileName === filePath && workspace.textDocuments[i].isDirty) {
-                isFileDirty = true;
-                dirtyFile = workspace.textDocuments[i];
-            }
-        }
-        if (isFileDirty) {
+        const dirtyFile = workspace.textDocuments.find((file) => (file.fileName === filePath && file.isDirty));
+        if (typeof dirtyFile !== 'undefined') {
             const selection = await window.showWarningMessage(
                 `There are unsaved changes in ${fileName}. Do you want to save the file before continuing with the build?`,
                 ...['Yes', 'No']
