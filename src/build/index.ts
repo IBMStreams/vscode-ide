@@ -92,6 +92,7 @@ export default class StreamsBuild {
      * @param action      The post-build action to take
      */
     public static async buildApp(filePath: string, action: PostBuildAction): Promise<void> {
+        await this.checkIfDirty(filePath);
         const defaultInstance = Streams.checkDefaultInstance();
         if (filePath) {
             const filePaths = [filePath];
@@ -164,6 +165,7 @@ export default class StreamsBuild {
      * @param action      The post-build action to take
      */
     public static async buildMake(filePath: string, action: PostBuildAction): Promise<void> {
+        await this.checkIfDirty(filePath);
         const defaultInstance = Streams.checkDefaultInstance();
         if (filePath) {
             const filePaths = [filePath];
@@ -377,6 +379,24 @@ export default class StreamsBuild {
 
                 await ToolkitUtils.refreshToolkits(defaultInstance.connectionId);
                 getStreamsExplorer().refreshToolkitsView();
+            }
+        }
+    }
+
+    /**
+     * Check if a file is dirty (has unsaved changes)
+     * @param filePath     The path to the SPL file or Makefile
+     */
+    private static async checkIfDirty(filePath: string): Promise<void> {
+        const dirtyFile = workspace.textDocuments.find((file) => (file.fileName === filePath && file.isDirty));
+        if (dirtyFile) {
+            const fileName = path.basename(filePath);
+            const selection = await window.showWarningMessage(
+                `There are unsaved changes in ${fileName}. Do you want to save the file before continuing with the build?`,
+                ...['Yes', 'No']
+            );
+            if (selection === 'Yes') {
+                await dirtyFile.save();
             }
         }
     }
