@@ -398,9 +398,12 @@ export default class StreamsBuild {
             }
         }
         if (isFileDirty) {
-            const selection = await window.showWarningMessage(`There are unsaved changes in${fileName}(or makefile). Do you want to continue with the unsaved changes or save the file and continue with the build?`, ...['yes', 'no']);
-            if (selection === 'yes') {
-                dirtyFile.save();
+            const selection = await window.showWarningMessage(
+                `There are unsaved changes in ${fileName}. Do you want to save the file before continuing with the build?`,
+                ...['Yes', 'No']
+            );
+            if (selection === 'Yes') {
+                await dirtyFile.save();
             }
         }
     }
