@@ -155,7 +155,7 @@ export default class ConfigureJobSubmissionWebviewPanel extends BaseWebviewPanel
                 // Re-create the webview
                 ConfigureJobSubmissionWebviewPanel.createOrShow(this._context, this._properties);
             }
-        }, 3000);
+        }, 5000);
     }
 
     protected receiveMessage(): void {

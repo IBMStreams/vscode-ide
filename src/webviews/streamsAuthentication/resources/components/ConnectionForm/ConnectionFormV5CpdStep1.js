@@ -286,7 +286,7 @@ export default class ConnectionFormV5CpdStep1 extends Component {
             ref={input => !!instance && input && input.focus && input.focus()}
           />
         </div>
-        <div className="connection-form__form-item">
+        <div className="connection-form__form-item--compact">
           <Checkbox
             id={properties.USE_CPD_MASTER_NODE_HOST}
             checked={useCpdMasterNodeHost}
