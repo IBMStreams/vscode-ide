@@ -1,21 +1,21 @@
 .submit-job-container {
   .submit-job-container__accordion {
-    padding-top: $layout-03;
     padding-bottom: $layout-03;
   }
-  
+
   .submit-job-container__accordion_title {
     @include carbon--type-style('productive-heading-02');
   }
 
   .submit-job-container__button-container {
     flex-flow: row-reverse wrap;
+    justify-content: flex-end;
 
     @include carbon--breakpoint-down(700px) {
       flex-flow: column wrap;
       align-content: flex-end;
     }
-  
+
     .submit-job-container__button-container__button {
       flex: 1;
     }

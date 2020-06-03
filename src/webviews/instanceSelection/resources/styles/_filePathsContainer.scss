@@ -13,11 +13,18 @@
 .file-list {
   display: flex;
   flex-direction: column;
+  padding-top: $spacing-02;
   padding-left: $layout-01;
-  font-size: 1rem;
-  word-break: break-word;
+  word-break: break-all;
+  @include carbon--type-style('body-short-01');
+}
+
+.file-name {
+  padding-left: $spacing-02;
+  word-break: break-all;
+  @include carbon--type-style('body-short-01');
 }
 
 .file-path-subtitle {
-  font-size: 1rem;
+  @include carbon--type-style('body-short-01');
 }
