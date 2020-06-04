@@ -1,7 +1,6 @@
 import Accordion from 'carbon-components-react/es/components/Accordion';
 import AccordionItem from 'carbon-components-react/es/components/AccordionItem';
 import Button from 'carbon-components-react/es/components/Button';
-import { FileUploaderButton } from 'carbon-components-react/es/components/FileUploader';
 import _cloneDeep from 'lodash/cloneDeep';
 import _findIndex from 'lodash/findIndex';
 import PropTypes from 'prop-types';
@@ -80,34 +79,17 @@ export default class SubmitJobContainer extends Component {
     });
   }
 
-  handleJobConfigFileChanged(event) {
-    const reader = new FileReader();
-    const jobConfigOverlayFile = event.target.files[0];
-    const { name } = jobConfigOverlayFile;
-    reader.onload = () => {
-      const fileContents = reader.result;
-      if (fileContents) {
-        try {
-          const jobConfig = JSON.parse(fileContents);
-          this.setState({ jobConfigOverlay: jobConfig });
-        } catch (err) {
-          this.messageHandler.postMessage({
-            command: 'show-notification',
-            args: {
-              type: 'error',
-              message: `An error occurred while parsing the job configuration file ${name}.\n${err}`
-            }
-          });
-        }
-      }
-    };
-    reader.readAsText(jobConfigOverlayFile);
+  handleJobConfigFileChanged(jobConfig) {
+    this.setState({ jobConfigOverlay: jobConfig });
   }
 
   handleSubmitParamUpdate(param) {
     const { jobConfigOverlay } = this.state;
     const jobConfigState = { ...jobConfigOverlay };
     const { jobConfig } = jobConfigState.jobConfigOverlays[0];
+    if (!jobConfig.submissionParameters) {
+      jobConfig.submissionParameters = [];
+    }
     const itemIndex = _findIndex(jobConfig.submissionParameters, ['name', param.name]);
     if (itemIndex >= 0) {
       jobConfig.submissionParameters[itemIndex].value = param.value;
@@ -147,6 +129,9 @@ export default class SubmitJobContainer extends Component {
 
     // Omit parameters that are the same as the default values
     const { jobConfig } = jobConfigOverlay.jobConfigOverlays[0];
+    if (!jobConfig.submissionParameters) {
+      jobConfig.submissionParameters = [];
+    }
     jobConfig.submissionParameters = jobConfig.submissionParameters.filter(({ name, value }) => {
       const initialSubmissionParameter = initialSubmissionParameters.find((param) => param.name === name);
       return initialSubmissionParameter && value !== initialSubmissionParameter.value;
@@ -162,7 +147,7 @@ export default class SubmitJobContainer extends Component {
   }
 
   render() {
-    const { jobConfigOverlay } = this.state;
+    const { initialSubmissionParameters, jobConfigOverlay } = this.state;
     const submitParamsFromJobConfig = JobConfigOverlayUtils.getSubmissionTimeParameters(jobConfigOverlay);
     const { params: { submissionTimeParameters, targetInstance: { streamsJobGroups } } } = this.props;
     const regex = RegExp(/[\^!#$%&'*+,/;<>=?@[\]`{|}~()\s\u0000-\u0019\u007F-\u009F\ud800-\uF8FF\uFFF0-\uFFFF]/);
@@ -172,7 +157,7 @@ export default class SubmitJobContainer extends Component {
     return (
       <div className="bx--grid bx--grid--no-gutter submit-job-container">
         <div className="bx--row submit-job-container__accordion">
-          <div className="bx--col bx--no-gutter ">
+          <div className="bx--col bx--no-gutter">
             <Accordion>
               <AccordionItem
                 open
@@ -186,6 +171,7 @@ export default class SubmitJobContainer extends Component {
                   submitParamsFromJobConfig={submitParamsFromJobConfig}
                   submitParamsFromApp={submissionTimeParameters}
                   handleSubmitParamUpdate={this.handleSubmitParamUpdate}
+                  initialSubmissionParameters={initialSubmissionParameters}
                 />
               </AccordionItem>
               <AccordionItem
@@ -216,7 +202,7 @@ export default class SubmitJobContainer extends Component {
               onClick={this.submitClicked}
               className="submit-job-container__button-container__button"
             >
-              Submit
+              Submit job
             </Button>
             <Button
               type="reset"
@@ -225,22 +211,6 @@ export default class SubmitJobContainer extends Component {
               className="submit-job-container__button-container__button"
             >
               Cancel
-            </Button>
-            <FileUploaderButton
-              disableLabelChanges
-              labelText="Import job configuration file"
-              buttonKind="tertiary"
-              size="default"
-              accept={['application/JSON']}
-              onChange={this.handleJobConfigFileChanged}
-              className="submit-job-container__button-container__button submit-job-container__button-container__file-uploader-button"
-            />
-            <Button
-              kind="tertiary"
-              onClick={this.exportJCO}
-              className="submit-job-container__button-container__button"
-            >
-              Export job configuration file
             </Button>
           </div>
         </div>

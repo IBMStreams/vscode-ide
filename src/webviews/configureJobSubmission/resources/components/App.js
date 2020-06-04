@@ -9,6 +9,7 @@ import SubmitJobContainer from './SubmitJobContainer';
  */
 const App = () => {
   const [isJobInfoModalOpen, setIsJobInfoModalOpen] = useState(false);
+  let submitJobContainerRef;
 
   return (
     <div className="app-container">
@@ -24,12 +25,18 @@ const App = () => {
             <HeaderContainer
               bundleName={submitJobParams.name}
               setIsJobInfoModalOpen={setIsJobInfoModalOpen}
+              jcoFiles={submitJobParams.jcoFiles}
+              handleJcoChange={(jobConfig) => submitJobContainerRef.handleJobConfigFileChanged(jobConfig)}
+              exportJco={() => submitJobContainerRef.exportJCO()}
             />
           </div>
         </div>
         <div className="bx--row app-container__main-container">
           <div className="bx--col">
-            <SubmitJobContainer params={submitJobParams} />
+            <SubmitJobContainer
+              params={submitJobParams}
+              ref={(instance) => { submitJobContainerRef = instance; }}
+            />
           </div>
         </div>
       </div>

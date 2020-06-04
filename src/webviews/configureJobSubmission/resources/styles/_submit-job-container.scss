@@ -1,3 +1,37 @@
+.header-container--flex {
+  justify-content: space-between;
+
+  .header-container--flex-left {
+    display: flex;
+    align-items: center;
+    padding-right: $spacing-02;
+  }
+
+  .header-container--flex-right {
+    display: flex;
+    align-items: center;
+  }
+}
+
+.header-container__button-menu {
+  width: 350px;
+  outline: none;
+
+  .bx--overflow-menu-options__btn {
+    max-width: 100%;
+  }
+
+  .header-container__button-menu-file-uploader {
+    @include carbon--type-style('body-short-01');
+    color: $text-01;
+    max-width: unset;
+
+    span {
+      padding: 0 $layout-01;
+    }
+  }
+}
+
 .submit-job-container {
   .submit-job-container__accordion {
     padding-bottom: $layout-03;
@@ -18,13 +52,6 @@
 
     .submit-job-container__button-container__button {
       flex: 1;
-    }
-
-    .submit-job-container__button-container__file-uploader-button {
-      padding-top: calc(0.875rem - 3px);
-      padding-right: 60px;
-      padding-bottom: calc(0.875rem - 3px);
-      padding-left: 12px;
     }
   }
 }

@@ -1,5 +1,6 @@
 import { getStreamsInstance, InstanceSelector, store } from '@ibmstreams/common';
 import * as fs from 'fs';
+import _has from 'lodash/has';
 import * as os from 'os';
 import * as path from 'path';
 import {
@@ -141,8 +142,14 @@ export default class ConfigureJobSubmissionWebviewPanel extends BaseWebviewPanel
             .replace(/{{webviewCspSource}}/g, this.panel.webview.cspSource)
             .replace('{{mainScriptUri}}', mainScriptUri);
 
+        const jcoFiles = this.getJobConfigOverlayFiles();
+
         // Set parameters to pass as props for submit job container
-        content = content.replace('{{init}}', `const submitJobParams = ${JSON.stringify(this._properties)};`);
+        const params = {
+            jcoFiles,
+            ...this._properties
+        };
+        content = content.replace('{{init}}', `const submitJobParams = ${JSON.stringify(params)};`);
 
         this.panel.webview.html = content;
 
@@ -179,6 +186,36 @@ export default class ConfigureJobSubmissionWebviewPanel extends BaseWebviewPanel
             }
             return null;
         }, null, this.disposables);
+    }
+
+    /**
+     * Get the job configuration overlay files that are located in the same directory as the bundle
+     */
+    private getJobConfigOverlayFiles(): string[] {
+        const { details } = this._properties;
+        const prop = 'Bundle path';
+        const jcoFiles = [];
+        if (details && _has(details, prop)) {
+            const bundlePath = details[prop];
+            const dirPath = path.dirname(bundlePath);
+            fs.readdirSync(dirPath)
+                .filter((fileName: any) => typeof fileName === 'string' && path.extname(fileName) === '.json')
+                .map((jsonFileName: string) => path.join(dirPath, jsonFileName))
+                .forEach((jsonFilePath: string) => {
+                    try {
+                        const json = JSON.parse(fs.readFileSync(jsonFilePath, 'utf8'));
+                        if (_has(json, 'jobConfigOverlays')) {
+                            jcoFiles.push({
+                                filePath: jsonFilePath,
+                                fileContent: json
+                            });
+                        }
+                    } catch (err) {
+                        // Do nothing
+                    }
+                });
+        }
+        return jcoFiles;
     }
 
     /**
