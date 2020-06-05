@@ -2,6 +2,7 @@ import Accordion from 'carbon-components-react/es/components/Accordion';
 import AccordionItem from 'carbon-components-react/es/components/AccordionItem';
 import Button from 'carbon-components-react/es/components/Button';
 import { FileUploaderButton } from 'carbon-components-react/es/components/FileUploader';
+import _cloneDeep from 'lodash/cloneDeep';
 import _findIndex from 'lodash/findIndex';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
@@ -18,11 +19,25 @@ export default class SubmitJobContainer extends Component {
     const { params: { submissionTimeParameters } } = this.props;
     const submissionParameters = [];
     submissionTimeParameters.forEach((param) => {
-      const strippedDefaultValue = param.defaultValue ? param.defaultValue.replace(/^"|"$|^\[|\]$/g, '') : '';
+    const strippedDefaultValue = param.defaultValue
+      ? param.defaultValue
+          // Remove surrounding quotes/square brackets
+          .replace(/^"|"$|^\[|\]$/g, '')
+          // Unescape escape sequences
+          .replace(/\\f/g, '\f') // form feed
+          .replace(/\\n/g, '\n') // new line
+          .replace(/\\r/g, '\r') // carriage return
+          .replace(/\\t/g, '\t') // horizontal tab
+          .replace(/\\v/g, '\v') // vertical tab
+          .replace(/\\'/g, '\'') // single quote
+          .replace(/\\"/g, '"') // double quote
+          .replace(/\\/g, '\\') // backslash
+      : '';
       submissionParameters.push({ name: `${param.compositeName}.${param.name}`, value: strippedDefaultValue });
     });
 
     this.state = {
+      initialSubmissionParameters: _cloneDeep(submissionParameters),
       jobConfigOverlay: {
         jobConfigOverlays: [
           {
@@ -128,7 +143,15 @@ export default class SubmitJobContainer extends Component {
   }
 
   submitClicked() {
-    const { jobConfigOverlay } = this.state;
+    const { initialSubmissionParameters, jobConfigOverlay } = this.state;
+
+    // Omit parameters that are the same as the default values
+    const { jobConfig } = jobConfigOverlay.jobConfigOverlays[0];
+    jobConfig.submissionParameters = jobConfig.submissionParameters.filter(({ name, value }) => {
+      const initialSubmissionParameter = initialSubmissionParameters.find((param) => param.name === name);
+      return initialSubmissionParameter && value !== initialSubmissionParameter.value;
+    });
+
     this.messageHandler.postMessage({
       command: 'submit-job',
       args: {

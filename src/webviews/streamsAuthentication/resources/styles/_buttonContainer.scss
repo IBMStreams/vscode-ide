@@ -1,5 +1,6 @@
 .button-container {
   flex-flow: row-reverse wrap;
+  justify-content: flex-end;
   padding-top: $layout-03;
 
   @include carbon--breakpoint-down(500px) {

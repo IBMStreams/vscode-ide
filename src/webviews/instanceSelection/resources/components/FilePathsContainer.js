@@ -20,7 +20,7 @@ const FilePathsContainer = (props) => {
   const fileList = () => {
     const filePaths = files.map((file, i) => {
       return (
-        files.length > 1 ? <ListItem key={file}>{file}</ListItem> : <div key={file}>{file}</div>
+        files.length > 1 ? <ListItem key={file}>{file}</ListItem> : <div key={file} className="file-name">{file}</div>
       );
     });
     return filePaths;
@@ -34,7 +34,7 @@ const FilePathsContainer = (props) => {
           {fileList()}
         </UnorderedList>
       ) : (
-        <div className="file-list">
+        <div>
           {fileList()}
         </div>
       )}

@@ -1,0 +1,9 @@
+.job-details-container {
+  .job-details-container__list {
+    margin-bottom: 0;
+
+    .job-details-container__list-value {
+      word-break: break-all;
+    }
+  }
+}
