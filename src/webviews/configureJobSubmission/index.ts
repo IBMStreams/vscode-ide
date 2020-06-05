@@ -142,14 +142,8 @@ export default class ConfigureJobSubmissionWebviewPanel extends BaseWebviewPanel
             .replace(/{{webviewCspSource}}/g, this.panel.webview.cspSource)
             .replace('{{mainScriptUri}}', mainScriptUri);
 
-        const jcoFiles = this.getJobConfigOverlayFiles();
-
         // Set parameters to pass as props for submit job container
-        const params = {
-            jcoFiles,
-            ...this._properties
-        };
-        content = content.replace('{{init}}', `const submitJobParams = ${JSON.stringify(params)};`);
+        content = content.replace('{{init}}', `const submitJobParams = ${JSON.stringify(this._properties)};`);
 
         this.panel.webview.html = content;
 
@@ -177,6 +171,8 @@ export default class ConfigureJobSubmissionWebviewPanel extends BaseWebviewPanel
                     return this.handleSubmitJobMessage(message);
                 case 'close-panel':
                     return this.handleClosePanelMessage(message);
+                case 'import-jco':
+                    return this._handleImportJcoMessage(message);
                 case 'save-file':
                     return this._handleSaveFileMessage(message);
                 case 'show-notification':
@@ -186,36 +182,6 @@ export default class ConfigureJobSubmissionWebviewPanel extends BaseWebviewPanel
             }
             return null;
         }, null, this.disposables);
-    }
-
-    /**
-     * Get the job configuration overlay files that are located in the same directory as the bundle
-     */
-    private getJobConfigOverlayFiles(): string[] {
-        const { details } = this._properties;
-        const prop = 'Bundle path';
-        const jcoFiles = [];
-        if (details && _has(details, prop)) {
-            const bundlePath = details[prop];
-            const dirPath = path.dirname(bundlePath);
-            fs.readdirSync(dirPath)
-                .filter((fileName: any) => typeof fileName === 'string' && path.extname(fileName) === '.json')
-                .map((jsonFileName: string) => path.join(dirPath, jsonFileName))
-                .forEach((jsonFilePath: string) => {
-                    try {
-                        const json = JSON.parse(fs.readFileSync(jsonFilePath, 'utf8'));
-                        if (_has(json, 'jobConfigOverlays')) {
-                            jcoFiles.push({
-                                filePath: jsonFilePath,
-                                fileContent: json
-                            });
-                        }
-                    } catch (err) {
-                        // Do nothing
-                    }
-                });
-        }
-        return jcoFiles;
     }
 
     /**
@@ -247,6 +213,58 @@ export default class ConfigureJobSubmissionWebviewPanel extends BaseWebviewPanel
      */
     private handleClosePanelMessage(message: IRequestMessage<any>): void {
         this.close();
+    }
+
+    /**
+     * Handle a import JCO message
+     * @param message    The JSON message sent from the webview
+     */
+    private async _handleImportJcoMessage(message: IRequestMessage<any>): Promise<any> {
+        const { details } = this._properties;
+        const prop = 'Bundle path';
+        if (details && _has(details, prop)) {
+            const bundlePath = details[prop];
+            const dirPath = path.dirname(bundlePath);
+            return window.showOpenDialog({
+                canSelectMany: false,
+                defaultUri: Uri.file(dirPath),
+                filters: { 'JSON': ['json'] },
+                openLabel: 'Import'
+            }).then((uris: Uri[]) => {
+                if (uris && uris.length) {
+                    const [selectedJco] = uris;
+                    const jcoFilePath = selectedJco.fsPath;
+                    const jcoFileName = path.basename(jcoFilePath);
+                    try {
+                        const json = JSON.parse(fs.readFileSync(jcoFilePath, 'utf8'));
+                        if (_has(json, 'jobConfigOverlays')) {
+                            this._replyMessage(message, {
+                                fileName: jcoFileName,
+                                json,
+                                error: null,
+                                errorLink: false
+                            });
+                        } else {
+                            this._replyMessage(message, {
+                                fileName: jcoFileName,
+                                json: null,
+                                error: 'Not a valid job configuration overlay file. Learn more ',
+                                errorLink: true
+                            });
+                        }
+                    } catch (err) {
+                        const error = `Not valid JSON.${err && err.message ? ` ${err.message.trim()}` : ''}`;
+                        this._replyMessage(message, {
+                            fileName: jcoFileName,
+                            json: null,
+                            error: error.endsWith('.') ? error : `${error}.`,
+                            errorLink: false
+                        });
+                    }
+                }
+            });
+        }
+        return null;
     }
 
     /**
