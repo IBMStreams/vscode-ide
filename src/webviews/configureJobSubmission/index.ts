@@ -216,7 +216,7 @@ export default class ConfigureJobSubmissionWebviewPanel extends BaseWebviewPanel
     }
 
     /**
-     * Handle a import JCO message
+     * Handle an import JCO message
      * @param message    The JSON message sent from the webview
      */
     private async _handleImportJcoMessage(message: IRequestMessage<any>): Promise<any> {
