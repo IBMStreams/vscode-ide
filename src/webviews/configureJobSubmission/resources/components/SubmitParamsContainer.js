@@ -24,6 +24,13 @@ export default class SubmitParamsContainer extends Component {
   handleSubmitParam = (event) => {
     const { handleSubmitParamUpdate } = this.props;
     const param = { name: event.target.name, value: event.target.value };
+    // Unescape escape sequences
+    param.value = param.value
+      .replace(/\\f/g, '\f') // form feed
+      .replace(/\\n/g, '\n') // new line
+      .replace(/\\r/g, '\r') // carriage return
+      .replace(/\\t/g, '\t') // horizontal tab
+      .replace(/\\v/g, '\v'); // vertical tab
     handleSubmitParamUpdate(param);
   }
 
@@ -57,6 +64,13 @@ export default class SubmitParamsContainer extends Component {
                 sortedSubTimeValsForComp.map(subVal => {
                   let paramValue = _find(submitParamsFromJobConfig, ['name', subVal.fqn]) || _find(submitParamsFromJobConfig, ['name', subVal.name]);
                   paramValue = paramValue ? (paramValue.value || '') : (subVal.defaultValue || '');
+                  // Escape escape sequences
+                  paramValue = paramValue
+                    .replace(/\f/g, '\\f') // form feed
+                    .replace(/\n/g, '\\n') // new line
+                    .replace(/\r/g, '\\r') // carriage return
+                    .replace(/\t/g, '\\t') // horizontal tab
+                    .replace(/\v/g, '\\v'); // vertical tab
                   const placeholder = subVal.kind === 'named' ? 'Enter a value' : 'Enter a comma-separated list of values';
                   const invalidText = subVal.kind === 'named' ? 'A value is required.' : 'A comma-separated list of values is required.';
                   let isInvalid = false;

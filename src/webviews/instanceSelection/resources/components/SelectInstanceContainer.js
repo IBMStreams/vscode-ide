@@ -52,14 +52,12 @@ export default class SelectInstanceContainer extends Component {
 
   getButtonContainer = () => {
     const { selectedInstance } = this.state;
-    const { params: { storedInstances, action, postBuildAction } } = this.props;
+    const { params: { storedInstances, action } } = this.props;
     const inst = storedInstances.find((type) => type.connectionId === selectedInstance.id);
-    const actionCapitalized = this.capitalizeFirstLetter(action);
-    const labelTitle = postBuildAction === 1 ? `${actionCapitalized} and submit` : actionCapitalized;
     return (
       <ButtonContainer
         primaryBtn={{
-          label: labelTitle,
+          label: 'Select',
           isValid: true,
           onClick: () => {
             this.messageHandler.postMessage({
@@ -139,11 +137,6 @@ export default class SelectInstanceContainer extends Component {
 
   closePanel = () => {
     this.messageHandler.postMessage({ command: 'close-panel' });
-  }
-
-  capitalizeFirstLetter = (string) => {
-    const action = string === 'build-make' ? 'build' : string;
-    return action.charAt(0).toUpperCase() + action.slice(1);
   }
 
   render() {
