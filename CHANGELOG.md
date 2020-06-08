@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update default save file location to user's home directory ([#69](https://github.com/IBMStreams/vscode-ide/issues/69))
 - Warn user when building a file with unsaved changes ([#70](https://github.com/IBMStreams/vscode-ide/issues/70))
+- Keyboard shortcuts for build commands ([#79](https://github.com/IBMStreams/vscode-ide/issues/79))
 - Changelog file to document changes between releases ([#87](https://github.com/IBMStreams/vscode-ide/issues/87))
 
 ### Changed
