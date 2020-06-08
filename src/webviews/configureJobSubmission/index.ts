@@ -220,51 +220,46 @@ export default class ConfigureJobSubmissionWebviewPanel extends BaseWebviewPanel
      * @param message    The JSON message sent from the webview
      */
     private async _handleImportJcoMessage(message: IRequestMessage<any>): Promise<any> {
-        const { details } = this._properties;
-        const prop = 'Bundle path';
-        if (details && _has(details, prop)) {
-            const bundlePath = details[prop];
-            const dirPath = path.dirname(bundlePath);
-            return window.showOpenDialog({
-                canSelectMany: false,
-                defaultUri: Uri.file(dirPath),
-                filters: { JSON: ['json'] },
-                openLabel: 'Import'
-            }).then((uris: Uri[]) => {
-                if (uris && uris.length) {
-                    const [selectedJco] = uris;
-                    const jcoFilePath = selectedJco.fsPath;
-                    const jcoFileName = path.basename(jcoFilePath);
-                    try {
-                        const json = JSON.parse(fs.readFileSync(jcoFilePath, 'utf8'));
-                        if (_has(json, 'jobConfigOverlays')) {
-                            this._replyMessage(message, {
-                                fileName: jcoFileName,
-                                json,
-                                error: null,
-                                errorLink: false
-                            });
-                        } else {
-                            this._replyMessage(message, {
-                                fileName: jcoFileName,
-                                json: null,
-                                error: 'Not a valid job configuration overlay file. Learn more ',
-                                errorLink: true
-                            });
-                        }
-                    } catch (err) {
-                        const error = `Not valid JSON.${err && err.message ? ` ${err.message.trim()}` : ''}`;
+        const dirPath = this._getDirPath();
+        const options = {
+            canSelectMany: false,
+            defaultUri: Uri.file(dirPath),
+            filters: { JSON: ['json'] },
+            openLabel: 'Import'
+        };
+        return window.showOpenDialog(options).then((uris: Uri[]) => {
+            if (uris && uris.length) {
+                const [selectedJco] = uris;
+                const jcoFilePath = selectedJco.fsPath;
+                const jcoFileName = path.basename(jcoFilePath);
+                try {
+                    const json = JSON.parse(fs.readFileSync(jcoFilePath, 'utf8'));
+                    if (_has(json, 'jobConfigOverlays')) {
+                        this._replyMessage(message, {
+                            fileName: jcoFileName,
+                            json,
+                            error: null,
+                            errorLink: false
+                        });
+                    } else {
                         this._replyMessage(message, {
                             fileName: jcoFileName,
                             json: null,
-                            error: error.endsWith('.') ? error : `${error}.`,
-                            errorLink: false
+                            error: 'Not a valid job configuration overlay file. Learn more ',
+                            errorLink: true
                         });
                     }
+                } catch (err) {
+                    const error = `Not valid JSON.${err && err.message ? ` ${err.message.trim()}` : ''}`;
+                    this._replyMessage(message, {
+                        fileName: jcoFileName,
+                        json: null,
+                        error: error.endsWith('.') ? error : `${error}.`,
+                        errorLink: false
+                    });
                 }
-            });
-        }
-        return null;
+            }
+        });
     }
 
     /**
@@ -275,15 +270,7 @@ export default class ConfigureJobSubmissionWebviewPanel extends BaseWebviewPanel
         const { args }: { args: ISaveFileOptions } = message;
         if (args) {
             const { fileName, fileContent, fileType, buttonLabel } = args;
-            let dirPath: string;
-            const { details } = this._properties;
-            const prop = 'Bundle path';
-            if (details && _has(details, prop)) {
-                const bundlePath = details[prop];
-                dirPath = path.dirname(bundlePath);
-            } else {
-                dirPath = os.homedir();
-            }
+            const dirPath = this._getDirPath();
             const options = {
                 defaultUri: Uri.file(path.join(dirPath, fileName)),
                 filters: fileType,
@@ -311,6 +298,27 @@ export default class ConfigureJobSubmissionWebviewPanel extends BaseWebviewPanel
         if (args) {
             const { type, message: notificationMessage } = args;
             Logger[type](null, notificationMessage, true);
+        }
+    }
+
+    /**
+     * Get directory path to use for importing and exporting job configuration overlay files
+     */
+    private _getDirPath(): string {
+        const { details } = this._properties;
+        const bundlePathProp = 'Bundle path';
+        const appRootProp = 'Application root';
+        if (details && _has(details, bundlePathProp)) {
+            // Submission from application bundle
+            const bundlePath = details[bundlePathProp];
+            return path.dirname(bundlePath);
+        } else if (details && _has(details, appRootProp)) {
+            // Submission from build artifact
+            const appRoot = details[appRootProp];
+            return appRoot;
+        } else {
+            // Default
+            return os.homedir();
         }
     }
 }
