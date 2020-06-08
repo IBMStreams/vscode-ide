@@ -93,8 +93,8 @@ Remove Build Output Channels | Removes build output channels that are automatica
 
 Name | Description
 --- | ---
-Build | <ul><li>Builds SPL application(s) from source</li><li>Downloads the Streams application bundle(s) (`.sab`) to the project's `output` directory</li><li>Only available for `.spl` and `Makefile` files</li></ul>
-Build and Submit Job(s) | <ul><li>Builds SPL application(s) from source</li><li>Submits the Streams application bundle(s) (`.sab`) to a Streams instance</li><li>Only available for `.spl` and `Makefile` files</li></ul>
+Build | <ul><li>Builds SPL application(s) from source</li><li>Downloads the Streams application bundle(s) (`.sab`) to the project's `output` directory</li><li>Only available for `.spl` and `Makefile` files</li><li>Keyboard shortcut: `Ctrl+Alt+B` (Windows/Linux), `Command+Option+B` (macOS)</li></ul>
+Build and Submit Job(s) | <ul><li>Builds SPL application(s) from source</li><li>Submits the Streams application bundle(s) (`.sab`) to a Streams instance</li><li>Only available for `.spl` and `Makefile` files</li><li>Keyboard shortcut: `Ctrl+Alt+S` (Windows/Linux), `Command+Option+S` (macOS)</li></ul>
 Submit Job(s) | <ul><li>Submits the Streams application bundle(s) (`.sab`) to a Streams instance</li><li>Only available for `.sab` files</li></ul>
 
 ### Environment

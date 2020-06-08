@@ -1,10 +1,39 @@
 .submit-job-container {
-  .submit-job-container__accordion {
-    padding-bottom: $layout-03;
+  .submit-job-container__import-jco {
+    padding-bottom: $layout-02;
+
+    .submit-job-container__import-jco__button-container {
+      display: flex;
+      align-items: center;
+
+      .submit-job-container__import-jco__button-container__button {
+        width: 100%;
+      }
+    }
+
+    .submit-job-container__import-jco__file-uploader-item {
+      padding-top: $spacing-03;
+
+      .bx--file__state-container svg {
+        cursor: unset;
+      }
+
+      .bx--file-complete:focus {
+        outline: none;
+      }
+
+      .submit-job-container__import-jco__file-uploader-item__link {
+        @include carbon--type-style('helper-text-01');
+      }
+    }
   }
 
-  .submit-job-container__accordion_title {
-    @include carbon--type-style('productive-heading-02');
+  .submit-job-container__accordion {
+    padding-bottom: $layout-03;
+
+    .submit-job-container__accordion-item .bx--accordion__title {
+      @include carbon--type-style('productive-heading-02');
+    }
   }
 
   .submit-job-container__button-container {
@@ -13,18 +42,18 @@
 
     @include carbon--breakpoint-down(700px) {
       flex-flow: column wrap;
-      align-content: flex-end;
+
+      .submit-job-container__button-container__button {
+        max-width: 19rem;
+      }
     }
 
     .submit-job-container__button-container__button {
       flex: 1;
     }
 
-    .submit-job-container__button-container__file-uploader-button {
-      padding-top: calc(0.875rem - 3px);
-      padding-right: 60px;
-      padding-bottom: calc(0.875rem - 3px);
-      padding-left: 12px;
+    .submit-job-container__button-container__button-export {
+      max-width: 19rem;
     }
   }
 }
