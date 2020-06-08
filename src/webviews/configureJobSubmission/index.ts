@@ -228,7 +228,7 @@ export default class ConfigureJobSubmissionWebviewPanel extends BaseWebviewPanel
             return window.showOpenDialog({
                 canSelectMany: false,
                 defaultUri: Uri.file(dirPath),
-                filters: { 'JSON': ['json'] },
+                filters: { JSON: ['json'] },
                 openLabel: 'Import'
             }).then((uris: Uri[]) => {
                 if (uris && uris.length) {
@@ -275,8 +275,17 @@ export default class ConfigureJobSubmissionWebviewPanel extends BaseWebviewPanel
         const { args }: { args: ISaveFileOptions } = message;
         if (args) {
             const { fileName, fileContent, fileType, buttonLabel } = args;
+            let dirPath: string;
+            const { details } = this._properties;
+            const prop = 'Bundle path';
+            if (details && _has(details, prop)) {
+                const bundlePath = details[prop];
+                dirPath = path.dirname(bundlePath);
+            } else {
+                dirPath = os.homedir();
+            }
             const options = {
-                defaultUri: Uri.file(path.join(os.homedir(), fileName)),
+                defaultUri: Uri.file(path.join(dirPath, fileName)),
                 filters: fileType,
                 saveLabel: buttonLabel
             };

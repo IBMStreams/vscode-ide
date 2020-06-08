@@ -90,8 +90,8 @@ export default class SubmitJobContainer extends Component {
       args: {
         fileName,
         fileContent: JSON.stringify(jobConfigOverlay, null, 2),
-        fileType: { 'Streams Job Configuration': ['json', 'jco'] },
-        buttonLabel: 'Save'
+        fileType: { JSON: ['json'] },
+        buttonLabel: 'Export'
       }
     });
   }
@@ -236,11 +236,8 @@ export default class SubmitJobContainer extends Component {
             <Accordion>
               <AccordionItem
                 open
-                title={(
-                  <h1 className="submit-job-container__accordion_title">
-                    Submission-time parameters
-                  </h1>
-                )}
+                title="Submission-time parameters"
+                className="submit-job-container__accordion-item"
               >
                 <SubmitParamsContainer
                   submitParamsFromJobConfig={submitParamsFromJobConfig}
@@ -251,11 +248,8 @@ export default class SubmitJobContainer extends Component {
               </AccordionItem>
               <AccordionItem
                 open
-                title={(
-                  <h1 className="submit-job-container__accordion_title">
-                    Job configuration
-                  </h1>
-                )}
+                title="Job configuration"
+                className="submit-job-container__accordion-item"
               >
                 <JobConfigContainer
                   jobConfig={jobConfigOverlay}

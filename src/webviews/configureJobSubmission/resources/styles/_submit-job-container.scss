@@ -30,10 +30,10 @@
 
   .submit-job-container__accordion {
     padding-bottom: $layout-03;
-  }
 
-  .submit-job-container__accordion_title {
-    @include carbon--type-style('productive-heading-02');
+    .submit-job-container__accordion-item .bx--accordion__title {
+      @include carbon--type-style('productive-heading-02');
+    }
   }
 
   .submit-job-container__button-container {
