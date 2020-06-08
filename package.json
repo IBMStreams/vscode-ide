@@ -37,24 +37,26 @@
     "keybindings": [
       {
         "command": "ibm-streams.build.makeDownload",
-        "key": "ctrl+shift+b",
-        "mac": "cmd+shift+b",
+        "key": "ctrl+alt+b",
+        "mac": "cmd+alt+b",
         "when": "editorLangId == makefile"
       },
       {
         "command": "ibm-streams.build.appDownload",
-        "key": "ctrl+shift+b",
-        "mac": "cmd+shift+b",
+        "key": "ctrl+alt+b",
+        "mac": "cmd+alt+b",
         "when": "editorLangId == spl"
       },
       {
         "command": "ibm-streams.build.makeSubmit",
-        "key": "alt+shift+b",
+        "key": "ctrl+alt+s",
+        "mac": "cmd+alt+s",
         "when": "editorLangId == makefile"
       },
       {
         "command": "ibm-streams.build.appSubmit",
-        "key": "alt+shift+b",
+        "key": "ctrl+alt+s",
+        "mac": "cmd+alt+s",
         "when": "editorLangId == spl"
       }
     ],
