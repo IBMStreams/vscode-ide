@@ -49,14 +49,12 @@
       },
       {
         "command": "ibm-streams.build.makeSubmit",
-        "key": "alt+shift+s",
-        "mac": "alt+shift+s",
+        "key": "alt+shift+b",
         "when": "editorLangId == makefile"
       },
       {
         "command": "ibm-streams.build.appSubmit",
-        "key": "alt+shift+s",
-        "mac": "alt+shift+s",
+        "key": "alt+shift+b",
         "when": "editorLangId == spl"
       }
     ],
