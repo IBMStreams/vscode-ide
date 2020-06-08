@@ -34,6 +34,20 @@
   ],
   "main": "./dist/extension",
   "contributes": {
+    "keybindings": [
+      {
+        "command": "ibm-streams.build.makeDownload",
+        "key": "ctrl+shift+m",
+        "mac": "cmd+shift+m",
+        "when": "editorLangId == makefile"
+      },
+      {
+        "command": "ibm-streams.build.appDownload",
+        "key": "ctrl+shift+b",
+        "mac": "cmd+shift+b",
+        "when": "editorLangId == spl"
+      }
+    ],
     "configuration": {
       "type": "object",
       "title": "IBM Streams",
