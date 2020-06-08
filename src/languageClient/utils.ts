@@ -58,11 +58,11 @@ export const checkUserPort = async (port: number): Promise<number> => {
                     const portInputNum = parseInt(portInput);
                     if (result === 'Session') {
                         // Re-check
-                        return this.checkIfPortIsAvailable(portInputNum);
+                        return checkUserPort(portInputNum);
                     } else if (result === 'Workspace') {
                         if (Configuration.getSetting(Settings.SERVER_PORT) === portInputNum) {
                             // Re-check
-                            return this.checkIfPortIsAvailable(portInputNum);
+                            return checkUserPort(portInputNum);
                         }
                         // Port in use re-check will happen automatically
                         await Configuration.setSetting(Settings.SERVER_PORT, portInputNum, ConfigurationTarget.Workspace);

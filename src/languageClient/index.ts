@@ -234,9 +234,7 @@ export default class SplLanguageClient {
                     ...['Yes', 'No']
                 );
                 if (result === 'Yes') {
-                    setTimeout(async () => {
-                        await Configuration.setSetting(Settings.SERVER_MODE, Settings.SERVER_MODE_VALUE.SOCKET);
-                    }, 5000);
+                    await Configuration.setSetting(Settings.SERVER_MODE, Settings.SERVER_MODE_VALUE.SOCKET);
                 }
             }
         }, 60000);
