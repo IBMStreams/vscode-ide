@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Keyboard shortcuts for build commands ([#79](https://github.com/IBMStreams/vscode-ide/issues/79))
 - Better support for job configuration overlay files when configuring job submissions ([#81](https://github.com/IBMStreams/vscode-ide/issues/81))
 - Changelog file to document changes between releases ([#87](https://github.com/IBMStreams/vscode-ide/issues/87))
+- Better error handling when starting the SPL language server ([#89](https://github.com/IBMStreams/vscode-ide/issues/89))
 
 ### Changed
 
