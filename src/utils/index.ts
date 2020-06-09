@@ -43,5 +43,9 @@ export function inDebugMode(): boolean {
  * Determine if logging is enabled
  */
 export function isLoggingEnabled(): boolean {
-    return inDebugMode() || Configuration.getSetting(Settings.LOG_LEVEL) === Settings.LOG_LEVEL_VALUE.DEBUG
+    // Do not enable logging when running the "Launch Extension (Extensions and Logging Disabled)" configuration
+    if (process.env && process.env.LOGGING_ENABLED && process.env.LOGGING_ENABLED === 'false') {
+        return false;
+    }
+    return inDebugMode() || Configuration.getSetting(Settings.LOG_LEVEL) === Settings.LOG_LEVEL_VALUE.DEBUG;
 }
