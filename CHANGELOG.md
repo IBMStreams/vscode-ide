@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Coloring for debug log messages ([#76](https://github.com/IBMStreams/vscode-ide/issues/76))
 - Clean up and standardize webview styling ([#83](https://github.com/IBMStreams/vscode-ide/issues/83))
+- Update extension documentation link ([#93](https://github.com/IBMStreams/vscode-ide/issues/93))
 
 ### Fixed
 
