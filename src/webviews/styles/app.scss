@@ -13,6 +13,7 @@ html, body, #root {
 
     .header-container--flex {
       display: flex;
+      align-items: center;
     }
 
     .header-container__header {
@@ -22,7 +23,7 @@ html, body, #root {
 
     .header-container__info-button {
       margin-left: 0.5rem;
-      padding: 0 5px;
+      padding: 5px;
       min-height: unset;
     }
   }

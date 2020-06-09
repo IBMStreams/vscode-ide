@@ -1,7 +1,9 @@
 import Accordion from 'carbon-components-react/es/components/Accordion';
 import AccordionItem from 'carbon-components-react/es/components/AccordionItem';
 import Button from 'carbon-components-react/es/components/Button';
-import { FileUploaderButton } from 'carbon-components-react/es/components/FileUploader';
+import { FileUploaderItem } from 'carbon-components-react/es/components/FileUploader';
+import Link from 'carbon-components-react/es/components/Link';
+import Tooltip from 'carbon-components-react/es/components/Tooltip';
 import _cloneDeep from 'lodash/cloneDeep';
 import _findIndex from 'lodash/findIndex';
 import PropTypes from 'prop-types';
@@ -46,22 +48,36 @@ export default class SubmitJobContainer extends Component {
             }
           }
         ]
-      }
+      },
+      selectedJcoFile: null
     };
 
     this.themeHandler = new ThemeHandler();
     this.messageHandler = new MessageHandler();
-    this.handleJobConfigFileChanged = this.handleJobConfigFileChanged.bind(this);
     this.handleSubmitParamUpdate = this.handleSubmitParamUpdate.bind(this);
     this.handleJobConfigUpdate = this.handleJobConfigUpdate.bind(this);
     this.handleJobGroupConfigUpdate = this.handleJobGroupConfigUpdate.bind(this);
     this.submitClicked = this.submitClicked.bind(this);
     this.handleTracingUpdate = this.handleTracingUpdate.bind(this);
+    this.importJCO = this.importJCO.bind(this);
     this.exportJCO = this.exportJCO.bind(this);
   }
 
   componentDidMount() {
     this.messageHandler.postMessage({ command: 'webview-ready' });
+  }
+
+  async importJCO() {
+    const jcoFile = await this.messageHandler.postMessage({ command: 'import-jco' });
+    if (jcoFile) {
+      const {
+        fileName, json, error, errorLink
+      } = jcoFile;
+      this.setState({
+        ...(json && { jobConfigOverlay: json }),
+        selectedJcoFile: { name: fileName, error, errorLink }
+      });
+    }
   }
 
   exportJCO() {
@@ -74,40 +90,19 @@ export default class SubmitJobContainer extends Component {
       args: {
         fileName,
         fileContent: JSON.stringify(jobConfigOverlay, null, 2),
-        fileType: { 'Streams Job Configuration': ['json', 'jco'] },
-        buttonLabel: 'Save'
+        fileType: { JSON: ['json'] },
+        buttonLabel: 'Export'
       }
     });
-  }
-
-  handleJobConfigFileChanged(event) {
-    const reader = new FileReader();
-    const jobConfigOverlayFile = event.target.files[0];
-    const { name } = jobConfigOverlayFile;
-    reader.onload = () => {
-      const fileContents = reader.result;
-      if (fileContents) {
-        try {
-          const jobConfig = JSON.parse(fileContents);
-          this.setState({ jobConfigOverlay: jobConfig });
-        } catch (err) {
-          this.messageHandler.postMessage({
-            command: 'show-notification',
-            args: {
-              type: 'error',
-              message: `An error occurred while parsing the job configuration file ${name}.\n${err}`
-            }
-          });
-        }
-      }
-    };
-    reader.readAsText(jobConfigOverlayFile);
   }
 
   handleSubmitParamUpdate(param) {
     const { jobConfigOverlay } = this.state;
     const jobConfigState = { ...jobConfigOverlay };
     const { jobConfig } = jobConfigState.jobConfigOverlays[0];
+    if (!jobConfig.submissionParameters) {
+      jobConfig.submissionParameters = [];
+    }
     const itemIndex = _findIndex(jobConfig.submissionParameters, ['name', param.name]);
     if (itemIndex >= 0) {
       jobConfig.submissionParameters[itemIndex].value = param.value;
@@ -147,6 +142,9 @@ export default class SubmitJobContainer extends Component {
 
     // Omit parameters that are the same as the default values
     const { jobConfig } = jobConfigOverlay.jobConfigOverlays[0];
+    if (!jobConfig.submissionParameters) {
+      jobConfig.submissionParameters = [];
+    }
     jobConfig.submissionParameters = jobConfig.submissionParameters.filter(({ name, value }) => {
       const initialSubmissionParameter = initialSubmissionParameters.find((param) => param.name === name);
       return initialSubmissionParameter && value !== initialSubmissionParameter.value;
@@ -162,39 +160,96 @@ export default class SubmitJobContainer extends Component {
   }
 
   render() {
-    const { jobConfigOverlay } = this.state;
+    const { initialSubmissionParameters, jobConfigOverlay, selectedJcoFile } = this.state;
     const submitParamsFromJobConfig = JobConfigOverlayUtils.getSubmissionTimeParameters(jobConfigOverlay);
     const { params: { submissionTimeParameters, targetInstance: { streamsJobGroups } } } = this.props;
     const regex = RegExp(/[\^!#$%&'*+,/;<>=?@[\]`{|}~()\s\u0000-\u0019\u007F-\u009F\ud800-\uF8FF\uFFF0-\uFFFF]/);
     let jobNameIsInvalid = JobConfigOverlayUtils.getJobName(jobConfigOverlay);
     jobNameIsInvalid = jobNameIsInvalid && (regex.test(jobNameIsInvalid) || jobNameIsInvalid.length > 1024);
     const isDisabled = _findIndex(submitParamsFromJobConfig, (param) => param.value.trim() === '') >= 0 || jobNameIsInvalid;
+    const jcoDocLink = 'https://www.ibm.com/support/knowledgecenter/SSCRJU_4.3.0/com.ibm.streams.admin.doc/doc/job_configuration_overlays.html';
     return (
       <div className="bx--grid bx--grid--no-gutter submit-job-container">
+        <div className="bx--row submit-job-container__import-jco">
+          <div className="bx--col bx--no-gutter">
+            <div className="submit-job-container__import-jco__button-container">
+              <Button
+                kind="tertiary"
+                size="field"
+                onClick={this.importJCO}
+                className="submit-job-container__import-jco__button-container__button"
+              >
+                Import job configuration overlay file
+              </Button>
+              <Tooltip
+                showIcon
+                direction="bottom"
+                iconDescription="Learn more"
+              >
+                <p>
+                  A job configuration overlay file is a JSON file that contains name-value pairs
+                  for job configuration parameters. You can use a job configuration overlay file
+                  to define, save, and distribute the submission-time configuration or to change
+                  the configuration of a running job.
+                </p>
+                <div className="bx--tooltip__footer">
+                  <Button
+                    kind="primary"
+                    size="small"
+                    href={jcoDocLink}
+                  >
+                    Learn more
+                  </Button>
+                </div>
+              </Tooltip>
+            </div>
+            {selectedJcoFile && (
+              <div className="submit-job-container__import-jco__file-uploader-item">
+                <FileUploaderItem
+                  errorBody={selectedJcoFile.errorLink
+                    ? (
+                      <span>
+                        {selectedJcoFile.error}
+                        <Link
+                          href={jcoDocLink}
+                          className="submit-job-container__import-jco__file-uploader-item__link"
+                        >
+                          here
+                        </Link>.
+                      </span>
+                    )
+                    : selectedJcoFile.error
+                  }
+                  errorSubject="File could not be imported. Import a different file."
+                  iconDescription={null}
+                  invalid={!!selectedJcoFile.error}
+                  name={selectedJcoFile.name}
+                  status={selectedJcoFile.error ? 'edit' : 'complete'}
+                  onDelete={() => { this.setState({ selectedJcoFile: null }) }}
+                />
+              </div>
+            )}
+          </div>
+        </div>
         <div className="bx--row submit-job-container__accordion">
-          <div className="bx--col bx--no-gutter ">
+          <div className="bx--col bx--no-gutter">
             <Accordion>
               <AccordionItem
                 open
-                title={(
-                  <h1 className="submit-job-container__accordion_title">
-                    Submission-time parameters
-                  </h1>
-                )}
+                title="Submission-time parameters"
+                className="submit-job-container__accordion-item"
               >
                 <SubmitParamsContainer
                   submitParamsFromJobConfig={submitParamsFromJobConfig}
                   submitParamsFromApp={submissionTimeParameters}
                   handleSubmitParamUpdate={this.handleSubmitParamUpdate}
+                  initialSubmissionParameters={initialSubmissionParameters}
                 />
               </AccordionItem>
               <AccordionItem
                 open
-                title={(
-                  <h1 className="submit-job-container__accordion_title">
-                    Job configuration
-                  </h1>
-                )}
+                title="Job configuration"
+                className="submit-job-container__accordion-item"
               >
                 <JobConfigContainer
                   jobConfig={jobConfigOverlay}
@@ -216,7 +271,7 @@ export default class SubmitJobContainer extends Component {
               onClick={this.submitClicked}
               className="submit-job-container__button-container__button"
             >
-              Submit
+              Submit job
             </Button>
             <Button
               type="reset"
@@ -226,21 +281,12 @@ export default class SubmitJobContainer extends Component {
             >
               Cancel
             </Button>
-            <FileUploaderButton
-              disableLabelChanges
-              labelText="Import job configuration file"
-              buttonKind="tertiary"
-              size="default"
-              accept={['application/JSON']}
-              onChange={this.handleJobConfigFileChanged}
-              className="submit-job-container__button-container__button submit-job-container__button-container__file-uploader-button"
-            />
             <Button
               kind="tertiary"
               onClick={this.exportJCO}
-              className="submit-job-container__button-container__button"
+              className="submit-job-container__button-container__button-export"
             >
-              Export job configuration file
+              Export job configuration overlay file
             </Button>
           </div>
         </div>
