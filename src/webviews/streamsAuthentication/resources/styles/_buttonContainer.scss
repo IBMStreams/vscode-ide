@@ -5,7 +5,6 @@
 
   @include carbon--breakpoint-down(500px) {
     flex-flow: column wrap;
-    align-content: flex-end;
   }
 
   .button-container__button {

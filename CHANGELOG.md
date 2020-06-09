@@ -12,12 +12,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update default save file location to user's home directory ([#69](https://github.com/IBMStreams/vscode-ide/issues/69))
 - Warn user when building a file with unsaved changes ([#70](https://github.com/IBMStreams/vscode-ide/issues/70))
 - Diagnostics for build output messages of all severity types ([#78](https://github.com/IBMStreams/vscode-ide/issues/78))
+- Keyboard shortcuts for build commands ([#79](https://github.com/IBMStreams/vscode-ide/issues/79))
+- Better support for job configuration overlay files when configuring job submissions ([#81](https://github.com/IBMStreams/vscode-ide/issues/81))
 - Changelog file to document changes between releases ([#87](https://github.com/IBMStreams/vscode-ide/issues/87))
+- Better error handling when starting the SPL language server ([#89](https://github.com/IBMStreams/vscode-ide/issues/89))
 
 ### Changed
 
 - Coloring for debug log messages ([#76](https://github.com/IBMStreams/vscode-ide/issues/76))
 - Clean up and standardize webview styling ([#83](https://github.com/IBMStreams/vscode-ide/issues/83))
+- Update extension documentation link ([#93](https://github.com/IBMStreams/vscode-ide/issues/93))
 
 ### Fixed
 

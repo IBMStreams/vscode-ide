@@ -176,10 +176,11 @@ export default class Configuration {
 
     /**
      * Set the value for a configuration setting
-     * @param name     The configuration setting name
-     * @param value    The new value
+     * @param name      The configuration setting name
+     * @param value     The new value
+     * @param target    The configuration target
      */
-    public static setSetting(name: string, value: any): Thenable<any> {
+    public static setSetting(name: string, value: any, target = ConfigurationTarget.Global): Thenable<any> {
         const configuration = workspace.getConfiguration();
         const inspect = this.inspectSetting(name);
         const { defaultValue, globalValue, workspaceValue, workspaceFolderValue } = inspect;
@@ -204,7 +205,7 @@ export default class Configuration {
             return Promise.resolve();
         }
 
-        return configuration.update(name, value, ConfigurationTarget.Global);
+        return configuration.update(name, value, target);
     }
 
     /**

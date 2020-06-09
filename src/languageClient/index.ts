@@ -10,6 +10,7 @@ import {
 import {
     Configuration, EXTENSION_ID, EXTENSION_NAME, LANGUAGE_SERVER, LANGUAGE_SPL, Logger, TOOLKITS_CACHE_DIR, Settings
 } from '../utils';
+import { checkUserPort } from './utils';
 
 let client: LanguageClient = null;
 let clientState: State = null;
@@ -60,6 +61,7 @@ export default class SplLanguageClient {
         const processOptions = { cwd, shell: true, env: { ...process.env } };
 
         const mode = Configuration.getSetting(Settings.SERVER_MODE);
+        let port: number;
         if (mode === Settings.SERVER_MODE_VALUE.EMBEDDED) {
             launcher = os.platform() === 'win32' ? 'startSplLspServer.bat' : 'startSplLspServer';
             command = getCommand(launcher);
@@ -69,7 +71,13 @@ export default class SplLanguageClient {
             };
         } else {
             // Spawn a process for starting the language server in socket mode
-            const port = Configuration.getSetting(Settings.SERVER_PORT);
+            port = Configuration.getSetting(Settings.SERVER_PORT);
+
+            // Check if the port is available
+            port = await checkUserPort(port);
+            if (!port) {
+                return;
+            }
 
             launcher = os.platform() === 'win32' ? 'startSplLspServerSocket.bat' : 'startSplLspServerSocket';
             command = getCommand(launcher);
@@ -160,10 +168,10 @@ export default class SplLanguageClient {
                     status = 'has stopped';
                     break;
                 case State.Starting:
-                    status = 'is starting';
+                    status = `is starting${port ? ` on port ${port}` : ''}`;
                     break;
                 case State.Running:
-                    status = 'is running';
+                    status = `is running${port ? ` on port ${port}` : ''}`;
                     break;
                 default:
                     break;
@@ -179,6 +187,7 @@ export default class SplLanguageClient {
             }, 5000);
         } else {
             client.start();
+            this._checkClientReady();
         }
 
         return progress;
@@ -214,6 +223,21 @@ export default class SplLanguageClient {
 
     public static createDebugEnv(): any {
         return { JAVA_OPTS: '-Xdebug -Xrunjdwp:transport=dt_socket,address=8998,server=n,suspend=y', ...process.env };
+    }
+
+    private static _checkClientReady(): void {
+        // If client is not ready within 60 seconds, then ask the user if they want to switch to socket mode
+        setTimeout(async () => {
+            if (!isClientReady) {
+                const result = await window.showWarningMessage(
+                    'The SPL language server is taking a while to start. Do you want to try running the server in socket mode?',
+                    ...['Yes', 'No']
+                );
+                if (result === 'Yes') {
+                    await Configuration.setSetting(Settings.SERVER_MODE, Settings.SERVER_MODE_VALUE.SOCKET);
+                }
+            }
+        }, 60000);
     }
 }
 
