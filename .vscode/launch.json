@@ -20,7 +20,28 @@
             "sourceMaps": true,
             "skipFiles": [
                 "<node_internals>/**/*.js"
-              ]
+            ]
+        },
+        {
+            "name": "Launch Extension (Extensions and Logging Disabled)",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "--disable-extensions",
+                "--extensionDevelopmentPath=${workspaceFolder}"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/dist/**/*.js"
+            ],
+            "preLaunchTask": "npm: webpack:dev-watch",
+            "sourceMaps": true,
+            "skipFiles": [
+                "<node_internals>/**/*.js"
+            ],
+            "env": {
+                "LOGGING_ENABLED": "false"
+            }
         },
         {
             "name": "Launch Extension Tests",
