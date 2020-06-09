@@ -5,7 +5,7 @@ import { BuiltInCommands, Views } from '../../utils';
 
 const resourceLinks = {
     'Getting started': {
-        'Using the IBM Streams extension for Visual Studio Code': 'https://developer.ibm.com/streamsdev/docs/develop-run-streams-applications-using-atom-visual-studio-code',
+        'Using the IBM Streams extension for Visual Studio Code': 'http://ibmstreams.github.io/streamsx.documentation/docs/spl/quick-start/qs-1b/',
         'New to IBM Streams': 'https://developer.ibm.com/streamsdev/new-to-streams',
         Tutorials: 'https://ibmstreams.github.io/tutorials',
         Toolkits: 'https://developer.ibm.com/streamsdev/docs/github-projects-overview',
