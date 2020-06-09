@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Better support for job configuration overlay files when configuring job submissions ([#81](https://github.com/IBMStreams/vscode-ide/issues/81))
 - Changelog file to document changes between releases ([#87](https://github.com/IBMStreams/vscode-ide/issues/87))
 - Better error handling when starting the SPL language server ([#89](https://github.com/IBMStreams/vscode-ide/issues/89))
+- Launch configuration that disables extensions and logging ([#96](https://github.com/IBMStreams/vscode-ide/issues/96))
 
 ### Changed
 
