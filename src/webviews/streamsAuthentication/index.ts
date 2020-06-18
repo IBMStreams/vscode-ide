@@ -152,6 +152,8 @@ export default class StreamsAuthenticationWebviewPanel extends BaseWebviewPanel 
                     return this._handleSetSelectedInstanceMessage(message);
                 case 'remove-instance':
                     return this._handleRemoveInstanceMessage(message);
+                case 'start-streaming-analytics-service':
+                    return this._startStreamingAnalyticsService(message);
                 case 'close-panel':
                     return this._handleClosePanelMessage(message);
                 default:
@@ -368,6 +370,41 @@ export default class StreamsAuthenticationWebviewPanel extends BaseWebviewPanel 
     }
 
     /**
+     * Handle a start Streaming Analytics service message
+     * @param message    The JSON message sent from the webview
+     */
+    private async _startStreamingAnalyticsService(message: IRequestMessage<any>): void {
+        const { args } = message;
+        if (args) {
+            try {
+                const { instanceType, instance, credentials } = args;
+                const callbackFn = (): void => {
+                    const successFn = async (result: any): Promise<void> => {
+                        this._handleAuthenticationSuccess(result, instance);
+                    };
+                    const errorFn = this._getErrorFunction();
+                    const authentication = { credentials };
+                    store.dispatch(Instance.addStreamsInstance(instanceType, authentication, instance.isDefault, instance.connectionId))
+                        .then(successFn)
+                        .catch(errorFn);
+                }
+                await store.dispatch(Instance.startStreamingAnalyticsService(instance.connectionId, callbackFn));
+            } catch (error) {
+                const errorMsg = 'An error occurred while starting the Streaming Analytics service.';
+                this._replyMessage(message, { errorMsg: `${errorMsg} ${this._getErrorMessage(error)}` });
+                Registry.getDefaultMessageHandler().handleError(
+                    errorMsg,
+                    {
+                        showNotification: false,
+                        detail: error.response || error.message || error,
+                        stack: error.response || error.stack
+                    }
+                );
+            }
+        }
+    }
+
+    /**
      * Handle a close panel message
      * @param message    The JSON message sent from the webview
      */
@@ -430,7 +467,12 @@ export default class StreamsAuthenticationWebviewPanel extends BaseWebviewPanel 
             const errorMessage = this._getErrorMessage(error);
             this._postMessage({
                 command: 'set-auth-error',
-                args: { authError: { message: errorMessage } }
+                args: {
+                    authError: {
+                        message: errorMessage,
+                        ...(error.name && error.name === 'CustomError' && { data: error.data })
+                    }
+                }
             });
             Registry.getDefaultMessageHandler().handleError(
                 'An error occurred during Streams authentication.',
