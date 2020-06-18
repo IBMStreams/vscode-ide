@@ -1093,10 +1093,10 @@
   resolved "https://registry.yarnpkg.com/@formatjs/intl-utils/-/intl-utils-2.3.0.tgz#2dc8c57044de0340eb53a7ba602e59abf80dc799"
   integrity sha512-KWk80UPIzPmUg+P0rKh6TqspRw0G6eux1PuJr+zz47ftMaZ9QDwbGzHZbtzWkl5hgayM/qrKRutllRC7D/vVXQ==
 
-"@ibmstreams/common@0.9.0":
-  version "0.9.0"
-  resolved "https://registry.yarnpkg.com/@ibmstreams/common/-/common-0.9.0.tgz#358096d90ec32afaf4942eac4c8dec2dcc3adbeb"
-  integrity sha512-R5H/RJG8HDrXaRkW7Z7suMcQ5VRiJjx6SqymPdY/4tFOCYB1nh1u50I1Bscq1Cc97mw48XrG82lQHg/z+MhlmQ==
+"@ibmstreams/common@0.9.1":
+  version "0.9.1"
+  resolved "https://registry.yarnpkg.com/@ibmstreams/common/-/common-0.9.1.tgz#3d0222c05e1c6551c935497264f191e391cb1aa6"
+  integrity sha512-PAJmjzT1MmgLqljESSB4ekCehxWhv2yNwHNFwOJdMimlLdM65nIKXqmKrrnzdSysPBOjcoyCPl3OpSYujs9hvA==
   dependencies:
     "@reduxjs/toolkit" "^1.3.1"
     archiver "^3.1.1"

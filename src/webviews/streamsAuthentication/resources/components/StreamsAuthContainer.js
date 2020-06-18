@@ -132,9 +132,9 @@ export default class StreamsAuthContainer extends Component {
     );
   }
 
-  renderLoadingOverlay = (loading, isAuthenticating) => {
+  renderLoadingOverlay = (loading, isAuthenticating, description = 'Loading...') => {
     if (loading || isAuthenticating) {
-      return <Loading description="Loading..." />;
+      return <Loading description={description} />;
     }
   }
 
@@ -204,6 +204,9 @@ export default class StreamsAuthContainer extends Component {
       if (requestTimedOut) {
         newMsg = msg.replace(/Try updating/, `${verifyMessage}, or try updating`);
       } else {
+        if (!msg.endsWith('.')) {
+          newMsg += '.';
+        }
         newMsg += ` ${verifyMessage}.`;
       }
     }
