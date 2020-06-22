@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Handling of special characters in submission-time parameter values ([#82](https://github.com/IBMStreams/vscode-ide/issues/82))
 - Application bundle submissions from IBM Streams Studio projects ([#98](https://github.com/IBMStreams/vscode-ide/issues/98))
 - Detection of newer local toolkits ([#99](https://github.com/IBMStreams/vscode-ide/issues/99))
+- Remove leftover build archive file when a build fails ([#104](https://github.com/IBMStreams/vscode-ide/issues/104))
 
 ## [1.0.1] - 2020-05-26
 
