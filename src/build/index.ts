@@ -435,6 +435,10 @@ export default class StreamsBuild {
         }
     }
 
+    /**
+     * Get the file path relative to a workspace folder
+     * @param filePath    The path to the file
+     */
     private static getFilePathRelativeToWorkspaceFolder(filePath: string): string {
         let newFilePath = filePath;
         const workspaceFolderPaths = workspace.workspaceFolders.map((folder: WorkspaceFolder) => folder.uri.fsPath);
