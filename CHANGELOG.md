@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Update default save file location to user's home directory ([#69](https://github.com/IBMStreams/vscode-ide/issues/69))
-- Warn user when building a file with unsaved changes ([#70](https://github.com/IBMStreams/vscode-ide/issues/70))
+- Warn user when building with unsaved changes ([#70](https://github.com/IBMStreams/vscode-ide/issues/70), [#103](https://github.com/IBMStreams/vscode-ide/issues/103))
 - Allow user to start an IBM Streaming Analytics service if stopped ([#72](https://github.com/IBMStreams/vscode-ide/issues/72))
 - Diagnostics for build output messages of all severity types ([#78](https://github.com/IBMStreams/vscode-ide/issues/78))
 - Keyboard shortcuts for build commands ([#79](https://github.com/IBMStreams/vscode-ide/issues/79))
