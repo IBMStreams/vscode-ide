@@ -101,7 +101,11 @@ export default class MessageHandler {
         const outputChannel = this._getOutputChannel();
         const detailMessage = Streams.getErrorMessage(detail);
         let stackMessage: string;
-        if (stack && stack.config && stack.status) {
+        // CDIS is the unique component prefix that identifies IBM Streams log messages
+        // If an error message contains such a log message, do not show the stack trace
+        if (message.includes('CDIS')) {
+            stackMessage = null;
+        } else if (stack && stack.config && stack.status) {
             const stackObj: any = _pick(stack.config, ['method', 'url']);
             stackObj.status = stack.status;
             stackMessage = JSON.stringify(stackObj, null, 2);
