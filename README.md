@@ -52,16 +52,19 @@ There are two build options:
 - __Build__: builds and downloads the application bundle(s)
 - __Build and Submit Job__: builds and submits the application(s) to a Streams instance
 
-**Note**: In order to detect your application folder, ensure that it contains either an [`info.xml`](https://www.ibm.com/support/knowledgecenter/en/SSCRJU_5.3.0/com.ibm.streams.dev.doc/doc/toolkitinformationmodelfile.html) or `Makefile` file. If your SPL application is defined with a namespace, then one of these files must be present in the parent folder; otherwise, one of these files must be present in the same folder as your `.spl` file.
-As an example, consider the following application folder layout:
-```
-/+ MyAppDir                     # application folder
-  /+ info.xml                   # name, version, dependency information
-  /+ my.sample                  # namespace directory
-    /+ FooBar.spl               # .spl file with the namespace my.sample and the main composite FooBar
-    /+ FooBarHelper.spl         # a second .spl file containing helpers
-```
-For more information, refer to the [documentation](https://www.ibm.com/support/knowledgecenter/en/SSCRJU_5.3.0/com.ibm.streams.dev.doc/doc/appdirlayout.html).
+> **Note**: In order to detect your application folder, ensure that it contains either an [`info.xml`](https://www.ibm.com/support/knowledgecenter/en/SSCRJU_5.3.0/com.ibm.streams.dev.doc/doc/toolkitinformationmodelfile.html) or `Makefile` file. If your SPL application is defined with a namespace, then one of these files must be present in the parent folder; otherwise, one of these files must be present in the same folder as your `.spl` file.
+>
+> As an example, consider the following application folder layout:
+>
+> ```
+> /+ MyAppDir                     # application folder
+>   /+ info.xml                   # name, version, dependency information
+>   /+ my.sample                  # namespace directory
+>     /+ FooBar.spl               # .spl file with the namespace my.sample and the main composite FooBar
+>     /+ FooBarHelper.spl         # a second .spl file containing helpers
+> ```
+>
+> For more information, refer to the [documentation](https://www.ibm.com/support/knowledgecenter/en/SSCRJU_5.3.0/com.ibm.streams.dev.doc/doc/appdirlayout.html).
 
 ![Building and submitting SPL application](./images/docs/feature_buildSubmitApplication.gif)
 
