@@ -52,7 +52,7 @@ There are two build options:
 - __Build__: builds and downloads the application bundle(s)
 - __Build and Submit Job__: builds and submits the application(s) to a Streams instance
 
-Note: In order to detect your application folder, ensure that your application contains an info.xml or Makefile file in the same folder as the .spl file you would like to build (or any of its parent folders). (https://www.ibm.com/support/knowledgecenter/en/SSCRJU_5.3.0/com.ibm.streams.dev.doc/doc/toolkitinformationmodelfile.html)
+Note: In order to detect your application folder, ensure that your application contains an info.xml or Makefile file in the same folder as the .spl file you would like to build (or any of its parent folders). [info.xml](https://www.ibm.com/support/knowledgecenter/en/SSCRJU_5.3.0/com.ibm.streams.dev.doc/doc/toolkitinformationmodelfile.html)
 
 ![Building and submitting SPL application](./images/docs/feature_buildSubmitApplication.gif)
 
