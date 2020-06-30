@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Application bundle submissions from IBM Streams Studio projects ([#98](https://github.com/IBMStreams/vscode-ide/issues/98))
 - Detection of newer local toolkits ([#99](https://github.com/IBMStreams/vscode-ide/issues/99))
 - Do not show error stack trace when IBM Streams log messages are reported ([#110](https://github.com/IBMStreams/vscode-ide/issues/110))
+- Incorrect build output path in Windows environments ([#112](https://github.com/IBMStreams/vscode-ide/issues/112))
 
 ## [1.0.1] - 2020-05-26
 
