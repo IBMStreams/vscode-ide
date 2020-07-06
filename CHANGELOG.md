@@ -32,6 +32,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Handling of special characters in submission-time parameter values ([#82](https://github.com/IBMStreams/vscode-ide/issues/82))
 - Application bundle submissions from IBM Streams Studio projects ([#98](https://github.com/IBMStreams/vscode-ide/issues/98))
 - Detection of newer local toolkits ([#99](https://github.com/IBMStreams/vscode-ide/issues/99))
+- Remove leftover build archive file when a build fails ([#104](https://github.com/IBMStreams/vscode-ide/issues/104))
+- Fetching toolkit index files may result in 404 errors ([#105](https://github.com/IBMStreams/vscode-ide/issues/105))
 - Do not show error stack trace when IBM Streams log messages are reported ([#110](https://github.com/IBMStreams/vscode-ide/issues/110))
 - Incorrect build output path in Windows environments ([#112](https://github.com/IBMStreams/vscode-ide/issues/112))
 
