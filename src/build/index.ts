@@ -655,7 +655,7 @@ export default class StreamsBuild {
      */
     private static async initBuild(type: string, filePath: string, action: PostBuildAction): Promise<any> {
         const workspaceFolders = _map(workspace.workspaceFolders, (folder: WorkspaceFolder) => folder.uri.fsPath);
-        const appRoot = SourceArchiveUtils.getApplicationRoot(workspaceFolders, filePath);
+        const appRoot = SourceArchiveUtils.getApplicationRoot(workspaceFolders, filePath, true);
 
         let lintHandler = Registry.getLintHandler(appRoot);
         if (!lintHandler) {
