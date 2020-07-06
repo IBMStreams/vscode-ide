@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changelog file to document changes between releases ([#87](https://github.com/IBMStreams/vscode-ide/issues/87))
 - Better error handling when starting the SPL language server ([#89](https://github.com/IBMStreams/vscode-ide/issues/89))
 - Launch configuration that disables extensions and logging ([#96](https://github.com/IBMStreams/vscode-ide/issues/96))
+- Provide more clarity about application folder structure requirements ([#113](https://github.com/IBMStreams/vscode-ide/issues/113))
 
 ### Changed
 
@@ -32,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Application bundle submissions from IBM Streams Studio projects ([#98](https://github.com/IBMStreams/vscode-ide/issues/98))
 - Detection of newer local toolkits ([#99](https://github.com/IBMStreams/vscode-ide/issues/99))
 - Fetching toolkit index files may result in 404 errors ([#105](https://github.com/IBMStreams/vscode-ide/issues/105))
+- Do not show error stack trace when IBM Streams log messages are reported ([#110](https://github.com/IBMStreams/vscode-ide/issues/110))
 
 ## [1.0.1] - 2020-05-26
 
