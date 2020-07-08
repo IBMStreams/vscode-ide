@@ -56,7 +56,6 @@ async function getStreamsJobsDetails(/* instanceId, callback */ {
   callback
 }) {
   const padlMap = new Map();
-  // eslint-disable-next-line compat/compat
   await Promise.all(jobIds.map(async (jobId) => {
     try {
       const jobPadlResponse = await messageHandler.postMessage({
@@ -85,6 +84,7 @@ async function getStreamsJobsDetails(/* instanceId, callback */ {
       jobSnapshots.jobs.forEach(job => {
         const padl = padlMap.get(job.id);
         if (padl) {
+          // eslint-disable-next-line no-param-reassign
           job.padl = JSON.parse(JSON.stringify(padl));
         }
       });

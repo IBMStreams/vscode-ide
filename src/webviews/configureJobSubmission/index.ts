@@ -1,5 +1,7 @@
 import { getStreamsInstance, InstanceSelector, store } from '@ibmstreams/common';
 import * as fs from 'fs';
+import _has from 'lodash/has';
+import * as os from 'os';
 import * as path from 'path';
 import {
     commands, ExtensionContext, Uri, ViewColumn, WebviewPanel, window
@@ -154,7 +156,7 @@ export default class ConfigureJobSubmissionWebviewPanel extends BaseWebviewPanel
                 // Re-create the webview
                 ConfigureJobSubmissionWebviewPanel.createOrShow(this._context, this._properties);
             }
-        }, 3000);
+        }, 5000);
     }
 
     protected receiveMessage(): void {
@@ -169,6 +171,8 @@ export default class ConfigureJobSubmissionWebviewPanel extends BaseWebviewPanel
                     return this.handleSubmitJobMessage(message);
                 case 'close-panel':
                     return this.handleClosePanelMessage(message);
+                case 'import-jco':
+                    return this._handleImportJcoMessage(message);
                 case 'save-file':
                     return this._handleSaveFileMessage(message);
                 case 'show-notification':
@@ -212,6 +216,53 @@ export default class ConfigureJobSubmissionWebviewPanel extends BaseWebviewPanel
     }
 
     /**
+     * Handle an import JCO message
+     * @param message    The JSON message sent from the webview
+     */
+    private async _handleImportJcoMessage(message: IRequestMessage<any>): Promise<any> {
+        const dirPath = this._getDirPath();
+        const options = {
+            canSelectMany: false,
+            defaultUri: Uri.file(dirPath),
+            filters: { JSON: ['json'] },
+            openLabel: 'Import'
+        };
+        return window.showOpenDialog(options).then((uris: Uri[]) => {
+            if (uris && uris.length) {
+                const [selectedJco] = uris;
+                const jcoFilePath = selectedJco.fsPath;
+                const jcoFileName = path.basename(jcoFilePath);
+                try {
+                    const json = JSON.parse(fs.readFileSync(jcoFilePath, 'utf8'));
+                    if (_has(json, 'jobConfigOverlays')) {
+                        this._replyMessage(message, {
+                            fileName: jcoFileName,
+                            json,
+                            error: null,
+                            errorLink: false
+                        });
+                    } else {
+                        this._replyMessage(message, {
+                            fileName: jcoFileName,
+                            json: null,
+                            error: 'Not a valid job configuration overlay file. Learn more ',
+                            errorLink: true
+                        });
+                    }
+                } catch (err) {
+                    const error = `Not valid JSON.${err && err.message ? ` ${err.message.trim()}` : ''}`;
+                    this._replyMessage(message, {
+                        fileName: jcoFileName,
+                        json: null,
+                        error: error.endsWith('.') ? error : `${error}.`,
+                        errorLink: false
+                    });
+                }
+            }
+        });
+    }
+
+    /**
      * Handle a save data message
      * @param message    The JSON message sent from the webview
      */
@@ -219,8 +270,9 @@ export default class ConfigureJobSubmissionWebviewPanel extends BaseWebviewPanel
         const { args }: { args: ISaveFileOptions } = message;
         if (args) {
             const { fileName, fileContent, fileType, buttonLabel } = args;
+            const dirPath = this._getDirPath();
             const options = {
-                defaultUri: Uri.file(fileName),
+                defaultUri: Uri.file(path.join(dirPath, fileName)),
                 filters: fileType,
                 saveLabel: buttonLabel
             };
@@ -246,6 +298,27 @@ export default class ConfigureJobSubmissionWebviewPanel extends BaseWebviewPanel
         if (args) {
             const { type, message: notificationMessage } = args;
             Logger[type](null, notificationMessage, true);
+        }
+    }
+
+    /**
+     * Get directory path to use for importing and exporting job configuration overlay files
+     */
+    private _getDirPath(): string {
+        const { details } = this._properties;
+        const bundlePathProp = 'Bundle path';
+        const appRootProp = 'Application root';
+        if (details && _has(details, bundlePathProp)) {
+            // Submission from application bundle
+            const bundlePath = details[bundlePathProp];
+            return path.dirname(bundlePath);
+        } else if (details && _has(details, appRootProp)) {
+            // Submission from build artifact
+            const appRoot = details[appRootProp];
+            return appRoot;
+        } else {
+            // Default
+            return os.homedir();
         }
     }
 }

@@ -2,7 +2,6 @@ import Dropdown from 'carbon-components-react/es/components/Dropdown';
 import DropdownSkeleton from 'carbon-components-react/es/components/Dropdown/Dropdown.Skeleton';
 import Link from 'carbon-components-react/es/components/Link';
 import { InlineNotification, NotificationActionButton } from 'carbon-components-react/es/components/Notification';
-import _isEqual from 'lodash/isEqual';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import MessageHandler from '../../../../message.ts';
@@ -32,13 +31,6 @@ export default class ConnectionFormV5CpdStep2 extends Component {
     setInstanceDropdownDisabled(true);
   }
 
-  componentDidUpdate(prevProps, prevState) {
-    const { streamsInstances } = this.state;
-    if (!_isEqual(streamsInstances, prevState.streamsInstances)) {
-      this.setState({ loading: false });
-    }
-  }
-
   componentWillUnmount() {
     this.isComponentMounted = false;
   }
@@ -51,6 +43,7 @@ export default class ConnectionFormV5CpdStep2 extends Component {
         case 'set-streams-instances': {
           const { params: { instance } } = this.props;
           const { result: { connectionId, streamsInstances } } = args;
+          newState.loading = false;
           newState.connectionId = connectionId;
           newState.streamsInstances = streamsInstances;
           const instanceItems = this.getInstanceItems(streamsInstances);

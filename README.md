@@ -52,6 +52,20 @@ There are two build options:
 - __Build__: builds and downloads the application bundle(s)
 - __Build and Submit Job__: builds and submits the application(s) to a Streams instance
 
+> **Note**: In order to detect your application folder, ensure that it contains either an [`info.xml`](https://www.ibm.com/support/knowledgecenter/en/SSCRJU_5.3.0/com.ibm.streams.dev.doc/doc/toolkitinformationmodelfile.html) or `Makefile` file. If your SPL application is defined with a namespace, then one of these files must be present in the parent folder; otherwise, one of these files must be present in the same folder as your `.spl` file.
+>
+> As an example, consider the following application folder layout:
+>
+> ```
+> /+ MyAppDir                     # application folder
+>   /+ info.xml                   # name, version, dependency information
+>   /+ my.sample                  # namespace directory
+>     /+ FooBar.spl               # .spl file with the namespace my.sample and the main composite FooBar
+>     /+ FooBarHelper.spl         # a second .spl file containing helpers
+> ```
+>
+> For more information, refer to the [documentation](https://www.ibm.com/support/knowledgecenter/en/SSCRJU_5.3.0/com.ibm.streams.dev.doc/doc/appdirlayout.html).
+
 ![Building and submitting SPL application](./images/docs/feature_buildSubmitApplication.gif)
 
 To submit application bundles, right-click on one or more bundles in the [Explorer](https://code.visualstudio.com/docs/getstarted/userinterface#_explorer) and select __Submit Job__. For each bundle, you will prompted for the job configuration before the submission. For an advanced configuration, you may import a job overlay configuration file (in JSON format).
@@ -93,8 +107,8 @@ Remove Build Output Channels | Removes build output channels that are automatica
 
 Name | Description
 --- | ---
-Build | <ul><li>Builds SPL application(s) from source</li><li>Downloads the Streams application bundle(s) (`.sab`) to the project's `output` directory</li><li>Only available for `.spl` and `Makefile` files</li></ul>
-Build and Submit Job(s) | <ul><li>Builds SPL application(s) from source</li><li>Submits the Streams application bundle(s) (`.sab`) to a Streams instance</li><li>Only available for `.spl` and `Makefile` files</li></ul>
+Build | <ul><li>Builds SPL application(s) from source</li><li>Downloads the Streams application bundle(s) (`.sab`) to the project's `output` directory</li><li>Only available for `.spl` and `Makefile` files</li><li>Keyboard shortcut: `Ctrl+Alt+B` (Windows/Linux), `Command+Option+B` (macOS)</li></ul>
+Build and Submit Job(s) | <ul><li>Builds SPL application(s) from source</li><li>Submits the Streams application bundle(s) (`.sab`) to a Streams instance</li><li>Only available for `.spl` and `Makefile` files</li><li>Keyboard shortcut: `Ctrl+Alt+S` (Windows/Linux), `Command+Option+S` (macOS)</li></ul>
 Submit Job(s) | <ul><li>Submits the Streams application bundle(s) (`.sab`) to a Streams instance</li><li>Only available for `.sab` files</li></ul>
 
 ### Environment

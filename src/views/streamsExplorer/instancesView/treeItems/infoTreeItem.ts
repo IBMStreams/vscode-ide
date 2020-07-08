@@ -18,9 +18,9 @@ export default class InfoTreeItem extends TreeItem {
         super(label, TreeItemCollapsibleState.None);
     }
 
-    contextValue = 'infoInstanceTreeItem';
+    public contextValue = 'infoInstanceTreeItem';
 
-    iconPath = {
+    public iconPath = {
         light: path.join(this._extensionPath, 'images', 'icons', 'light', 'information.svg'),
         dark: path.join(this._extensionPath, 'images', 'icons', 'dark', 'information.svg')
     };

@@ -2,6 +2,7 @@ import { addStreamsRequestAuth, store } from '@ibmstreams/common';
 import axios from 'axios';
 import * as fs from 'fs';
 import * as https from 'https';
+import * as os from 'os';
 import * as path from 'path';
 import {
     commands, ExtensionContext, Uri, ViewColumn, WebviewPanel, window
@@ -264,7 +265,7 @@ export default class JobGraphWebviewPanel extends BaseWebviewPanel {
         if (args) {
             const { fileName, fileContent, fileType, buttonLabel } = args;
             const options = {
-                defaultUri: Uri.file(fileName),
+                defaultUri: Uri.file(path.join(os.homedir(), fileName)),
                 filters: fileType,
                 saveLabel: buttonLabel
             };

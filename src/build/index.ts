@@ -92,6 +92,7 @@ export default class StreamsBuild {
      * @param action      The post-build action to take
      */
     public static async buildApp(filePath: string, action: PostBuildAction): Promise<void> {
+        await this.checkIfDirty();
         const defaultInstance = Streams.checkDefaultInstance();
         if (filePath) {
             const filePaths = [filePath];
@@ -164,6 +165,7 @@ export default class StreamsBuild {
      * @param action      The post-build action to take
      */
     public static async buildMake(filePath: string, action: PostBuildAction): Promise<void> {
+        await this.checkIfDirty();
         const defaultInstance = Streams.checkDefaultInstance();
         if (filePath) {
             const filePaths = [filePath];
@@ -382,6 +384,74 @@ export default class StreamsBuild {
     }
 
     /**
+     * Check if there are any dirty (unsaved) files
+     */
+    private static async checkIfDirty(): Promise<void> {
+        const dirtyFiles = workspace.textDocuments.filter((file) => file.isDirty);
+        if (dirtyFiles && dirtyFiles.length) {
+            if (dirtyFiles.length === 1) {
+                const [dirtyFile] = dirtyFiles;
+                const dirtyFilePath = dirtyFile.uri.fsPath;
+                const dirtyFileDisplayPath = this.getFilePathRelativeToWorkspaceFolder(dirtyFilePath);
+                const selection = await window.showWarningMessage(
+                    `There are unsaved changes in ${dirtyFileDisplayPath}. Do you want to save the file before continuing with the build?`,
+                    ...['Yes', 'No']
+                );
+                if (selection && selection === 'Yes') {
+                    await dirtyFile.save();
+                }
+            } else {
+                const selection = await window.showWarningMessage(
+                    'There are multiple files with unsaved changes. Do you want to save the files before continuing with the build?',
+                    ...['Save All', 'Choose Files to Save', 'Save None']
+                );
+                if (selection) {
+                    if (selection === 'Save All') {
+                        await Promise.all(dirtyFiles.map((dirtyFile) => dirtyFile.save()));
+                    } else if (selection === 'Choose Files to Save') {
+                        const items = dirtyFiles.map((dirtyFile) => {
+                            const dirtyFilePath = dirtyFile.uri.fsPath;
+                            const dirtyFileFolderPath = path.dirname(dirtyFile.uri.fsPath);
+                            const dirtyFileFolderDisplayPath = this.getFilePathRelativeToWorkspaceFolder(dirtyFileFolderPath);
+                            return {
+                                label: path.basename(dirtyFilePath),
+                                description: dirtyFileFolderDisplayPath,
+                                dirtyFile
+                            };
+                        });
+                        const selectedFiles = await window.showQuickPick(items, {
+                            canPickMany: true,
+                            ignoreFocusOut: true,
+                            matchOnDescription: true,
+                            placeHolder: 'Select the files to save'
+                        });
+                        if (selectedFiles && selectedFiles.length) {
+                            await Promise.all(selectedFiles.map((selectedFile) => selectedFile.dirtyFile.save()));
+                        }
+                    }
+                    // Do nothing if 'Save None'
+                }
+            }
+        }
+    }
+
+    /**
+     * Get the file path relative to a workspace folder
+     * @param filePath    The path to the file
+     */
+    private static getFilePathRelativeToWorkspaceFolder(filePath: string): string {
+        let newFilePath = filePath;
+        const workspaceFolderPaths = workspace.workspaceFolders.map((folder: WorkspaceFolder) => folder.uri.fsPath);
+        if (workspaceFolderPaths && workspaceFolderPaths.length) {
+            const matchingWorkspaceFolder = workspaceFolderPaths.find((workspaceFolderPath) => filePath.startsWith(workspaceFolderPath));
+            if (matchingWorkspaceFolder) {
+                newFilePath = path.relative(path.join(matchingWorkspaceFolder, '..'), filePath);
+            }
+        }
+        return newFilePath;
+    }
+
+    /**
      * Initialize util registry
      */
     private static initUtilRegistry(): void {
@@ -418,8 +488,8 @@ export default class StreamsBuild {
         store.dispatch(EditorAction.setToolkitsCacheDir(TOOLKITS_CACHE_DIR));
         store.dispatch(EditorAction.setRefreshInterval(Configuration.getSetting(Settings.ENV_REFRESH_INTERVAL)));
         store.dispatch(EditorAction.setUpdateStreamsInstancesHandler(async (instances: any[]) => {
-            instances = instances.map((instance: any) => _omit(instance, ['streamsInstance', 'streamsJobGroups', 'streamsJobs', 'zenJobs']));
-            await Streams.setInstances(instances);
+            const newInstances = instances.map((instance: any) => _omit(instance, ['streamsInstance', 'streamsJobGroups', 'streamsJobs', 'zenJobs']));
+            await Streams.setInstances(newInstances);
             getStreamsExplorer().refreshInstancesView();
         }));
 
@@ -585,7 +655,7 @@ export default class StreamsBuild {
      */
     private static async initBuild(type: string, filePath: string, action: PostBuildAction): Promise<any> {
         const workspaceFolders = _map(workspace.workspaceFolders, (folder: WorkspaceFolder) => folder.uri.fsPath);
-        const appRoot = SourceArchiveUtils.getApplicationRoot(workspaceFolders, filePath);
+        const appRoot = SourceArchiveUtils.getApplicationRoot(workspaceFolders, filePath, true);
 
         let lintHandler = Registry.getLintHandler(appRoot);
         if (!lintHandler) {

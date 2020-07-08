@@ -132,9 +132,9 @@ export default class StreamsAuthContainer extends Component {
     );
   }
 
-  renderLoadingOverlay = (loading, isAuthenticating) => {
+  renderLoadingOverlay = (loading, isAuthenticating, description = 'Loading...') => {
     if (loading || isAuthenticating) {
-      return <Loading description="Loading..." />;
+      return <Loading description={description} />;
     }
   }
 
@@ -173,22 +173,22 @@ export default class StreamsAuthContainer extends Component {
   }
 
   renderErrorNotification = (authError, type, callbackFn) => {
-    if (authError) {
-      authError.message = this.handleErrorMsg(authError.message);
+    if (!authError) {
+      return null;
     }
-    return authError
-      ? (
-        <InlineNotification
-          title="Error"
-          subtitle={authError.message}
-          iconDescription="Close"
-          kind="error"
-          statusIconDescription="Error"
-          onCloseButtonClick={callbackFn}
-          className="connection-form__error-notification"
-        />
-      )
-      : null;
+
+    const message = this.handleErrorMsg(authError.message);
+    return (
+      <InlineNotification
+        title="Error"
+        subtitle={message}
+        iconDescription="Close"
+        kind="error"
+        statusIconDescription="Error"
+        onCloseButtonClick={callbackFn}
+        className="connection-form__error-notification"
+      />
+    );
   }
 
   closePanel = () => {
@@ -199,14 +199,18 @@ export default class StreamsAuthContainer extends Component {
     const requestTimedOut = msg.includes('The request timed out')
       && msg.includes('Try updating the request timeout setting to a larger value');
     const verifyMessage = 'Verify that the instance exists and the connection details you have provided are correct';
+    let newMsg = msg;
     if (!msg.includes(verifyMessage)) {
       if (requestTimedOut) {
-        msg = msg.replace(/Try updating/, `${verifyMessage}, or try updating`);
+        newMsg = msg.replace(/Try updating/, `${verifyMessage}, or try updating`);
       } else {
-        msg += ` ${verifyMessage}.`;
+        if (!msg.endsWith('.')) {
+          newMsg += '.';
+        }
+        newMsg += ` ${verifyMessage}.`;
       }
     }
-    return msg;
+    return newMsg;
   }
 
   render() {

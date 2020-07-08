@@ -1,5 +1,6 @@
 import UserAdmin16 from '@carbon/icons-react/es/user--admin/16';
 import Button from 'carbon-components-react/es/components/Button';
+import { InlineNotification, NotificationActionButton } from 'carbon-components-react/es/components/Notification';
 import TextArea from 'carbon-components-react/es/components/TextArea';
 import Tooltip from 'carbon-components-react/es/components/Tooltip';
 import PropTypes from 'prop-types';
@@ -21,6 +22,7 @@ export default class ConnectionFormV4 extends Component {
       isTestingConnection: false,
       connectionSuccessful: null,
       isAuthenticating: false,
+      isStartingService: false,
       authError: null
     };
 
@@ -114,12 +116,62 @@ export default class ConnectionFormV4 extends Component {
     );
   }
 
+  renderErrorNotification = (authError, type, callbackFn) => {
+    const { credentials } = this.state;
+    const {
+      instanceType,
+      renderErrorNotification: renderErrorNotificationProp
+    } = this.props;
+    if (authError && authError.data && authError.data.type === 'STREAMING_ANALYTICS_SERVICE_NOT_STARTED') {
+      const { data: { instance } } = authError;
+      const startServiceAction = (
+        <NotificationActionButton
+          onClick={async () => {
+            this.setState({ loading: true, isStartingService: true });
+            const result = await this.messageHandler.postMessage({
+              command: 'start-streaming-analytics-service',
+              args: {
+                instanceType,
+                credentials: JSON.parse(credentials),
+                instance
+              }
+            });
+            if (result.errorMsg) {
+              this.setState({ authError: { message: result.errorMsg } });
+              this.messageHandler.postMessage({
+                command: 'remove-instance',
+                args: { connectionId: instance.connectionId }
+              });
+            }
+            this.setState({ loading: false, isStartingService: false });
+          }}
+        >
+          Start service and retry
+        </NotificationActionButton>
+      );
+      return (
+        <InlineNotification
+          title="Error"
+          subtitle={authError.message}
+          actions={startServiceAction}
+          iconDescription="Close"
+          kind="error"
+          statusIconDescription="Error"
+          onCloseButtonClick={callbackFn}
+          className="connection-form__error-notification"
+        />
+      );
+    }
+
+    return renderErrorNotificationProp(authError, type, callbackFn);
+  }
+
   render() {
     const {
-      credentials, loading, isTestingConnection, connectionSuccessful, isAuthenticating, authError
+      credentials, loading, isTestingConnection, connectionSuccessful, isAuthenticating, isStartingService, authError
     } = this.state;
     const {
-      instanceType, renderLoadingOverlay, renderTestConnectionNotification, renderErrorNotification, params: { instance }
+      instanceType, renderLoadingOverlay, renderTestConnectionNotification, params: { instance }
     } = this.props;
 
     const errors = this.validate();
@@ -167,7 +219,7 @@ export default class ConnectionFormV4 extends Component {
     );
     return (
       <>
-        {renderLoadingOverlay(loading, isAuthenticating)}
+        {renderLoadingOverlay(loading, isAuthenticating, isStartingService ? 'Starting the service...' : 'Loading...')}
         {renderTestConnectionNotification(connectionSuccessful, () => { this.setState({ connectionSuccessful: null }); })}
         <div className="connection-form__form-item">
           <TextArea
@@ -183,7 +235,7 @@ export default class ConnectionFormV4 extends Component {
             rows={16}
           />
         </div>
-        {renderErrorNotification(authError, 'IBM Streaming Analytics', () => { this.setState({ authError: null }); })}
+        {this.renderErrorNotification(authError, 'IBM Streaming Analytics', () => { this.setState({ authError: null }); })}
         {this.getButtonContainer()}
       </>
     );

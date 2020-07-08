@@ -29,11 +29,10 @@ export default class Authentication {
      * @param queuedActionId        The queued action identifier
      */
     public static showAuthPanel(existingInstance: any, useDefaultInstance: boolean, queuedActionId: string): void {
-        if (useDefaultInstance && !existingInstance) {
-            existingInstance = Streams.getDefaultInstance();
-        }
-
-        commands.executeCommand(Commands.ENVIRONMENT.SHOW_AUTHENTICATION_WEBVIEW_PANEL, existingInstance, queuedActionId);
+        const instance = (useDefaultInstance && !existingInstance)
+            ? Streams.getDefaultInstance()
+            : existingInstance;
+        commands.executeCommand(Commands.ENVIRONMENT.SHOW_AUTHENTICATION_WEBVIEW_PANEL, instance, queuedActionId);
     }
 
     /**

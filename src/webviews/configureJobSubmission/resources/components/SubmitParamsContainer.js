@@ -24,11 +24,18 @@ export default class SubmitParamsContainer extends Component {
   handleSubmitParam = (event) => {
     const { handleSubmitParamUpdate } = this.props;
     const param = { name: event.target.name, value: event.target.value };
+    // Unescape escape sequences
+    param.value = param.value
+      .replace(/\\f/g, '\f') // form feed
+      .replace(/\\n/g, '\n') // new line
+      .replace(/\\r/g, '\r') // carriage return
+      .replace(/\\t/g, '\t') // horizontal tab
+      .replace(/\\v/g, '\v'); // vertical tab
     handleSubmitParamUpdate(param);
   }
 
   render() {
-    const { submitParamsFromApp, submitParamsFromJobConfig } = this.props;
+    const { submitParamsFromApp, submitParamsFromJobConfig, initialSubmissionParameters } = this.props;
     if (!submitParamsFromApp || submitParamsFromApp.length === 0) {
       return (
         <div className="submit-params-container__body">
@@ -56,7 +63,19 @@ export default class SubmitParamsContainer extends Component {
               {
                 sortedSubTimeValsForComp.map(subVal => {
                   let paramValue = _find(submitParamsFromJobConfig, ['name', subVal.fqn]) || _find(submitParamsFromJobConfig, ['name', subVal.name]);
-                  paramValue = paramValue ? (paramValue.value || '') : (subVal.defaultValue || '');
+                  if (paramValue) {
+                    paramValue = paramValue.value || '';
+                  } else {
+                    const initialSubmissionParameter = initialSubmissionParameters.find((param) => param.name === `${subVal.compositeName}.${subVal.name}`);
+                    paramValue = initialSubmissionParameter ? initialSubmissionParameter.value : '';
+                  }
+                  // Escape escape sequences
+                  paramValue = paramValue
+                    .replace(/\f/g, '\\f') // form feed
+                    .replace(/\n/g, '\\n') // new line
+                    .replace(/\r/g, '\\r') // carriage return
+                    .replace(/\t/g, '\\t') // horizontal tab
+                    .replace(/\v/g, '\\v'); // vertical tab
                   const placeholder = subVal.kind === 'named' ? 'Enter a value' : 'Enter a comma-separated list of values';
                   const invalidText = subVal.kind === 'named' ? 'A value is required.' : 'A comma-separated list of values is required.';
                   let isInvalid = false;
@@ -91,6 +110,10 @@ export default class SubmitParamsContainer extends Component {
   }
 }
 
+SubmitParamsContainer.defaultProps = {
+  submitParamsFromJobConfig: null
+};
+
 SubmitParamsContainer.propTypes = {
   handleSubmitParamUpdate: PropTypes.func.isRequired,
   submitParamsFromApp: PropTypes.arrayOf(PropTypes.shape({
@@ -99,6 +122,10 @@ SubmitParamsContainer.propTypes = {
     defaultValue: PropTypes.string
   })).isRequired,
   submitParamsFromJobConfig: PropTypes.arrayOf(PropTypes.shape({
+    name: PropTypes.string.isRequired,
+    value: PropTypes.string.isRequired,
+  })),
+  initialSubmissionParameters: PropTypes.arrayOf(PropTypes.shape({
     name: PropTypes.string.isRequired,
     value: PropTypes.string.isRequired,
   })).isRequired

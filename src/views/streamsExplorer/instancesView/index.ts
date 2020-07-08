@@ -182,7 +182,7 @@ export default class InstancesView {
  */
 class InstancesProvider implements TreeDataProvider<StreamsTreeItem> {
     private _onDidChangeTreeData: EventEmitter<any> = new EventEmitter<any>();
-    readonly onDidChangeTreeData: Event<any> = this._onDidChangeTreeData.event;
+    public readonly onDidChangeTreeData: Event<any> = this._onDidChangeTreeData.event;
     private _extensionPath: string;
 
     constructor(extensionPath: string) {

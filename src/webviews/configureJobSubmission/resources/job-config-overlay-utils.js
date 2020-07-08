@@ -1,6 +1,3 @@
-'use babel';
-'use strict';
-
 const isValid = jobConfig => {
   if (jobConfig && Array.isArray(jobConfig.jobConfigOverlays)) {
     if (jobConfig.jobConfigOverlays.length > 0) {

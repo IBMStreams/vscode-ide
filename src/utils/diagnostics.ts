@@ -13,6 +13,8 @@ export default class Diagnostics {
     private static diagnosticCollection: DiagnosticCollection;
     private static activeEditor: TextEditor;
     private static errorDecorationType: TextEditorDecorationType;
+    private static warningDecorationType: TextEditorDecorationType;
+    private static informationDecorationType: TextEditorDecorationType;
 
     /**
      * Perform initial configuration
@@ -80,6 +82,9 @@ export default class Diagnostics {
             dark: { gutterIconPath: iconPathDark }
         });
         this.errorDecorationType = createDecoration(context.asAbsolutePath('images/markers/error-light.svg'), context.asAbsolutePath('images/markers/error-dark.svg'));
+        this.warningDecorationType = createDecoration(context.asAbsolutePath('images/markers/warning-light.svg'), context.asAbsolutePath('images/markers/warning-dark.svg'));
+        this.informationDecorationType = createDecoration(context.asAbsolutePath('images/markers/information-light.svg'), context.asAbsolutePath('images/markers/information-dark.svg'));
+
 
         const isSplFile = (): boolean => this.activeEditor && this.activeEditor.document.languageId === LANGUAGE_SPL;
 
@@ -130,5 +135,7 @@ export default class Diagnostics {
             .map((diagnostic: Diagnostic) => diagnostic.range);
 
         this.activeEditor.setDecorations(this.errorDecorationType, getDiagnosticRanges(DiagnosticSeverity.Error));
+        this.activeEditor.setDecorations(this.warningDecorationType, getDiagnosticRanges(DiagnosticSeverity.Warning));
+        this.activeEditor.setDecorations(this.informationDecorationType, getDiagnosticRanges(DiagnosticSeverity.Information));
     }
 }

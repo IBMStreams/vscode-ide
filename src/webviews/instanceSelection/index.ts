@@ -89,7 +89,7 @@ export default class InstanceSelectionWebviewPanel extends BaseWebviewPanel {
             .replace('{{mainScriptUri}}', mainScriptUri);
 
         const workspaceFolders = _map(workspace.workspaceFolders, (folder: WorkspaceFolder) => folder.uri.fsPath);
-        const appRoot = SourceArchiveUtils.getApplicationRoot(workspaceFolders, this._filePaths[0]);
+        const appRoot = SourceArchiveUtils.getApplicationRoot(workspaceFolders, this._filePaths[0], false);
         const files = this.getFiles();
 
         const action = this._action;
@@ -133,7 +133,7 @@ export default class InstanceSelectionWebviewPanel extends BaseWebviewPanel {
         const workspaceFolders = _map(workspace.workspaceFolders, (folder: WorkspaceFolder) => folder.uri.fsPath);
         const filePathStrings = [];
         for (let i = 0; i < this._filePaths.length; i++) {
-            const appRoot = SourceArchiveUtils.getApplicationRoot(workspaceFolders, this._filePaths[i]);
+            const appRoot = SourceArchiveUtils.getApplicationRoot(workspaceFolders, this._filePaths[i], false);
             const displayPath = StreamsBuild.getDisplayPath(appRoot, this._filePaths[i]);
             filePathStrings.push(displayPath);
         }

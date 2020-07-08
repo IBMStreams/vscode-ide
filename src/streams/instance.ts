@@ -1,6 +1,7 @@
 import {
     Editor,
     getStreamsInstance,
+    IBM_CLOUD_DASHBOARD_URL,
     Instance,
     InstanceSelector,
     Registry,
@@ -96,6 +97,8 @@ export default class StreamsInstance {
             return;
         }
 
+        const args = { instance, useDefaultInstance, queuedActionId };
+
         const existingInstance = instance.contextValue ? instance.instance : instance;
         const { connectionId } = existingInstance;
 
@@ -122,7 +125,7 @@ export default class StreamsInstance {
                         const password = await Registry.getSystemKeychain().getCredentials(serviceName, username);
                         if (!password) {
                             const error = new Error(`Failed to retrieve the password associated with the username '${username}' and the service name '${serviceName}' from the system keychain.`);
-                            this._handleAuthenticationError(error, instanceName);
+                            this._handleAuthenticationError(error, instanceName, args);
                             return;
                         }
                         authentication.password = password;
@@ -139,17 +142,17 @@ export default class StreamsInstance {
                             const currentInstance = result.streamsInstances.find((streamsInstance: any) => getCpdInstanceName(streamsInstance) === instanceName);
                             if (!currentInstance) {
                                 store.dispatch(Instance.setInstanceIsAuthenticating(connectionId, false));
-                                this._handleAuthenticationError(new Error('The instance was not found. Verify that the instance exists.'), instanceName);
+                                this._handleAuthenticationError(new Error('The instance was not found. Verify that the instance exists.'), instanceName, args);
                                 return;
                             }
                             store.dispatch(Instance.setCloudPakForDataStreamsInstance(connectionId, currentInstance, connectionId))
                                 .then((cpdResult: any) => this._handleAuthenticationSuccess(cpdResult, connectionId, instanceName, queuedActionId))
-                                .catch((error: any) => this._handleAuthenticationError(error, instanceName));
+                                .catch((error: any) => this._handleAuthenticationError(error, instanceName, args));
                         } else {
                             this._handleAuthenticationSuccess(result, connectionId, instanceName, queuedActionId);
                         }
                     })
-                    .catch((error: any) => this._handleAuthenticationError(error, instanceName));
+                    .catch((error: any) => this._handleAuthenticationError(error, instanceName, args));
             } else {
                 Authentication.showAuthPanel(existingInstance, useDefaultInstance || false, queuedActionId || null);
             }
@@ -269,9 +272,42 @@ export default class StreamsInstance {
      * Handle authentication success
      * @param error           The authentication error
      * @param instanceName    The target instance name
+     * @param authArgs        The original authentication arguments
      */
-    private static _handleAuthenticationError(error: any, instanceName: string): void {
-        if (error.message !== 'Authentication is already in progress for this instance.') {
+    private static _handleAuthenticationError(error: any, instanceName: string, authArgs: any): void {
+        if (error.data && error.data.type === 'STREAMING_ANALYTICS_SERVICE_NOT_STARTED') {
+            const openCloudDashboardLabel = 'Open IBM Cloud Dashboard';
+            const startServiceAndRetryLabel = 'Start Service and Retry';
+            const callbackFn = (): void => {
+                const { instance, useDefaultInstance, queuedActionId } = authArgs;
+                this.authenticate(instance, useDefaultInstance, queuedActionId);
+            };
+            const notificationButtons = [
+                {
+                    label: openCloudDashboardLabel,
+                    callbackFn: () => {
+                        Registry.getDefaultMessageHandler().handleInfo(`Selected: ${openCloudDashboardLabel}`, { showNotification: false });
+                        return Registry.openUrl(IBM_CLOUD_DASHBOARD_URL);
+                    }
+                },
+                {
+                    label: startServiceAndRetryLabel,
+                    callbackFn: () => {
+                        Registry.getDefaultMessageHandler().handleInfo(`Selected: ${startServiceAndRetryLabel}`, { showNotification: false });
+                        return store.dispatch(Instance.startStreamingAnalyticsService(error.data.instance.connectionId, callbackFn));
+                    }
+                }
+            ];
+            Registry.getDefaultMessageHandler().handleError(
+                `Failed to authenticate to the Streams instance ${instanceName}. ${error.message}`,
+                {
+                    notificationButtons,
+                    detail: error.response || error.message || error,
+                    stack: error.response || error.stack
+                }
+            );
+        }
+        else if (error.message !== 'Authentication is already in progress for this instance.') {
             Registry.getDefaultMessageHandler().handleError(
                 `Failed to authenticate to the Streams instance ${instanceName}.`,
                 {

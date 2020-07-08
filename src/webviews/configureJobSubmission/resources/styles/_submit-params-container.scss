@@ -1,9 +1,5 @@
-.submit-params-container__composite-section:first-of-type {
-  padding-bottom: $layout-02;
-
-  .submit-params-container__composite-title {
-    padding-top: $spacing-03;
-  }
+.submit-params-container__composite-section:not(:first-of-type) {
+  padding-top: $layout-02;
 }
 
 .submit-params-container__composite-title {

@@ -5,7 +5,7 @@ import TitleHeader from '../components/TitleHeader/TitleHeader';
 import LoadingIcon from '../icons/LoadingIcon.svg';
 import MessageHandler from '../../../message.ts';
 import ThemeHandler from '../../../theme.ts';
-import { StreamsUtils } from '../utils';
+import StreamsUtils from '../utils';
 
 const messageHandler = new MessageHandler();
 
