@@ -2,7 +2,7 @@
   "name": "ibm-streams",
   "displayName": "IBM Streams",
   "description": "IBM Streams Support for Visual Studio Code",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "publisher": "IBM",
   "license": "Apache-2.0",
   "icon": "images/ibm-streams.png",
