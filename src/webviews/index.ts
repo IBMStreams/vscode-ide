@@ -24,7 +24,7 @@ export function initialize(context: ExtensionContext): void {
 }
 
 /**
- * Generate a nonce to whitelist which scripts can be run
+ * Generate a nonce to allow which scripts can be run
  */
 export function getNonce(): string {
     let text = '';
