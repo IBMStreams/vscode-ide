@@ -1,6 +1,6 @@
 import { ExtensionContext, window } from 'vscode';
 import { Commands, BaseCommand } from '.';
-import { EXTENSION_NAME, Logger } from '../utils';
+import { EXTENSION_NAME, LANGUAGE_SERVER, Logger } from '../utils';
 
 /**
  * Command that allows a user to remove build output channels
@@ -17,7 +17,8 @@ export default class RemoveOutputChannelsCommand implements BaseCommand {
         Logger.info(null, 'Received request to remove build output channels');
         const channels = Logger.outputChannels;
         const channelObjs = Object.keys(channels).map((key) => channels[key]);
-        const channelNames = channelObjs.filter((channel) => channel.displayName !== EXTENSION_NAME).map((channel) => channel.displayName);
+        const channelNames = channelObjs.filter((channel) => channel.displayName !== EXTENSION_NAME && channel.displayName !== LANGUAGE_SERVER)
+            .map((channel) => channel.displayName);
         if (!channelNames.length) {
             Logger.info(null, 'There are no channels to remove.', true, true);
             return null;
