@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Lint error when build output messages return column values of 0 ([#121](https://github.com/IBMStreams/vscode-ide/issues/121))
+
 ## [1.0.2] - 2020-07-08
 
 ### Added

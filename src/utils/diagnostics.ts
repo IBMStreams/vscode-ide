@@ -54,9 +54,10 @@ export default class Diagnostics {
                     diagnostics = diagnosticMap.get(document.uri);
                 }
 
+                const charIndex = message.column ? message.column - 1 : 0;
                 const diagnostic: Diagnostic = {
                     severity: message.severity,
-                    range: new Range(message.line - 1, message.column - 1, message.line - 1, message.column - 1),
+                    range: new Range(message.line - 1, charIndex, message.line - 1, charIndex),
                     message: `${message.code} ${message.description}`,
                     source: EXTENSION_NAME
                 };
