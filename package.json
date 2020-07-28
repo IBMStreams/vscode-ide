@@ -6,7 +6,7 @@
   "publisher": "IBM",
   "license": "Apache-2.0",
   "icon": "images/ibm-streams.png",
-  "homepage": "https://github.com/IBMStreams/vscode-ide/blob/master/README.md",
+  "homepage": "https://github.com/IBMStreams/vscode-ide/blob/main/README.md",
   "repository": {
     "type": "git",
     "url": "https://github.com/IBMStreams/vscode-ide.git"
