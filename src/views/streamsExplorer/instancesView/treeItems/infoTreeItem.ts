@@ -1,12 +1,13 @@
 import { StreamsInstanceType } from '@ibmstreams/common';
 import * as path from 'path';
 import { Command, TreeItem, TreeItemCollapsibleState } from 'vscode';
+import { TreeItemType } from '.';
 
 /**
  * Tree item that represents information
  */
 export default class InfoTreeItem extends TreeItem {
-    public type = 'info';
+    public type = TreeItemType.Info;
     public children = null;
 
     constructor(
@@ -47,6 +48,9 @@ export default class InfoTreeItem extends TreeItem {
                     tooltip = `Streams REST service URL:\n${authentication.streamsRestServiceUrl}`;
                     tooltip += authentication.streamsBuildServiceUrl
                         ? `\n\nStreams build service URL:\n${authentication.streamsBuildServiceUrl}`
+                        : '';
+                    tooltip += authentication.streamsSecurityServiceUrl
+                        ? `\n\nStreams security service URL:\n${authentication.streamsSecurityServiceUrl}`
                         : '';
                     tooltip += `\n\nStreams username:\n${authentication.username}`;
                     break;

@@ -54,10 +54,14 @@ export default class Diagnostics {
                     diagnostics = diagnosticMap.get(document.uri);
                 }
 
-                const charIndex = message.column ? message.column - 1 : 0;
                 const diagnostic: Diagnostic = {
                     severity: message.severity,
-                    range: new Range(message.line - 1, charIndex, message.line - 1, charIndex),
+                    range: new Range(
+                        message.line - 1,
+                        message.column ? message.column - 1 : 0,
+                        message.line - 1,
+                        message.column ? message.column - 1 : Number.MAX_VALUE
+                    ),
                     message: `${message.code} ${message.description}`,
                     source: EXTENSION_NAME
                 };

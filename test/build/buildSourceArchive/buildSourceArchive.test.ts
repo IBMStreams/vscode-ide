@@ -47,7 +47,7 @@ describe('build source archive', function() {
             const messageHandler = new MessageHandler({ appRoot, filePath });
             Registry.addMessageHandler(fqn, messageHandler);
 
-            const displayPath = StreamsBuild.getDisplayPath(appRoot, filePath);
+            const displayPath = StreamsBuild.getDisplayPath(appRoot, filePath, null);
             Logger.registerOutputChannel(filePath, displayPath);
         });
 
@@ -85,7 +85,7 @@ describe('build source archive', function() {
             const messageHandler = new MessageHandler({ appRoot, filePath });
             Registry.addMessageHandler(fqn, messageHandler);
 
-            const displayPath = StreamsBuild.getDisplayPath(appRoot, filePath);
+            const displayPath = StreamsBuild.getDisplayPath(appRoot, filePath, null);
             Logger.registerOutputChannel(filePath, displayPath);
         });
 

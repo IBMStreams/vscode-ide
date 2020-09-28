@@ -12,7 +12,18 @@ const FilePathsContainer = (props) => {
       title = files.length === 1 ? 'Application\xa0bundle: ' : 'Application\xa0bundles:';
     } else if (action === 'build' || action === 'build-make') {
       const firstFile = files[0];
-      title = firstFile.trim().endsWith('.spl') ? 'Application:' : 'Makefile:';
+      title = firstFile.trim().endsWith('.spl') || firstFile.trim().endsWith('.splmm')
+        ? 'Application:'
+        : 'Makefile:';
+    } else if (action === 'build-image') {
+      const firstFile = files[0];
+      if (firstFile.trim().endsWith('.spl') || firstFile.trim().endsWith('.splmm')) {
+        title = 'Application:';
+      } else if (firstFile.trim().toLowerCase().endsWith('Makefile')) {
+        title = 'Application:';
+      } else {
+        title = files.length === 1 ? 'Application\xa0bundle: ' : 'Application\xa0bundles:';
+      }
     }
     return title;
   };

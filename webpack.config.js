@@ -76,9 +76,11 @@ function getWebviewsConfig(mode) {
     context: path.resolve(__dirname, 'src/webviews'),
     entry: {
       streamsAuthentication: ['./streamsAuthentication/resources/index.js'],
+      configureImageBuild: ['./configureImageBuild/resources/index.js'],
       configureJobSubmission: ['./configureJobSubmission/resources/index.js'],
       jobGraph: ['./jobGraph/resources/index.js'],
-      instanceSelection: ['./instanceSelection/resources/index.js']
+      instanceSelection: ['./instanceSelection/resources/index.js'],
+      createSplApplicationSet: ['./createSplApplicationSet/resources/index.js']
     },
     output: {
       path: path.resolve(__dirname, 'dist/webviews'),
@@ -163,6 +165,11 @@ function getWebviewsConfig(mode) {
       new HtmlWebpackPlugin({
         template: 'streamsAuthentication/resources/index.html',
         filename: path.resolve(__dirname, 'dist/webviews/streamsAuthentication.html'),
+        minify: mode === 'production' ? htmlMinifyOptions : false
+      }),
+      new HtmlWebpackPlugin({
+        template: 'configureImageBuild/resources/index.html',
+        filename: path.resolve(__dirname, 'dist/webviews/configureImageBuild.html'),
         minify: mode === 'production' ? htmlMinifyOptions : false
       }),
       new HtmlWebpackPlugin({

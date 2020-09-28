@@ -9,6 +9,7 @@ import {
 import { getStreamsExplorer } from '../views';
 
 export { default as StreamsInstance } from './instance';
+export { default as SplUtils } from './splUtils';
 
 /**
  * Maps Streams environment keys to names
@@ -114,6 +115,17 @@ export class Streams {
      */
     public static getInstances(): any[] {
         return Configuration.getState(State.STREAMS_INSTANCES) || [];
+    }
+
+    /**
+     * Get the instances with edge application image builds enabled
+     */
+    public static getInstancesWithImageBuildEnabled(): any[] {
+        const instances = this.getInstances();
+        const instancesWithImageBuildEnabled = instances.filter((instance) => {
+            return instance.zenInstanceDetails?.metadata?.parameters?.buildservice?.imageBuild?.enabled || false;
+        });
+        return instancesWithImageBuildEnabled;
     }
 
     /**

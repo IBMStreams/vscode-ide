@@ -1,0 +1,117 @@
+.build-image-container {
+  padding-left: 0;
+  padding-right: 0;
+
+  .build-image-container__section-container {
+    padding-bottom: $layout-02;
+  }
+
+  .build-image-container__config-options-container {
+    .config-options-container__instructions {
+      @include carbon--type-style('body-long-02');
+      padding-bottom: $layout-02;
+
+      code {
+        @include carbon--type-style('code-02');
+      }
+    }
+  }
+
+  .build-image-container__config-container {
+    .existing-config-container {
+      .existing-config-container__browse-button-container {
+        display: flex;
+        align-items: center;
+      }
+
+      .existing-config-container__browse-button-container__button {
+        width: 100%;
+      }
+
+      .existing-config-container__file-uploader-item {
+        padding-top: $spacing-03;
+
+        .bx--file__state-container svg {
+          cursor: unset;
+        }
+
+        .bx--file-complete:focus {
+          outline: none;
+        }
+
+        .existing-config-container__file-uploader-item__link {
+          @include carbon--type-style('helper-text-01');
+        }
+      }
+    }
+
+    .existing-config-container {
+      .existing-config-container__form {
+        padding-left: 0;
+        padding-right: 0;
+      }
+
+      .existing-config-container__row {
+        &:not(:last-of-type) {
+          padding-bottom: $layout-02;
+        }
+
+        #override-application-bundles-checkbox + .bx--checkbox-label {
+          .bx--tooltip__label {
+            @include carbon--type-style('body-long-01');
+          }
+        }
+      }
+    }
+
+    .new-config-container {
+      .new-config-container__instructions {
+        @include carbon--type-style('body-long-02');
+
+        &:not(:last-of-type) {
+          padding-bottom: $layout-01;
+        }
+
+        .new-config-container__instructions__link {
+          @include carbon--type-style('body-long-02');
+        }
+
+        code {
+          @include carbon--type-style('code-02');
+        }
+      }
+
+      .new-config-container__form {
+        padding-left: 0;
+        padding-right: 0;
+
+        .new-config-container__row:not(:last-of-type) {
+          padding-bottom: $layout-02;
+        }
+
+        .new-config-container__base-image-combobox {
+          input {
+            text-overflow: ellipsis;
+          }
+
+          &.bx--list-box--expanded .bx--list-box__menu {
+            // Show 10 items
+            max-height: 25rem;
+          }
+        }
+
+        .new-config-container__file-container {
+          display: flex;
+
+          .new-config-container__file-uploader-item {
+            padding-left: $layout-01;
+          }
+        }
+      }
+    }
+  }
+}
+
+.build-image-container__help-tooltip {
+  @include carbon--type-style('body-long-01');
+}

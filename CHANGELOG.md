@@ -5,7 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.3] - 2020-09-28
+
+### Added
+
+- Support for building edge applications
+- Support mixed-mode SPL applications in toleration mode ([#109](https://github.com/IBMStreams/vscode-ide/issues/109))
+- Support for SPL application sets
+- Additional actions to manage Streams build service and local toolkits ([#131](https://github.com/IBMStreams/vscode-ide/issues/131))
 
 ### Fixed
 
@@ -83,6 +90,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Set IBM Streaming Analytics Service Credentials (`ibm-streams.streamingAnalytics.setServiceCredentials`)
   - Set IBM Streams Target Version (`ibm-streams.setTargetVersion`)
 
-[Unreleased]: https://github.com/IBMStreams/vscode-ide/compare/v1.0.2...develop
+[1.0.3]: https://github.com/IBMStreams/vscode-ide/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/IBMStreams/vscode-ide/compare/v1.0.0...v1.0.2
 [1.0.1]: https://github.com/IBMStreams/vscode-ide/tree/v1.0.0

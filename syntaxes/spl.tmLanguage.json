@@ -22,6 +22,9 @@
 		"contentName": "storage.modifier.namespace.spl",
 		"patterns": [
 			{
+				"include": "#perl"
+			},
+			{
 				"include": "#comments"
 			},
 			{
@@ -61,6 +64,9 @@
 		"name": "meta.use.spl",
 		"contentName": "storage.modifier.use.spl",
 		"patterns": [
+			{
+				"include": "#perl"
+			},
 			{
 				"match": "\\.",
 				"name": "punctuation.separator.spl"
@@ -328,6 +334,9 @@
 	"code": {
 		"patterns": [
 			{
+				"include": "#perl"
+			},
+			{
 				"include": "#annotations"
 			},
 			{
@@ -396,7 +405,16 @@
 				"name": "variable.other.definition.spl"
 			}
 		]
-	}, 
+	},
+	"perl": {
+		"patterns": [
+			{
+				"begin": "<%",
+				"end": "%>",
+				"name": "entity.other.perl"
+			}
+		]
+	},
 	"comments": {
 		"patterns": [
 			{
@@ -877,6 +895,9 @@
 		"name": "meta.op-invoke.spl",
 		"patterns": [
 			{
+				"include": "#perl"
+			},
+			{
 				"begin": "(?=(?:stream|\\())",
 				"end": "(?=\\=)",
 				"contentName": "meta.op-invoke.head.output.spl",
@@ -896,6 +917,9 @@
 				"end": "(?={)",
 				"contentName": "meta.op-invoke.head.input.spl",
 				"patterns": [
+					{
+						"include": "#perl"
+					},
 					{
 						"begin": "(?<=\\=)",
 						"end": "(?=\\()",
@@ -951,6 +975,9 @@
 	},
 	"op-invoke-head": {
 		"patterns": [
+			{
+				"include": "#perl"
+			},
 			{
 				"match": "(\\bstream\\b)",
 				"name": "storage.modifier.spl"

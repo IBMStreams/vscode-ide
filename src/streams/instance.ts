@@ -6,6 +6,7 @@ import {
     InstanceSelector,
     Registry,
     store,
+    StreamsErrorType,
     StreamsInstanceType,
     ToolkitUtils,
     CloudPakForDataVersion
@@ -105,7 +106,12 @@ export default class StreamsInstance {
         // Abort if we're already authenticating
         const isAuthenticating = InstanceSelector.selectInstanceIsAuthenticating(store.getState(), connectionId);
         if (isAuthenticating) {
-            return;
+            // Wait for instance authentication to complete
+            return this.waitForAuthenticated(instance, () => {
+                if (queuedActionId) {
+                    store.dispatch(Editor.runQueuedAction(queuedActionId));
+                }
+            });
         }
 
         const instanceType = InstanceSelector.selectInstanceType(store.getState(), connectionId);
@@ -152,7 +158,21 @@ export default class StreamsInstance {
                             this._handleAuthenticationSuccess(result, connectionId, instanceName, queuedActionId);
                         }
                     })
-                    .catch((error: any) => this._handleAuthenticationError(error, instanceName, args));
+                    .catch((error: any) => {
+                        if (
+                            error.data &&
+                            error.data.type === StreamsErrorType.AUTHENTICATION_IN_PROGRESS
+                        ) {
+                            // Wait for instance authentication to complete
+                            this.waitForAuthenticated(instance, () => {
+                                if (queuedActionId) {
+                                    store.dispatch(Editor.runQueuedAction(queuedActionId));
+                                }
+                            });
+                        } else {
+                            this._handleAuthenticationError(error, instanceName, args);
+                        }
+                    });
             } else {
                 Authentication.showAuthPanel(existingInstance, useDefaultInstance || false, queuedActionId || null);
             }
@@ -275,7 +295,7 @@ export default class StreamsInstance {
      * @param authArgs        The original authentication arguments
      */
     private static _handleAuthenticationError(error: any, instanceName: string, authArgs: any): void {
-        if (error.data && error.data.type === 'STREAMING_ANALYTICS_SERVICE_NOT_STARTED') {
+        if (error.data && error.data.type === StreamsErrorType.STREAMING_ANALYTICS_SERVICE_NOT_STARTED) {
             const openCloudDashboardLabel = 'Open IBM Cloud Dashboard';
             const startServiceAndRetryLabel = 'Start Service and Retry';
             const callbackFn = (): void => {
@@ -294,7 +314,7 @@ export default class StreamsInstance {
                     label: startServiceAndRetryLabel,
                     callbackFn: () => {
                         Registry.getDefaultMessageHandler().handleInfo(`Selected: ${startServiceAndRetryLabel}`, { showNotification: false });
-                        return store.dispatch(Instance.startStreamingAnalyticsService(error.data.instance.connectionId, callbackFn));
+                        return store.dispatch(Instance.startStreamingAnalyticsService(error.data.connectionId, callbackFn));
                     }
                 }
             ];
@@ -306,8 +326,9 @@ export default class StreamsInstance {
                     stack: error.response || error.stack
                 }
             );
-        }
-        else if (error.message !== 'Authentication is already in progress for this instance.') {
+        } else if (error.data && error.data.type === StreamsErrorType.AUTHENTICATION_IN_PROGRESS) {
+            Registry.getDefaultMessageHandler().handleWarn(error.message);
+        } else {
             Registry.getDefaultMessageHandler().handleError(
                 `Failed to authenticate to the Streams instance ${instanceName}.`,
                 {
@@ -347,6 +368,35 @@ export default class StreamsInstance {
                     }]
                 }
             );
+        }
+    }
+
+    /**
+    * Wait for an instance authentication to complete
+    * @param instance the Streams instance
+    * @param callbackFn the callback function to execute
+    */
+    private static waitForAuthenticated(
+        instance: any,
+        callbackFn: Function,
+        currentWaitTime?: number
+    ): void {
+        // Abandon after two minutes of waiting
+        if (currentWaitTime >= 120) {
+            return;
+        }
+        if (!Authentication.isAuthenticated(instance)) {
+            setTimeout(
+                () =>
+                this.waitForAuthenticated(
+                    instance,
+                    callbackFn,
+                    currentWaitTime ? currentWaitTime + 5 : 5
+                ),
+                5000
+            );
+        } else {
+            callbackFn();
         }
     }
 }

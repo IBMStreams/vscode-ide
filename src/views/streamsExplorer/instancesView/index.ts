@@ -15,9 +15,17 @@ import {
 import { getStreamsExplorer } from '../..';
 import { Commands } from '../../../commands';
 import { Streams, StreamsInstance } from '../../../streams';
-import { Views } from '../../../utils';
+import { Logger, Views } from '../../../utils';
 import {
-    InfoTreeItem, InstanceTreeItem, JobGroupTreeItem, JobTreeItem, StreamsTreeItem
+    BaseImageTreeItem,
+    BuildPoolTreeItem,
+    InfoTreeItem,
+    InstanceTreeItem,
+    JobGroupTreeItem,
+    JobTreeItem,
+    LabelTreeItem,
+    StreamsTreeItem,
+    TreeItemType
 } from './treeItems';
 
 /**
@@ -174,6 +182,10 @@ export default class InstancesView {
         commands.registerCommand(instanceCommands.JOB.OPEN_CPD_PROJECT, (element: JobTreeItem) => element.openCpdProject());
         commands.registerCommand(instanceCommands.JOB.DOWNLOAD_LOGS, (element: JobTreeItem) => element.downloadLogs());
         commands.registerCommand(instanceCommands.JOB.CANCEL_JOB, (element: JobTreeItem) => element.cancel());
+
+        // Base image commands
+        commands.registerCommand(instanceCommands.BASE_IMAGE.BUILD_IMAGE, (element: BaseImageTreeItem) => element.buildImage());
+        commands.registerCommand(instanceCommands.BASE_IMAGE.COPY_ID, (element: BaseImageTreeItem) => element.copyId());
     }
 }
 
@@ -228,9 +240,10 @@ class InstancesProvider implements TreeDataProvider<StreamsTreeItem> {
             let streamsInstance = null;
             let streamsJobGroups = null;
             let streamsJobs = null;
+            let buildService = null;
             const reduxInstance = InstanceSelector.selectInstance(store.getState(), connectionId);
             if (reduxInstance) {
-                ({ streamsInstance, streamsJobGroups, streamsJobs } = reduxInstance);
+                ({ streamsInstance, streamsJobGroups, streamsJobs, buildService } = reduxInstance);
             }
 
             let infoTreeItem: InfoTreeItem;
@@ -250,6 +263,37 @@ class InstancesProvider implements TreeDataProvider<StreamsTreeItem> {
                 );
             }
 
+            const jobsLabelTreeItem = this._getJobsTreeItem(reduxInstance, streamsJobGroups, streamsJobs);
+            const buildServiceLabelTreeItem = this._getBuildServiceTreeItem(reduxInstance, buildService);
+
+            // Generate root instance item
+            return new InstanceTreeItem(
+                this._extensionPath,
+                reduxInstance,
+                [
+                    ...(jobsLabelTreeItem && [jobsLabelTreeItem] || []),
+                    ...(buildServiceLabelTreeItem && [buildServiceLabelTreeItem] || [])
+                ]
+            );
+        });
+        return treeItems;
+    }
+
+    /**
+     * Get jobs tree item
+     * ```
+     * Jobs
+     * ├── default
+     * │   ├── {job1}
+     * │   ├── {job2}
+     * │   └── {jobX}
+     * ├── {jobGroup1}
+     * ├── {jobGroup2}
+     * └── {jobGroupX}
+     * ```
+     */
+    private _getJobsTreeItem(reduxInstance: any, streamsJobGroups: any, streamsJobs: any): any {
+        try {
             // Generate grandchild job items grouped by job group
             const jobGroupMap = new Map();
             if (streamsJobs && streamsJobs.length) {
@@ -263,12 +307,8 @@ class InstancesProvider implements TreeDataProvider<StreamsTreeItem> {
                     jobGroupMap.set(jobGroup, jobsInGroup);
                 });
             } else {
-                infoTreeItem = new InfoTreeItem(this._extensionPath, 'There are no jobs available.');
-                return new InstanceTreeItem(
-                    this._extensionPath,
-                    reduxInstance,
-                    [infoTreeItem]
-                );
+                const infoTreeItem = new InfoTreeItem(this._extensionPath, 'There are no jobs available.');
+                return new LabelTreeItem('Jobs', null, null, [infoTreeItem]);
             }
 
             // Generate child job group items
@@ -284,13 +324,60 @@ class InstancesProvider implements TreeDataProvider<StreamsTreeItem> {
                 });
             }
 
-            // Generate root instance item
-            return new InstanceTreeItem(
-                this._extensionPath,
-                reduxInstance,
-                [...jobGroupTreeItems]
-            );
-        });
-        return treeItems;
+            return new LabelTreeItem('Jobs', null, null, jobGroupTreeItems);
+        } catch (err) {
+            Logger.debug(null, `An error occurred while generating the jobs tree item for the instance with connection ID: ${reduxInstance.connectionId}.`, false, false);
+            return null;
+        }
+    }
+
+    /**
+     * Get build service tree item
+     * ```
+     * Build service
+     * └── Build pools
+     *     ├── {applicationBuildPool}
+     *     └── {imageBuildPool}
+     *         └── Base images
+     *             ├── {baseImage1} (default ✔)
+     *             ├── {baseImage2}
+     *             └── {baseImageX}
+     * ```
+     */
+    private _getBuildServiceTreeItem(reduxInstance: any, buildService: any): any {
+        const { connectionId } = reduxInstance;
+        try {
+            let buildServiceLabelTreeItem = null;
+            if (buildService) {
+                // Generate build pool tree items
+                let buildServiceChildren = null;
+                const buildPools = InstanceSelector.selectBuildPools(store.getState(), connectionId);
+                if (buildPools && buildPools.length) {
+                    const buildPoolLabelTreeItems = buildPools.map((buildPool: any) => {
+                        let baseImagesLabelTreeItem = null;
+                        // Generate base images tree items
+                        if (buildPool.type === 'image') {
+                            const baseImages = InstanceSelector.selectBaseImages(store.getState(), connectionId);
+                            const imageBuildChildren = baseImages && baseImages.length
+                                ? baseImages.map((baseImage: any) => new BaseImageTreeItem(this._extensionPath, baseImage, reduxInstance))
+                                : [new InfoTreeItem(this._extensionPath, 'There are no base images available.')];
+                            baseImagesLabelTreeItem = new LabelTreeItem('Base images', null, null, imageBuildChildren);
+                        }
+                        return new BuildPoolTreeItem(this._extensionPath, buildPool, baseImagesLabelTreeItem ? [baseImagesLabelTreeItem] : null);
+                    });
+                    buildServiceChildren = [new LabelTreeItem('Build pools', null, null, buildPoolLabelTreeItems)];
+                } else {
+                    buildServiceChildren = [new InfoTreeItem(this._extensionPath, 'There are no build pools available.')];
+                }
+
+                // Generate build service tree item
+                const buildServiceProperties = InstanceSelector.selectBuildServiceProperties(store.getState(), connectionId);
+                buildServiceLabelTreeItem = new LabelTreeItem('Build service', buildServiceProperties, TreeItemType.BuildService, buildServiceChildren);
+            }
+            return buildServiceLabelTreeItem;
+        } catch (err) {
+            Logger.debug(null, `An error occurred while generating the build service tree item for the instance with connection ID: ${connectionId}.`, false, false);
+            return null;
+        }
     }
 }

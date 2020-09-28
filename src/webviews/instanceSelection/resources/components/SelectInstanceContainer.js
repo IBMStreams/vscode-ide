@@ -97,6 +97,7 @@ export default class SelectInstanceContainer extends Component {
           { label: 'Streams version', value: 'IBM Streams standalone deployment' },
           { label: 'Streams REST service URL', value: authentication.streamsRestServiceUrl },
           { label: 'Streams build service URL', value: authentication.streamsBuildServiceUrl || '-' },
+          { label: 'Streams security service URL', value: authentication.streamsSecurityServiceUrl || '-' },
           { label: 'Streams Console URL', value: authentication.streamsConsoleUrl || '-' },
           { label: 'Streams username', value: authentication.username }
         ];

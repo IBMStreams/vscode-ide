@@ -51,13 +51,23 @@ describe('commands', function() {
     it('commands should be registered', function() {
         return commands.getCommands(true).then((cmds: string[]) => {
             const STREAMS_COMMANDS = [
-                Commands.GENERAL.CREATE_APPLICATION,
+                Commands.GENERAL.ADD_SPL_APPLICATION,
+                Commands.GENERAL.BUILD_SPL_APPLICATIONS,
+                Commands.GENERAL.BUILD_SUBMIT_SPL_APPLICATIONS,
+                Commands.GENERAL.CREATE_SPL_APPLICATION,
+                Commands.GENERAL.CREATE_SPL_APPLICATION_SET,
                 Commands.GENERAL.REMOVE_OUTPUT_CHANNELS,
+                Commands.GENERAL.SHOW_SPL_APPLICATION_SET_WEBVIEW_PANEL,
                 Commands.BUILD.APP_DOWNLOAD,
                 Commands.BUILD.APP_SUBMIT,
+                Commands.BUILD.APP_IMAGE,
+                Commands.BUILD.IMAGE,
                 Commands.BUILD.MAKE_DOWNLOAD,
                 Commands.BUILD.MAKE_SUBMIT,
+                Commands.BUILD.MAKE_IMAGE,
                 Commands.BUILD.SUBMIT,
+                Commands.ENVIRONMENT.ADD_TOOLKIT_TO_BUILD_SERVICE,
+                Commands.ENVIRONMENT.REMOVE_TOOLKITS_FROM_BUILD_SERVICE,
                 Commands.ENVIRONMENT.CPD_OPEN_CONSOLE,
                 Commands.ENVIRONMENT.CPD_OPEN_DASHBOARD,
                 Commands.ENVIRONMENT.STREAMING_ANALYTICS_OPEN_CONSOLE,
@@ -69,6 +79,7 @@ describe('commands', function() {
                 Commands.ENVIRONMENT.TOOLKITS_REFRESH,
                 // Internal
                 Commands.BUILD.CONFIGURE_JOB_SUBMISSION,
+                Commands.BUILD.CONFIGURE_IMAGE_BUILD,
                 Commands.ENVIRONMENT.SHOW_AUTHENTICATION_WEBVIEW_PANEL,
                 Commands.ENVIRONMENT.SHOW_INSTANCE_WEBVIEW_PANEL,
                 Commands.VIEW.STREAMS_EXPLORER.STREAMS_INSTANCES.GENERAL.ADD_INSTANCE,
@@ -84,17 +95,23 @@ describe('commands', function() {
                 Commands.VIEW.STREAMS_EXPLORER.STREAMS_INSTANCES.JOB.OPEN_CPD_PROJECT,
                 Commands.VIEW.STREAMS_EXPLORER.STREAMS_INSTANCES.JOB.DOWNLOAD_LOGS,
                 Commands.VIEW.STREAMS_EXPLORER.STREAMS_INSTANCES.JOB.CANCEL_JOB,
+                Commands.VIEW.STREAMS_EXPLORER.STREAMS_INSTANCES.BASE_IMAGE.BUILD_IMAGE,
+                Commands.VIEW.STREAMS_EXPLORER.STREAMS_INSTANCES.BASE_IMAGE.COPY_ID,
                 Commands.VIEW.STREAMS_EXPLORER.STREAMS_DETAILS.SHOW_DETAILS_FOR_ITEM,
                 Commands.VIEW.STREAMS_EXPLORER.STREAMS_DETAILS.COPY_TO_CLIPBOARD,
                 Commands.VIEW.STREAMS_EXPLORER.STREAMS_TOOLKITS.REFRESH_TOOLKITS,
-                Commands.VIEW.STREAMS_EXPLORER.STREAMS_TOOLKITS.EDIT_LOCAL_TOOLKITS
+                Commands.VIEW.STREAMS_EXPLORER.STREAMS_TOOLKITS.EDIT_LOCAL_TOOLKITS,
+                Commands.VIEW.STREAMS_EXPLORER.STREAMS_TOOLKITS.ADD_TOOLKIT_PATH,
+                Commands.VIEW.STREAMS_EXPLORER.STREAMS_TOOLKITS.REMOVE_TOOLKIT_PATHS,
+                Commands.VIEW.STREAMS_EXPLORER.STREAMS_TOOLKITS.OPEN_TOOLKIT,
+                Commands.VIEW.STREAMS_EXPLORER.STREAMS_TOOLKITS.VIEW_TOOLKIT
             ];
             const foundStreamsCommands = cmds.filter((cmd: string) => (STREAMS_COMMANDS.includes(cmd) || cmd.startsWith(`${EXTENSION_ID}.`)));
             expect(foundStreamsCommands.length).to.equal(STREAMS_COMMANDS.length);
         });
     });
 
-    describe(Commands.GENERAL.CREATE_APPLICATION, function() {
+    describe(Commands.GENERAL.CREATE_SPL_APPLICATION, function() {
         let rootDir: string;
         let uri: Uri[];
         let testNamespace: string;
@@ -103,7 +120,7 @@ describe('commands', function() {
         let infoXmlFilePath: string;
 
         before(function() {
-            command = Commands.GENERAL.CREATE_APPLICATION;
+            command = Commands.GENERAL.CREATE_SPL_APPLICATION;
             rootDir = `${os.tmpdir()}${path.sep}vscode_streams_test_createApplication`;
             uri = [Uri.file(rootDir)];
             testNamespace = 'myNamespace';
