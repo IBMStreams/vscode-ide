@@ -2,7 +2,9 @@ import { InstanceSelector, store } from '@ibmstreams/common';
 import _startCase from 'lodash/startCase';
 import * as path from 'path';
 import { commands, TreeItem, TreeItemCollapsibleState, Uri } from 'vscode';
-import { InfoTreeItem, JobGroupTreeItem, JobTreeItem } from '.';
+import {
+    InfoTreeItem, JobGroupTreeItem, JobTreeItem, LabelTreeItem, TreeItemType
+} from '.';
 import { Streams } from '../../../../streams';
 import { BuiltInCommands, Logger } from '../../../../utils';
 
@@ -10,12 +12,12 @@ import { BuiltInCommands, Logger } from '../../../../utils';
  * Tree item that represents a Streams instance
  */
 export default class InstanceTreeItem extends TreeItem {
-    public type = 'instance';
+    public type = TreeItemType.Instance;
 
     constructor(
         private _extensionPath: string,
         public instance: any,
-        public children: (InfoTreeItem | JobGroupTreeItem | JobTreeItem)[],
+        public children: (InfoTreeItem | JobGroupTreeItem | JobTreeItem | LabelTreeItem)[],
     ) {
         super(instance.instanceName, instance.isDefault ? TreeItemCollapsibleState.Expanded : TreeItemCollapsibleState.Collapsed);
     }

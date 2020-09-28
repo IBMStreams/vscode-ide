@@ -28,7 +28,7 @@ const resourceLinks = {
         'Stack Overflow': 'https://stackoverflow.com/questions/tagged/ibm-streams'
     },
     'Join the community': {
-        'Developer community': 'https://developer.ibm.com/streamsdev',
+        'Developer community': 'http://ibm.biz/streams-community',
         'IBM Streams on GitHub': 'https://ibmstreams.github.io',
         'Follow us on Twitter': 'https://twitter.com/hashtag/IBMStreams?src=hash'
     }

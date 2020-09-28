@@ -1,9 +1,12 @@
 import { commands, ExtensionContext } from 'vscode';
 import { Commands } from '../commands';
+import CreateSplApplicationSetWebviewPanel from './createSplApplicationSet';
 import StreamsAuthenticationWebviewPanel from './streamsAuthentication';
 import InstanceSelectionWebviewPanel from './instanceSelection';
 
+export { default as ConfigureImageBuildWebviewPanel } from './configureImageBuild';
 export { default as ConfigureJobSubmissionWebviewPanel } from './configureJobSubmission';
+export { default as CreateSplApplicationSetWebviewPanel } from './createSplApplicationSet';
 export { default as JobGraphWebviewPanel } from './jobGraph';
 export { default as StreamsAuthenticationWebviewPanel } from './streamsAuthentication';
 export { default as InstanceSelectionWebviewPanel } from './instanceSelection';
@@ -21,10 +24,14 @@ export function initialize(context: ExtensionContext): void {
     context.subscriptions.push(commands.registerCommand(Commands.ENVIRONMENT.SHOW_INSTANCE_WEBVIEW_PANEL, (action: string, filePaths: string[], postBuildAction: any) => {
         InstanceSelectionWebviewPanel.createOrShow(context, action, filePaths, postBuildAction);
     }));
+
+    context.subscriptions.push(commands.registerCommand(Commands.GENERAL.SHOW_SPL_APPLICATION_SET_WEBVIEW_PANEL, (folderPath: string, resolve: Function) => {
+        CreateSplApplicationSetWebviewPanel.createOrShow(context, folderPath, resolve );
+    }));
 }
 
 /**
- * Generate a nonce to whitelist which scripts can be run
+ * Generate a nonce to allow which scripts can be run
  */
 export function getNonce(): string {
     let text = '';

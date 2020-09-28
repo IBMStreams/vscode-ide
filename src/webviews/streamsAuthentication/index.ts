@@ -224,10 +224,10 @@ export default class StreamsAuthenticationWebviewPanel extends BaseWebviewPanel 
                 }
                 case StreamsInstanceType.V5_STANDALONE: {
                     const {
-                        streamsBuildServiceUrl, streamsRestServiceUrl, streamsConsoleUrl, username, password, rememberPassword
+                        streamsBuildServiceUrl, streamsRestServiceUrl, streamsSecurityServiceUrl, streamsConsoleUrl, username, password, rememberPassword
                     } = args;
                     authentication = {
-                        streamsBuildServiceUrl, streamsRestServiceUrl, streamsConsoleUrl, username, password, rememberPassword
+                        streamsBuildServiceUrl, streamsRestServiceUrl, streamsSecurityServiceUrl, streamsConsoleUrl, username, password, rememberPassword
                     };
                     url = streamsRestServiceUrl;
                     break;
@@ -310,10 +310,10 @@ export default class StreamsAuthenticationWebviewPanel extends BaseWebviewPanel 
                 }
                 case StreamsInstanceType.V5_STANDALONE: {
                     const {
-                        streamsBuildServiceUrl, streamsRestServiceUrl, streamsConsoleUrl, username, password, rememberPassword
+                        streamsBuildServiceUrl, streamsRestServiceUrl, streamsSecurityServiceUrl, streamsConsoleUrl, username, password, rememberPassword
                     } = args;
                     authentication = {
-                        streamsBuildServiceUrl, streamsRestServiceUrl, streamsConsoleUrl, username, password, rememberPassword
+                        streamsBuildServiceUrl, streamsRestServiceUrl, streamsSecurityServiceUrl, streamsConsoleUrl, username, password, rememberPassword
                     };
                     break;
                 }
@@ -470,7 +470,7 @@ export default class StreamsAuthenticationWebviewPanel extends BaseWebviewPanel 
                 args: {
                     authError: {
                         message: errorMessage,
-                        ...(error.name && error.name === 'CustomError' && { data: error.data })
+                        ...(error.name && error.name === 'StreamsError' && { data: error.data })
                     }
                 }
             });

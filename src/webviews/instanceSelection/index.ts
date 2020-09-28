@@ -1,4 +1,4 @@
-import { SourceArchiveUtils } from '@ibmstreams/common';
+import { PostBuildAction, SourceArchiveUtils } from '@ibmstreams/common';
 import * as fs from 'fs';
 import _map from 'lodash/map';
 import * as path from 'path';
@@ -8,6 +8,7 @@ import {
 import { getNonce } from '..';
 import StreamsBuild from '../../build';
 import { Streams } from '../../streams';
+import { ActionType } from '../../utils';
 import BaseWebviewPanel from '../base';
 
 interface IRequestMessage<T> {
@@ -60,10 +61,12 @@ export default class InstanceSelectionWebviewPanel extends BaseWebviewPanel {
      */
     public static createOrShow(context: ExtensionContext, action: string, filePaths: string[], postBuildAction: any): void {
         let title = '';
-        if (action === 'submit') {
-            title = filePaths.length === 1 ? 'Select a Streams instance for the submission' : 'Select a Streams instance for the submissions';
-        } else if (action === 'build' || action === 'build-make') {
+        if (action === ActionType.BuildApp || action === ActionType.BuildMake) {
             title = postBuildAction === 1 ? 'Select a Streams instance for the build and submission' : 'Select a Streams instance for the build';
+        } else if (action === ActionType.Submit) {
+            title = filePaths.length === 1 ? 'Select a Streams instance for the submission' : 'Select a Streams instance for the submissions';
+        } else {
+            title = filePaths.length === 1 ? 'Select a Streams instance for the edge application image build' : 'Select a Streams instance for the edge application image builds';
         }
         const panel = super.createWebview(context, this._location, title, this._viewType, { retainContextWhenHidden: true });
         const instanceSelectionPanel = new InstanceSelectionWebviewPanel(panel, context, action, filePaths, postBuildAction);
@@ -94,14 +97,25 @@ export default class InstanceSelectionWebviewPanel extends BaseWebviewPanel {
 
         const action = this._action;
         const postBuildAction = this._postBuildAction;
-        const displayPath = StreamsBuild.getDisplayPath(appRoot, this._filePaths[0]);
+        const displayPath = StreamsBuild.getDisplayPath(appRoot, this._filePaths[0], null);
 
         // Set parameters to pass as props for instance selection container
         const selectInstancePanelTitle = `const selectInstancePanelTitle = ${JSON.stringify(this._title)};`;
         const fileParams = { files, action, postBuildAction };
         const filePathsContainerParams = `const filePathsContainerParams = ${JSON.stringify(fileParams)};`;
-        const storedInstances = Streams.getInstances();
-        const defaultInstance = Streams.checkDefaultInstance();
+        const isPerformingImageBuild = this._action === ActionType.BuildImage || this._postBuildAction === PostBuildAction.BuildImage;
+        const storedInstances = isPerformingImageBuild ? Streams.getInstancesWithImageBuildEnabled() : Streams.getInstances();
+        let defaultInstance = Streams.checkDefaultInstance();
+        if (isPerformingImageBuild) {
+            if (defaultInstance) {
+                const matchingDefaultInstance = storedInstances.find((instance) => instance.connectionId === defaultInstance.connectionId);
+                if (!matchingDefaultInstance) {
+                    [defaultInstance] = storedInstances;
+                }
+            } else {
+                [defaultInstance] = storedInstances;
+            }
+        }
         const params = {
             storedInstances, action, postBuildAction, displayPath, defaultInstance
         };
@@ -116,12 +130,14 @@ export default class InstanceSelectionWebviewPanel extends BaseWebviewPanel {
             switch (message.command) {
                 case 'close-panel':
                     return this._handleClosePanelMessage(message);
-                case 'submit':
-                    return this._submitInstance(message);
                 case 'build':
-                    return this._buildInstance(message);
+                    return this._build(message);
                 case 'build-make':
                     return this._buildMake(message);
+                case 'submit':
+                    return this._submit(message);
+                case 'build-image':
+                    return this._buildImage(message);
                 default:
                     break;
             }
@@ -134,7 +150,7 @@ export default class InstanceSelectionWebviewPanel extends BaseWebviewPanel {
         const filePathStrings = [];
         for (let i = 0; i < this._filePaths.length; i++) {
             const appRoot = SourceArchiveUtils.getApplicationRoot(workspaceFolders, this._filePaths[i], false);
-            const displayPath = StreamsBuild.getDisplayPath(appRoot, this._filePaths[i]);
+            const displayPath = StreamsBuild.getDisplayPath(appRoot, this._filePaths[i], null);
             filePathStrings.push(displayPath);
         }
         return filePathStrings;
@@ -158,23 +174,10 @@ export default class InstanceSelectionWebviewPanel extends BaseWebviewPanel {
     }
 
     /**
-     * Submit an instance that is selected
+     * Build from SPL file
      * @param message    The JSON message sent from the webview
      */
-    private _submitInstance(message: IRequestMessage<any>): void {
-        const { args } = message;
-        if (args) {
-            const { inst } = args;
-            StreamsBuild.runSubmit(inst, this._filePaths);
-            this._close();
-        }
-    }
-
-    /**
-     * Perform a build from a spl file and either download the bundle(s) or submit the application(s)
-     * @param message    The JSON message sent from the webview
-     */
-    private _buildInstance(message: IRequestMessage<any>): void {
+    private _build(message: IRequestMessage<any>): void {
         const { args } = message;
         if (args) {
             const { inst } = args;
@@ -184,14 +187,40 @@ export default class InstanceSelectionWebviewPanel extends BaseWebviewPanel {
     }
 
     /**
-    * Perform a build from a Makefile and either download the bundle(s) or submit the application(s)
-    * @param message    The JSON message sent from the webview
+     * Build from Makefile file
+     * @param message    The JSON message sent from the webview
      */
     private async _buildMake(message: IRequestMessage<any>): Promise<void> {
         const { args } = message;
         if (args) {
             const { inst } = args;
             StreamsBuild.runBuildMake(inst, this._filePaths, this._postBuildAction);
+            this._close();
+        }
+    }
+
+    /**
+     * Submit application bundles
+     * @param message    The JSON message sent from the webview
+     */
+    private _submit(message: IRequestMessage<any>): void {
+        const { args } = message;
+        if (args) {
+            const { inst } = args;
+            StreamsBuild.runSubmit(inst, this._filePaths);
+            this._close();
+        }
+    }
+
+    /**
+     * Build edge application image(s) from application bundle(s)
+     * @param message    The JSON message sent from the webview
+     */
+    private _buildImage(message: IRequestMessage<any>): void {
+        const { args } = message;
+        if (args) {
+            const { inst } = args;
+            StreamsBuild.runBuildImage(inst, this._filePaths, null);
             this._close();
         }
     }

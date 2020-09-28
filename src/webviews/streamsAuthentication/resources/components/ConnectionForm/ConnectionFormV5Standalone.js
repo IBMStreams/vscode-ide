@@ -19,6 +19,7 @@ export default class ConnectionFormV5Standalone extends Component {
     this.state = {
       streamsBuildServiceUrl: (authentication && authentication.streamsBuildServiceUrl) ? authentication.streamsBuildServiceUrl : '',
       streamsRestServiceUrl: (authentication && authentication.streamsRestServiceUrl) ? authentication.streamsRestServiceUrl : '',
+      streamsSecurityServiceUrl: (authentication && authentication.streamsSecurityServiceUrl) ? authentication.streamsSecurityServiceUrl : '',
       streamsConsoleUrl: (authentication && authentication.streamsConsoleUrl) ? authentication.streamsConsoleUrl : '',
       username: (authentication && authentication.username) ? authentication.username : '',
       password: (authentication && authentication.password) ? authentication.password : '',
@@ -79,7 +80,7 @@ export default class ConnectionFormV5Standalone extends Component {
 
   validate = () => {
     const {
-      streamsBuildServiceUrl, streamsRestServiceUrl, streamsConsoleUrl, username, password
+      streamsBuildServiceUrl, streamsRestServiceUrl, streamsSecurityServiceUrl, streamsConsoleUrl, username, password
     } = this.state;
     // True if errors, false otherwise
     const errors = {
@@ -103,7 +104,14 @@ export default class ConnectionFormV5Standalone extends Component {
     } catch (err) {
       errors.streamsRestServiceUrl = 'The value must be a valid URL.';
     }
-
+    try {
+      if (streamsSecurityServiceUrl) {
+        url = new URL(streamsSecurityServiceUrl);
+        errors.streamsSecurityServiceUrl = false;
+      }
+    } catch (err) {
+      errors.streamsSecurityServiceUrl = 'The value must be a valid URL.';
+    }
     try {
       if (streamsConsoleUrl) {
         url = new URL(streamsConsoleUrl);
@@ -124,7 +132,7 @@ export default class ConnectionFormV5Standalone extends Component {
 
   getButtonContainer = () => {
     const {
-      streamsBuildServiceUrl, streamsRestServiceUrl, streamsConsoleUrl, username, password, rememberPassword
+      streamsBuildServiceUrl, streamsRestServiceUrl, streamsSecurityServiceUrl, streamsConsoleUrl, username, password, rememberPassword
     } = this.state;
     const { instanceType, closePanel, params: { instance } } = this.props;
     const isValid = this.isFormValid();
@@ -141,6 +149,7 @@ export default class ConnectionFormV5Standalone extends Component {
                 instanceType,
                 streamsBuildServiceUrl: this.sanitizeUrl(streamsBuildServiceUrl, false),
                 streamsRestServiceUrl: this.sanitizeUrl(streamsRestServiceUrl, false),
+                streamsSecurityServiceUrl: this.sanitizeUrl(streamsSecurityServiceUrl, false),
                 streamsConsoleUrl: this.sanitizeUrl(streamsConsoleUrl, true),
                 username,
                 password,
@@ -174,6 +183,7 @@ export default class ConnectionFormV5Standalone extends Component {
     const {
       streamsBuildServiceUrl,
       streamsRestServiceUrl,
+      streamsSecurityServiceUrl,
       streamsConsoleUrl,
       username,
       password,
@@ -221,6 +231,7 @@ export default class ConnectionFormV5Standalone extends Component {
                 instanceType,
                 streamsBuildServiceUrl: this.sanitizeUrl(streamsBuildServiceUrl, false),
                 streamsRestServiceUrl: this.sanitizeUrl(streamsRestServiceUrl, false),
+                streamsSecurityServiceUrl: this.sanitizeUrl(streamsSecurityServiceUrl, false),
                 streamsConsoleUrl: this.sanitizeUrl(streamsConsoleUrl, true),
                 username,
                 password,
@@ -251,6 +262,21 @@ export default class ConnectionFormV5Standalone extends Component {
         This service has a URL associated with it. For example, when the service is exposed as a node
         port: <span className="streams-auth-container__code">https://123.45.67.89:30002</span>.<br /><br />
         If not specified, you will not be able to build your Streams applications.
+      </Tooltip>
+    );
+    const securityServiceUrlLabel = (
+      <Tooltip
+        triggerText="IBM Streams security service URL (optional)"
+        iconDescription="IBM Streams security service URL"
+        tabIndex={0}
+        className="streams-auth-container__help-tooltip"
+      >
+        IBM Streams provides an optional security service for managing a set of security realms to provide
+        single sign-on support for Streams services. You can use the security service for both the
+        Streams instance and the build service. The security service is required for the build service.
+        The security service has a URL associated with it. For example, when the service is exposed as a node
+        port: <span className="streams-auth-container__code">https://123.45.67.89:30003</span>.<br /><br />
+        If not specified, the security service URL will be generated using the REST service URL.
       </Tooltip>
     );
     const consoleUrlLabel = (
@@ -303,9 +329,22 @@ export default class ConnectionFormV5Standalone extends Component {
         <div className="connection-form__form-item">
           <TextInput
             type="text"
+            id="streamsSecurityServiceUrl"
+            labelText={securityServiceUrlLabel}
+            placeholder={instance ? null : 'https://123.45.67.89:30003'}
+            value={streamsSecurityServiceUrl}
+            disabled={!!instance}
+            invalid={!!errors.streamsSecurityServiceUrl && streamsSecurityServiceUrl.length > 0}
+            invalidText={errors.streamsSecurityServiceUrl || null}
+            onChange={this.onTextChange}
+          />
+        </div>
+        <div className="connection-form__form-item">
+          <TextInput
+            type="text"
             id="streamsConsoleUrl"
             labelText={consoleUrlLabel}
-            placeholder="https://123.45.67.89:30003/streams/console"
+            placeholder="https://123.45.67.89:30004/streams/console"
             value={streamsConsoleUrl}
             disabled={!!instance}
             invalid={!!errors.streamsConsoleUrl && streamsConsoleUrl.length > 0}

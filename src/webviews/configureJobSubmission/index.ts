@@ -147,7 +147,7 @@ export default class ConfigureJobSubmissionWebviewPanel extends BaseWebviewPanel
 
         this.panel.webview.html = content;
 
-        // Check if the webview is ready within three seconds
+        // Check if the webview is ready within five seconds
         setTimeout(() => {
             const isReady = ConfigureJobSubmissionWebviewPanel.panelsReady[this._id];
             if (!isReady) {

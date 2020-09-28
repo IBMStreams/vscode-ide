@@ -527,6 +527,16 @@
 			}
 		},
 		{
+			"name": "Perl",
+			"scope": [
+				"entity.other.perl"
+			],
+			"settings": {
+				"fontStyle": "",
+				"foreground": "#3F7F5F"
+			}
+		},
+		{
 			"name": "SPL Error Log Message Header",
 			"scope": [
 				"meta.log.error.header.splLog"

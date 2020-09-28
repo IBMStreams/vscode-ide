@@ -4,17 +4,20 @@ import _has from 'lodash/has';
 import _isEqual from 'lodash/isEqual';
 import * as path from 'path';
 import {
-    commands, env, Event, EventEmitter, ExtensionContext, TreeDataProvider, TreeItem, TreeItemCollapsibleState, Uri, window
+    commands, Event, EventEmitter, ExtensionContext, TreeDataProvider, TreeItem, TreeItemCollapsibleState, Uri, window
 } from 'vscode';
 import { Commands } from '../../commands';
 import { Streams } from '../../streams';
-import { BuiltInCommands, Views } from '../../utils';
-import { InstanceTreeItem, JobTreeItem } from './instancesView/treeItems';
+import { BuiltInCommands, Views, VSCode } from '../../utils';
+import {
+    BaseImageTreeItem, BuildPoolTreeItem, InstanceTreeItem, JobTreeItem, LabelTreeItem, TreeItemType
+} from './instancesView/treeItems';
 
 const instanceProperties = {
     v5: [
         { name: 'applicationConfigurations', label: 'Application configurations', isUrl: true },
         { name: 'applicationEnvironmentVariables', label: 'Application environment variables', isUrl: true },
+        { name: 'bearerToken', label: 'Bearer token' },
         { name: 'connectionDetails', label: 'Connection details', mapFn: (detail: any) => ({ label: detail.label, value: detail.value }) },
         { name: 'applicationResourceTags', label: 'Application resource tags', mapFn: (tag: any) => ({ label: tag, value: null }) },
         { name: 'exportedStreams', label: 'Exported streams', isUrl: true },
@@ -50,6 +53,7 @@ const instanceProperties = {
                 return detail;
             }
         },
+        { name: 'serviceToken', label: 'Service token' },
         { name: 'startTime', label: 'Start time', formatFn: (time: number) => new Date(time).toLocaleString() },
         { name: 'status', label: 'Status' },
         { name: 'trustedOrigins', label: 'Trusted origins', isUrl: true },
@@ -120,6 +124,44 @@ const jobProperties = [
     { name: 'views', label: 'Views', isUrl: true }
 ];
 
+const buildServiceProperties = {
+    buildService: [
+        { name: 'buildPools', label: 'Build pools', isUrl: true },
+        { name: 'builds', label: 'Builds', isUrl: true },
+        { name: 'logs', label: 'Logs', isUrl: true },
+        { name: 'name', label: 'Name' },
+        { name: 'traceFileCount', label: 'Trace file count' },
+        { name: 'traceFileSize', label: 'Trace file size' },
+        { name: 'traceLevel', label: 'Trace level' },
+        { name: 'version', label: 'Version' }
+    ],
+    buildPool: [
+        { name: 'buildInactivityTimeout', label: 'Build inactivity timeout' },
+        { name: 'buildProcessingTimeout', label: 'Build processing timeout' },
+        { name: 'buildProcessingTimeoutMaximum', label: 'Build processing timeout maximum' },
+        { name: 'buildProductVersion', label: 'Build product version' },
+        { name: 'buildingCount', label: 'Building count' },
+        { name: 'logs', label: 'Logs', isUrl: true },
+        { name: 'name', label: 'Name' },
+        { name: 'resourceWaitTimeout', label: 'Resource wait timeout' },
+        { name: 'sizeMaximum', label: 'Size maximum' },
+        { name: 'sizeMinimum', label: 'Size minimum' },
+        { name: 'status', label: 'Status' },
+        { name: 'traceFileCount', label: 'Trace file count' },
+        { name: 'traceFileSize', label: 'Trace file size' },
+        { name: 'traceLevel', label: 'Trace level' },
+        { name: 'version', label: 'Version' },
+        { name: 'waitingCount', label: 'Waiting count' }
+    ],
+    baseImage: [
+        { name: 'id', label: 'ID' },
+        { name: 'name', label: 'Name' },
+        { name: 'prefix', label: 'Prefix' },
+        { name: 'registry', label: 'Registry' },
+        { name: 'tag', label: 'Tag' }
+    ]
+};
+
 /**
  * Represents the Details view
  */
@@ -152,15 +194,30 @@ export default class DetailsView {
             if (!selection.length) {
                 commands.executeCommand(command, null, null);
             } else {
+                let element = null;
                 const [selectedElement] = selection;
-                const { type } = selectedElement;
-                if (type === 'instance') {
-                    commands.executeCommand(command, type, (selectedElement as InstanceTreeItem).instance);
-                } else if (type === 'job') {
-                    commands.executeCommand(command, type, (selectedElement as JobTreeItem).job);
-                } else {
-                    commands.executeCommand(command, null, null);
+                let { type } = selectedElement;
+                switch (type) {
+                    case TreeItemType.Instance:
+                        element = (selectedElement as InstanceTreeItem).instance;
+                        break;
+                    case TreeItemType.Job:
+                        element = (selectedElement as JobTreeItem).job;
+                        break;
+                    case TreeItemType.BuildService:
+                        element = (selectedElement as LabelTreeItem).data;
+                        break;
+                    case TreeItemType.BuildPool:
+                        element = (selectedElement as BuildPoolTreeItem).buildPool;
+                        break;
+                    case TreeItemType.BaseImage:
+                        element = (selectedElement as BaseImageTreeItem).baseImage;
+                        break;
+                    default:
+                        type = null;
+                        break;
                 }
+                commands.executeCommand(command, type, element);
             }
         }
     }
@@ -171,18 +228,54 @@ export default class DetailsView {
      * @param element    The element
      */
     private _showDetails(type: string, element: any): void {
-        if (type === 'instance') {
-            const newElement = element.streamsInstance ? _cloneDeep(element.streamsInstance) : {};
-            newElement.connectionDetails = this._getConnectionDetails(element);
-            const instanceType = InstanceSelector.selectInstanceType(store.getState(), element.connectionId);
-            const propertiesSelector = instanceType === StreamsInstanceType.V4_STREAMING_ANALYTICS ? 'v4' : 'v5';
-            this._treeDataProvider.generateTreeData(newElement, instanceProperties[propertiesSelector]);
-        } else if (type === 'job') {
-            this._treeDataProvider.generateTreeData(element, jobProperties);
-        } else {
-            this._treeDataProvider.setTreeData(null);
-            this._treeDataProvider.refresh();
+        switch (type) {
+            case TreeItemType.Instance:
+                const newElement = element.streamsInstance ? _cloneDeep(element.streamsInstance) : {};
+                newElement.connectionDetails = this._getConnectionDetails(element);
+
+                const instanceType = InstanceSelector.selectInstanceType(store.getState(), element.connectionId);
+                if (instanceType === StreamsInstanceType.V5_CPD || instanceType === StreamsInstanceType.V5_STANDALONE) {
+                    const streamsAuthToken = InstanceSelector.selectStreamsAuthToken(store.getState(), element.connectionId) || null;
+                    if (streamsAuthToken !== null) {
+                        if (instanceType === StreamsInstanceType.V5_CPD) {
+                            newElement.serviceToken = streamsAuthToken;
+                        } else {
+                            newElement.bearerToken = streamsAuthToken;
+                        }
+                    }
+                }
+
+                const propertiesSelector = instanceType === StreamsInstanceType.V4_STREAMING_ANALYTICS ? 'v4' : 'v5';
+                this._treeDataProvider.generateTreeData(newElement, instanceProperties[propertiesSelector]);
+                break;
+            case TreeItemType.Job:
+                this._treeDataProvider.generateTreeData(element, jobProperties);
+                break;
+            case TreeItemType.BuildService:
+                if (element) {
+                    this._treeDataProvider.generateTreeData(element, buildServiceProperties.buildService);
+                } else {
+                    this._clearDetails();
+                }
+                break;
+            case TreeItemType.BuildPool:
+                this._treeDataProvider.generateTreeData(element, buildServiceProperties.buildPool);
+                break;
+            case TreeItemType.BaseImage:
+                this._treeDataProvider.generateTreeData(element, buildServiceProperties.baseImage);
+                break;
+            default:
+                this._clearDetails();
+                break;
         }
+    }
+
+    /**
+     * Clear the details
+     */
+    private _clearDetails(): void {
+        this._treeDataProvider.setTreeData(null);
+        this._treeDataProvider.refresh();
     }
 
     /**
@@ -191,7 +284,7 @@ export default class DetailsView {
      */
     private async _copyToClipboard(element: DetailTreeItem): Promise<void> {
         if (element && element.value) {
-            await env.clipboard.writeText(element.value);
+            await VSCode.copyToClipboard(element.value);
         }
     }
 
@@ -232,6 +325,10 @@ export default class DetailsView {
                     ...authentication.streamsBuildServiceUrl ? [{
                         label: 'Streams build service URL',
                         value: authentication.streamsBuildServiceUrl
+                    }] : [],
+                    ...authentication.streamsSecurityServiceUrl ? [{
+                        label: 'Streams security service URL',
+                        value: authentication.streamsSecurityServiceUrl
                     }] : [],
                     ...authentication.streamsConsoleUrl ? [{
                         label: 'Streams Console URL',
@@ -389,9 +486,10 @@ class DetailsProvider implements TreeDataProvider<DetailTreeItem> {
                         children: children && children.length ? children : [{ label: 'None' }]
                     };
                 }
+                const strPropertyValue = propertyValue.toString ? propertyValue.toString() : propertyValue;
                 return {
                     label,
-                    value: formatFn ? formatFn(propertyValue) : propertyValue,
+                    value: formatFn ? formatFn(propertyValue) : strPropertyValue,
                     isUrl
                 };
             });

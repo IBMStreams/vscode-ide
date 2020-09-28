@@ -8,6 +8,7 @@ export const EXTENSION_NAME = 'IBM Streams';
 export const TOOLKITS_CACHE_DIR = `${extensions.getExtension(EXTENSION_QUALIFIED_ID).extensionPath}${path.sep}toolkitsCache`;
 export const LANGUAGE_SPL = 'spl';
 export const LANGUAGE_SERVER = 'IBM Streams SPL Language Server';
+export const SPL_APPLICATION_KEY = 'applicationPath';
 
 /**
  * Built-in Visual Studio Code commands. See [documentation](https://code.visualstudio.com/api/references/commands).
@@ -15,7 +16,9 @@ export const LANGUAGE_SERVER = 'IBM Streams SPL Language Server';
 export enum BuiltInCommands {
     CloseAllEditors = 'workbench.action.closeAllEditors',
     Open = 'vscode.open',
+    OpenFolder = 'vscode.openFolder',
     OpenSettings = 'workbench.action.openSettings',
+    RevealFileInOS = 'revealFileInOS',
     SetContext = 'setContext',
     ShowViewContainer = 'workbench.view.extension',
     ShowView = 'focus'
@@ -44,6 +47,16 @@ export enum Views {
     StreamsHelpfulResources = 'streamsHelpfulResources',
     StreamsInstances = 'streamsInstances',
     StreamsToolkits = 'streamsToolkits'
+}
+
+/**
+ * Action type
+ */
+export enum ActionType {
+    BuildApp = 'build',
+    BuildImage = 'build-image',
+    BuildMake = 'build-make',
+    Submit = 'submit'
 }
 
 /**

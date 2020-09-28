@@ -1,14 +1,18 @@
 import { EditorSelector, store, StreamsInstanceType, ToolkitUtils } from '@ibmstreams/common';
+import * as fs from 'fs';
+ import * as path from 'path';
 import {
-    Command, commands, Event, EventEmitter, TreeDataProvider, TreeItem, TreeItemCollapsibleState, window
+    Command, commands, Event, EventEmitter, TreeDataProvider, TreeItem, TreeItemCollapsibleState, Uri, window
 } from 'vscode';
 import { Commands } from '../../commands';
 import { Streams } from '../../streams';
-import { BuiltInCommands, Configuration, Settings, Views } from '../../utils';
+import {
+ BuiltInCommands, Configuration, Logger, Settings, Views
+} from '../../utils';
 
 const BUILD_SERVICE_TOOLKITS_LABEL = 'Build service';
 const LOCAL_TOOLKITS_LABEL = 'Local';
-const NO_BUID_SERVICE_TOOLKITS_LABEL = 'No build service toolkits available';
+const NO_BUILD_SERVICE_TOOLKITS_LABEL = 'No build service toolkits available';
 const NO_LOCAL_TOOLKITS_LABEL = 'No local toolkits available';
 const NO_TOOLKITS_LABEL = 'None available';
 
@@ -31,6 +35,92 @@ export default class ToolkitsView {
         });
         commands.registerCommand(toolkitCommands.EDIT_LOCAL_TOOLKITS, () => {
             commands.executeCommand(BuiltInCommands.OpenSettings, Settings.ENV_TOOLKIT_PATHS);
+        });
+        commands.registerCommand(toolkitCommands.ADD_TOOLKIT_PATH, async () => {
+            const selectedFolderUri = await window.showOpenDialog({
+                canSelectFiles: false,
+                canSelectFolders: true,
+                canSelectMany: false,
+                openLabel: 'Add toolkit path'
+            });
+            if (selectedFolderUri && selectedFolderUri.length) {
+                const selectedFolderPath = selectedFolderUri[0].fsPath;
+                const toolkitPathsSetting = Configuration.getSetting(Settings.ENV_TOOLKIT_PATHS);
+                let newToolkitPathsSetting;
+                if (toolkitPathsSetting === Settings.ENV_TOOLKIT_PATHS_DEFAULT) {
+                    newToolkitPathsSetting = selectedFolderPath;
+                } else {
+                    const toolkitPaths = toolkitPathsSetting
+                        .split(/[,;]/)
+                        .map((toolkitPath) => toolkitPath.trim())
+                        .filter((toolkitPath) => toolkitPath !== '');
+                    if (toolkitPaths.includes(selectedFolderPath)) {
+                        Logger.info(null, `The selected folder is already included in the toolkit paths: ${selectedFolderPath}.`);
+                        return;
+                    }
+
+                    if (!toolkitPaths.length) {
+                        newToolkitPathsSetting = selectedFolderPath;
+                    } else if (toolkitPaths.length === 1) {
+                        newToolkitPathsSetting = `${toolkitPaths[0]}; ${selectedFolderPath}`;
+                    } else {
+                        if (toolkitPathsSetting.includes(',')) {
+                            newToolkitPathsSetting = `${toolkitPaths.join(', ')}, ${selectedFolderPath}`;
+                        } else if (toolkitPathsSetting.includes(';')) {
+                            newToolkitPathsSetting = `${toolkitPaths.join('; ')}; ${selectedFolderPath}`;
+                        }
+                    }
+                }
+                if (newToolkitPathsSetting) {
+                    await Configuration.setSetting(Settings.ENV_TOOLKIT_PATHS, newToolkitPathsSetting);
+                }
+            }
+        });
+        commands.registerCommand(toolkitCommands.REMOVE_TOOLKIT_PATHS, async () => {
+            const toolkitPathsSetting = Configuration.getSetting(Settings.ENV_TOOLKIT_PATHS);
+            if (toolkitPathsSetting === Settings.ENV_TOOLKIT_PATHS_DEFAULT || toolkitPathsSetting.trim() === '') {
+                Logger.info(null, 'There are no toolkit paths to remove.');
+                return;
+            }
+
+            const toolkitPaths = toolkitPathsSetting
+                .split(/[,;]/)
+                .map((toolkitPath) => toolkitPath.trim())
+                .filter((toolkitPath) => toolkitPath !== '');
+            const selectedToolkitPaths = await window.showQuickPick(toolkitPaths, {
+                canPickMany: true,
+                ignoreFocusOut: true,
+                placeHolder: 'Select the toolkit path(s) to remove'
+            })
+            if (selectedToolkitPaths && selectedToolkitPaths.length) {
+                const newToolkitPaths = toolkitPaths.filter((toolkitPath) => !selectedToolkitPaths.includes(toolkitPath));
+                let newToolkitPathsSetting;
+                if (!newToolkitPaths.length) {
+                    newToolkitPathsSetting = undefined;
+                } else {
+                    newToolkitPathsSetting = toolkitPathsSetting.includes(',') ? newToolkitPaths.join(', ') : newToolkitPaths.join('; ');
+                }
+                await Configuration.setSetting(Settings.ENV_TOOLKIT_PATHS, newToolkitPathsSetting);
+            }
+        });
+        commands.registerCommand(toolkitCommands.OPEN_TOOLKIT, (toolkit: any) => {
+            const { isLocal, indexPath } = toolkit;
+            if (indexPath && fs.existsSync(indexPath)) {
+                if (isLocal) {
+                    commands.executeCommand(BuiltInCommands.OpenFolder, Uri.file(path.dirname(indexPath)), true);
+                } else {
+                    commands.executeCommand(BuiltInCommands.Open, Uri.file(indexPath));
+                }
+            }
+        });
+        commands.registerCommand(toolkitCommands.VIEW_TOOLKIT, (toolkit: any) => {
+            const { isLocal, indexPath } = toolkit;
+            if (indexPath && fs.existsSync(indexPath)) {
+                commands.executeCommand(
+                    BuiltInCommands.RevealFileInOS,
+                    Uri.file(isLocal ? path.dirname(indexPath) : indexPath)
+                );
+            }
         });
     }
 
@@ -98,45 +188,18 @@ class ToolkitsProvider implements TreeDataProvider<ToolkitTreeItem> {
      * Get the build service and local toolkits
      */
     private _getToolkits(): any {
-        let buildServiceToolkits = ToolkitUtils.getCachedToolkits(EditorSelector.selectToolkitsCacheDir(store.getState()))
-            .map((tk: any) => tk.label);
-        buildServiceToolkits = this._parseToolkitStrings(buildServiceToolkits);
+        const buildServiceToolkits = ToolkitUtils.getCachedToolkits(EditorSelector.selectToolkitsCacheDir(store.getState()));
 
         const localToolkitPathsSetting = Configuration.getSetting(Settings.ENV_TOOLKIT_PATHS);
         let localToolkits = null;
         if (localToolkitPathsSetting && localToolkitPathsSetting.length > 0) {
-            localToolkits = ToolkitUtils.getLocalToolkits(localToolkitPathsSetting).map((tk: any) => tk.label);
-            localToolkits = this._parseToolkitStrings(localToolkits);
+            localToolkits = ToolkitUtils.getLocalToolkits(localToolkitPathsSetting);
         }
 
         return {
-            [BUILD_SERVICE_TOOLKITS_LABEL]: buildServiceToolkits && buildServiceToolkits.length ? buildServiceToolkits : NO_BUID_SERVICE_TOOLKITS_LABEL,
+            [BUILD_SERVICE_TOOLKITS_LABEL]: buildServiceToolkits && buildServiceToolkits.length ? buildServiceToolkits : NO_BUILD_SERVICE_TOOLKITS_LABEL,
             [LOCAL_TOOLKITS_LABEL]: localToolkits && localToolkits.length ? localToolkits : NO_LOCAL_TOOLKITS_LABEL
         };
-    }
-
-    /**
-     * Parse toolkit strings
-     * @param toolkits    Toolkits to parse
-     */
-    private _parseToolkitStrings(toolkits: string[]): {name: string, version: string}[] {
-        if (!toolkits) {
-            return [];
-        }
-        return toolkits.map((toolkit: string) => {
-            const regex = /([a-zA-Z\\.]+)\s-\s([\d\\.]+)/g;
-            const matches = regex.exec(toolkit);
-            if (matches && matches.length >= 3) {
-                return {
-                    name: matches[1],
-                    version: matches[2]
-                };
-            }
-            return {
-                name: null,
-                version: null
-            };
-        });
     }
 
     /**
@@ -145,7 +208,7 @@ class ToolkitsProvider implements TreeDataProvider<ToolkitTreeItem> {
      */
     private _createTreeItems(data: any): ToolkitTreeItem[] {
         if (typeof data === 'string') {
-            if (data === NO_BUID_SERVICE_TOOLKITS_LABEL) {
+            if (data === NO_BUILD_SERVICE_TOOLKITS_LABEL) {
                 const treeItem: ToolkitTreeItem = { name: NO_TOOLKITS_LABEL };
                 if (Streams.getDefaultInstanceEnv() === StreamsInstanceType.V4_STREAMING_ANALYTICS) {
                     treeItem.description = 'When the default Streams instance is an IBM Streaming Analytics service on IBM Cloud, there will be no toolkits listed here.';
@@ -166,8 +229,8 @@ class ToolkitsProvider implements TreeDataProvider<ToolkitTreeItem> {
         }
         if (Array.isArray(data)) {
             return data.map((toolkit: any) => ({
-                name: toolkit.name,
-                version: toolkit.version
+                ...toolkit,
+                contextValue: 'toolkitTreeItem'
             }));
         }
         return Object.keys(data).map((label): any => {
@@ -176,9 +239,10 @@ class ToolkitsProvider implements TreeDataProvider<ToolkitTreeItem> {
             let contextValue = null;
             if (label === BUILD_SERVICE_TOOLKITS_LABEL) {
                 description = 'These toolkits are fetched from the build service associated with the default IBM Streams instance.';
+                contextValue = 'buildService_label_toolkitTreeItem';
             } else if (label === LOCAL_TOOLKITS_LABEL) {
                 description = 'These toolkits are derived from the toolkit paths defined in the IBM Streams extension settings.';
-                contextValue = 'local_toolkitTreeItem';
+                contextValue = 'local_label_toolkitTreeItem';
             }
             return {
                 name: label,

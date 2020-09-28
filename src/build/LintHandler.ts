@@ -88,7 +88,7 @@ export default class LintHandler {
                 severity,
                 file: absolutePath,
                 line: parseInt(parts[2], 10),
-                column: parseInt(parts[3], 10),
+                column: parts[3] ? parseInt(parts[3], 10) : null,
                 code: parts[4],
                 description: parts[5]
             };

@@ -1,0 +1,26 @@
+.main-container {
+  padding-left: 0;
+  padding-right: 0;
+
+  .main-container__form-item {
+    padding-bottom: $layout-02;
+  }
+
+  .main-container__form-item--flex {
+    display: flex;
+  }
+
+  .main-container__form-item--last {
+    padding-bottom: $layout-03;
+  }
+
+  .main-container__browse-button {
+    height: $spacing-08;
+    margin-top: $spacing-06;
+    margin-left: $spacing-03;
+  }
+}
+
+.main-container__help-tooltip {
+  @include carbon--type-style('body-long-01');
+}

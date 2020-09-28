@@ -4,7 +4,7 @@
 **/.DS_Store
 */**/.DS_Store
 
-# Whitelist
+# Allowlist
 !dist
 !images
 !language-configuration.json

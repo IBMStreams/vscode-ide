@@ -34,7 +34,7 @@ export default class Configuration {
     /**
      * Customize global configuration settings for Streams color themes
      */
-    private static customizeWorkbench(): void {
+    private static async customizeWorkbench(): Promise<void> {
         workspace.getConfiguration('workbench').update('colorCustomizations', {
             '[Streams Light]': {
                 'editor.selectionBackground': '#E2F5FF',
@@ -47,6 +47,12 @@ export default class Configuration {
                 'editorCursor.foreground': '#FFFFFF'
             }
         }, ConfigurationTarget.Global);
+
+        // Customize ApplicationSet_*.properties files to be associated with XML
+        const filesConfiguration = workspace.getConfiguration('files');
+        const fileAssociations = filesConfiguration.get('associations');
+        fileAssociations['ApplicationSet.properties'] = 'xml';
+        await filesConfiguration.update('associations', fileAssociations, ConfigurationTarget.Global);
     }
 
     /**

@@ -8,6 +8,7 @@ import * as path from 'path';
 import {
     commands, TreeItem, TreeItemCollapsibleState, Uri, window
 } from 'vscode';
+import { TreeItemType } from '.';
 import { StreamsInstance } from '../../../../streams';
 import { BuiltInCommands, Logger, VSCode } from '../../../../utils';
 
@@ -15,7 +16,7 @@ import { BuiltInCommands, Logger, VSCode } from '../../../../utils';
  * Tree item that represents a Streams job
  */
 export default class JobTreeItem extends TreeItem {
-    public type = 'job';
+    public type = TreeItemType.Job;
     public children = null;
     public jobId: string;
     public jobName: string;

@@ -6,6 +6,12 @@ import StreamsBuild from '.';
 import { Streams, StreamsInstance } from '../streams';
 import { Logger } from '../utils';
 
+interface MessageHandlerProps {
+    appRoot?: string;
+    filePath?: string;
+    bundleFilePath?: string;
+}
+
 interface Message {
     detail?: string | string[] | any;
     stack?: string | string[] | any;
@@ -23,13 +29,13 @@ interface NotificationButton {
  * Handles build and submission messages
  */
 export default class MessageHandler {
-    private _info: { appRoot: string, filePath: string };
+    private _props: MessageHandlerProps;
 
     /**
      * @param info    Information that identifies the build target
      */
-    constructor(info: { appRoot: string, filePath: string }) {
-        this._info = info;
+    constructor(props: MessageHandlerProps) {
+        this._props = props;
     }
 
     /**
@@ -215,6 +221,14 @@ export default class MessageHandler {
     }
 
     /**
+     * Show the output channel
+     */
+    public showOutput(): void {
+        const outputChannel = this._getOutputChannel();
+        outputChannel.show();
+    }
+
+    /**
      * Log a message to an output channel
      * @param loggerFn    The logger function
      * @param message     The message to display
@@ -253,17 +267,29 @@ export default class MessageHandler {
      * Retrieve an output channel
      */
     private _getOutputChannel(): OutputChannel {
-        if (!this._info) {
+        if (!this._props) {
             return Logger.mainOutputChannel;
         }
 
-        const { appRoot, filePath } = this._info;
-        const channelObj = Logger.outputChannels[filePath];
-        if (!channelObj) {
-            const displayPath = StreamsBuild.getDisplayPath(appRoot, filePath);
-            const outputChannel = Logger.registerOutputChannel(filePath, displayPath);
-            outputChannel.show();
-            return outputChannel;
+        const { appRoot, filePath, bundleFilePath } = this._props;
+        let channelObj;
+        if (appRoot && filePath) {
+            channelObj = Logger.outputChannels[filePath];
+            if (!channelObj) {
+                const displayPath = StreamsBuild.getDisplayPath(appRoot, filePath, null);
+                const outputChannel = Logger.registerOutputChannel(filePath, displayPath);
+                outputChannel.show();
+                return outputChannel;
+            }
+            return channelObj.outputChannel;
+        } else if (bundleFilePath) {
+            channelObj = Logger.outputChannels[bundleFilePath];
+            if (!channelObj) {
+                const displayPath = StreamsBuild.getDisplayPath(null, null, bundleFilePath);
+                const outputChannel = Logger.registerOutputChannel(bundleFilePath, displayPath);
+                outputChannel.show();
+                return outputChannel;
+            }
         }
         return channelObj.outputChannel;
     }

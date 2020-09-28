@@ -3,13 +3,33 @@
  */
 export const GENERAL = {
     /**
-     * Create an IBM Streams Application from Template
+     * Add SPL Application
      */
-    CREATE_APPLICATION: 'ibm-streams.createApplication',
+    ADD_SPL_APPLICATION: 'ibm-streams.addSplApplication',
+    /**
+     * Build SPL Applications
+     */
+    BUILD_SPL_APPLICATIONS: 'ibm-streams.buildSplApplications',
+    /**
+    * Build and Submit SPL Applications
+    */
+    BUILD_SUBMIT_SPL_APPLICATIONS: 'ibm-streams.buildSubmitSplApplications',
+    /**
+     * Create SPL Application
+     */
+    CREATE_SPL_APPLICATION: 'ibm-streams.createSplApplication',
+    /**
+     * Create SPL Application Set
+     */
+    CREATE_SPL_APPLICATION_SET: 'ibm-streams.createSplApplicationSet',
     /**
      * Remove Build Output Channels
      */
-    REMOVE_OUTPUT_CHANNELS: 'ibm-streams.removeOutputChannels'
+    REMOVE_OUTPUT_CHANNELS: 'ibm-streams.removeOutputChannels',
+    /**
+     * Show SPL Application Set Webview Panel (internal)
+     */
+    SHOW_SPL_APPLICATION_SET_WEBVIEW_PANEL: 'ibm-streams.showCreateSplApplicationSetWebviewPanel'
 };
 
 /**
@@ -25,6 +45,10 @@ export const BUILD = {
      */
     APP_SUBMIT: 'ibm-streams.build.appSubmit',
     /**
+     * Build Edge Application Image
+     */
+    APP_IMAGE: 'ibm-streams.build.appEdgeAnalyticsImage',
+    /**
      * Build
      */
     MAKE_DOWNLOAD: 'ibm-streams.build.makeDownload',
@@ -33,9 +57,21 @@ export const BUILD = {
      */
     MAKE_SUBMIT: 'ibm-streams.build.makeSubmit',
     /**
+     * Build Edge Application Image
+     */
+    MAKE_IMAGE: 'ibm-streams.build.makeEdgeAnalyticsImage',
+    /**
      * Submit Job
      */
     SUBMIT: 'ibm-streams.build.submit',
+    /**
+     * Build Edge Application Image
+     */
+    IMAGE: 'ibm-streams.build.edgeAnalyticsImage',
+    /**
+     * Configure an Image Build (internal)
+     */
+    CONFIGURE_IMAGE_BUILD: 'ibm-streams.build.configureImageBuild',
     /**
      * Configure a Job Submission (internal)
      */
@@ -89,7 +125,15 @@ export const ENVIRONMENT = {
     /**
      * Refresh IBM Streams Toolkits
      */
-    TOOLKITS_REFRESH: 'ibm-streams.environment.toolkits.refresh'
+    TOOLKITS_REFRESH: 'ibm-streams.environment.toolkits.refresh',
+    /**
+     * Add Toolkit to Streams Build Service
+     */
+    ADD_TOOLKIT_TO_BUILD_SERVICE: 'ibm-streams.environment.addToolkitToBuildService',
+    /**
+     * Remove Toolkits from Streams Build Service
+     */
+    REMOVE_TOOLKITS_FROM_BUILD_SERVICE: 'ibm-streams.environment.removeToolkitsFromBuildService'
 };
 
 /**
@@ -155,6 +199,16 @@ export const VIEW = {
                  * Cancel Job
                  */
                 CANCEL_JOB: 'ibm-streams.view.streamsExplorer.streamsInstances.job.cancel'
+            },
+            BASE_IMAGE: {
+                /**
+                 * Build Edge Application Image
+                 */
+                BUILD_IMAGE: 'ibm-streams.view.streamsExplorer.streamsInstances.baseImage.buildImage',
+                /**
+                 * Copy ID
+                 */
+                COPY_ID: 'ibm-streams.view.streamsExplorer.streamsInstances.baseImage.copyId'
             }
         },
         STREAMS_DETAILS: {
@@ -175,7 +229,23 @@ export const VIEW = {
             /**
              * Edit Local Toolkits
              */
-            EDIT_LOCAL_TOOLKITS: 'ibm-streams.view.streamsExplorer.streamsToolkits.editLocalToolkits'
+            EDIT_LOCAL_TOOLKITS: 'ibm-streams.view.streamsExplorer.streamsToolkits.editLocalToolkits',
+            /**
+             * Add Toolkit Path
+             */
+            ADD_TOOLKIT_PATH: 'ibm-streams.view.streamsExplorer.streamsToolkits.addToolkitPath',
+            /**
+             * Remove Toolkit Paths
+             */
+            REMOVE_TOOLKIT_PATHS: 'ibm-streams.view.streamsExplorer.streamsToolkits.removeToolkitPaths',
+            /**
+             * Open Toolkit
+             */
+            OPEN_TOOLKIT: 'ibm-streams.view.streamsExplorer.streamsToolkits.openToolkit',
+            /**
+             * View Toolkit
+             */
+            VIEW_TOOLKIT: 'ibm-streams.view.streamsExplorer.streamsToolkits.viewToolkit'
         }
     }
 };

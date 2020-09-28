@@ -1,5 +1,6 @@
 import {
     Build,
+    BuildImage,
     Editor,
     EditorAction,
     EditorSelector,
@@ -24,7 +25,6 @@ import * as path from 'path';
 import {
     commands,
     ConfigurationChangeEvent,
-    env,
     ExtensionContext,
     Uri,
     window,
@@ -38,6 +38,7 @@ import SplLanguageClient from '../languageClient';
 import { getStreamsExplorer } from '../views';
 import { Streams, StreamsInstance } from '../streams';
 import {
+    ActionType,
     Authentication,
     BuiltInCommands,
     Configuration,
@@ -47,7 +48,8 @@ import {
     LANGUAGE_SPL,
     Logger,
     Settings,
-    TOOLKITS_CACHE_DIR
+    TOOLKITS_CACHE_DIR,
+    VSCode
 } from '../utils';
 import LintHandler from './LintHandler';
 import MessageHandler from './MessageHandler';
@@ -87,19 +89,241 @@ export default class StreamsBuild {
     }
 
     /**
+     * Add a toolkit to the Streams build service
+     * @param selectedPath    The selected path
+     */
+    public static async addToolkitToBuildService(selectedPath: string): Promise<void> {
+        const messageHandler = Registry.getDefaultMessageHandler();
+        messageHandler.handleInfo('Received request to add a toolkit to the build service.', { showNotification: false });
+
+        // Check for default instance
+        if (!Streams.getInstances().length) {
+            const notificationButtons = [{
+                label: 'Add Instance',
+                callbackFn: () => {
+                    const queuedActionId = generateRandomId('queuedAction');
+                    store.dispatch(EditorAction.addQueuedAction({
+                        id: queuedActionId,
+                        action: Editor.executeCallbackFn(() => this.addToolkitToBuildService(selectedPath))
+                    }));
+                    StreamsInstance.authenticate(null, false, queuedActionId);
+                }
+            }];
+            const message = 'There are no Streams instances available. Add an instance to continue with adding a toolkit.';
+            messageHandler.handleInfo(message, { notificationButtons });
+        } else if (!Streams.getDefaultInstanceEnv()) {
+            window.showWarningMessage(
+                `A default Streams instance has not been set.`,
+                'Set Default'
+            ).then((selection: string) => {
+                if (selection) {
+                    window.showQuickPick(Streams.getQuickPickItems(Streams.getInstances()), {
+                        canPickMany: false,
+                        ignoreFocusOut: true,
+                        placeHolder: 'Select a Streams instance to set as the default'
+                    }).then(async (item: any): Promise<void> => {
+                        if (item) {
+                            StreamsInstance.setDefaultInstance(item);
+                            return this.addToolkitToBuildService(selectedPath);
+                        }
+                    });
+                }
+                return null;
+            });
+        } else {
+            let defaultUri;
+            if (selectedPath) {
+                defaultUri = fs.lstatSync(selectedPath).isDirectory()
+                    ? Uri.file(selectedPath)
+                    : Uri.file(path.dirname(selectedPath));
+            }
+            const selected = await window.showOpenDialog({
+                canSelectFiles: false,
+                canSelectFolders: true,
+                canSelectMany: false,
+                ...(defaultUri && { defaultUri }),
+                openLabel: 'Set as toolkit folder'
+            });
+            const toolkitFolderUri = selected && selected.length ? selected[0] : null;
+            if (toolkitFolderUri) {
+                const toolkitFolderPath = toolkitFolderUri.path;
+                messageHandler.handleInfo(`Selected: ${toolkitFolderPath}`, { showNotification: false });
+                const defaultInstance = Streams.checkDefaultInstance();
+                if (!defaultInstance) {
+                    return;
+                }
+                this.runAddToolkitToBuildService(defaultInstance, toolkitFolderPath);
+            }
+        }
+    }
+
+    /**
+     * Handle adding a toolkit to the Streams build service
+     * @param targetInstance       The target Streams instance
+     * @param toolkitFolderPath    The toolkit folder path
+     */
+    public static async runAddToolkitToBuildService(targetInstance: any, toolkitFolderPath: string): Promise<void> {
+        const addToolkitToBuildService = (): void => {
+            if (targetInstance) {
+                const startAddAction = Build.addToolkitToBuildService({
+                    folderPath: toolkitFolderPath,
+                    targetInstance
+                });
+                if (!Authentication.isAuthenticated(targetInstance)) {
+                    const queuedActionId = generateRandomId('queuedAction');
+                    store.dispatch(EditorAction.addQueuedAction({
+                        id: queuedActionId,
+                        action: Editor.executeCallbackFn(addToolkitToBuildService)
+                    }));
+                    StreamsInstance.authenticate(targetInstance, false, queuedActionId);
+                } else {
+                    store.dispatch(startAddAction)
+                        .then(async () => {
+                            // Refresh the toolkits
+                            setTimeout(async () => {
+                                await ToolkitUtils.refreshToolkits(targetInstance.connectionId);
+                                getStreamsExplorer().refreshToolkitsView();
+                            }, 10000);
+                        })
+                        .catch((err) => {
+                            const instanceName = InstanceSelector.selectInstanceName(store.getState(), targetInstance.connectionId);
+                            const errorMsg = `Failed to add the toolkit in the ${toolkitFolderPath} folder to the build service using the Streams instance ${instanceName}.`;
+                            this.handleError(err, Registry.getDefaultMessageHandler(), errorMsg);
+                        });
+                }
+            }
+        }
+        addToolkitToBuildService();
+    }
+
+    /**
+     * Remove a toolkit from the Streams build service
+     * @param selectedPath    The selected path
+     */
+    public static async removeToolkitsFromBuildService(): Promise<void> {
+        const messageHandler = Registry.getDefaultMessageHandler();
+        messageHandler.handleInfo('Received request to remove toolkit(s) from the Streams build service.', { showNotification: false });
+
+        // Check for default instance
+        if (!Streams.getInstances().length) {
+            const notificationButtons = [{
+                label: 'Add Instance',
+                callbackFn: () => {
+                    const queuedActionId = generateRandomId('queuedAction');
+                    store.dispatch(EditorAction.addQueuedAction({
+                        id: queuedActionId,
+                        action: Editor.executeCallbackFn(() => this.removeToolkitsFromBuildService())
+                    }));
+                    StreamsInstance.authenticate(null, false, queuedActionId);
+                }
+            }];
+            const message = 'There are no Streams instances available. Add an instance to continue with removing a toolkit.';
+            messageHandler.handleInfo(message, { notificationButtons });
+        } else if (!Streams.getDefaultInstanceEnv()) {
+            window.showWarningMessage(
+                `A default Streams instance has not been set.`,
+                'Set Default'
+            ).then((selection: string) => {
+                if (selection) {
+                    window.showQuickPick(Streams.getQuickPickItems(Streams.getInstances()), {
+                        canPickMany: false,
+                        ignoreFocusOut: true,
+                        placeHolder: 'Select a Streams instance to set as the default'
+                    }).then(async (item: any): Promise<void> => {
+                        if (item) {
+                            StreamsInstance.setDefaultInstance(item);
+                            return this.removeToolkitsFromBuildService();
+                        }
+                    });
+                }
+                return null;
+            });
+        } else {
+            const defaultInstance = Streams.checkDefaultInstance();
+            if (!defaultInstance) {
+                return;
+            }
+            this.runRemoveToolkitsFromBuildService(defaultInstance);
+        }
+    }
+
+    /**
+     * Handle removing a toolkit from the Streams build service
+     * @param targetInstance    The target Streams instance
+     */
+    public static async runRemoveToolkitsFromBuildService(targetInstance: any): Promise<void> {
+        const removeToolkitsFromBuildService = (): void => {
+            if (targetInstance) {
+                if (!Authentication.isAuthenticated(targetInstance)) {
+                    const queuedActionId = generateRandomId('queuedAction');
+                    store.dispatch(EditorAction.addQueuedAction({
+                        id: queuedActionId,
+                        action: Editor.executeCallbackFn(removeToolkitsFromBuildService)
+                    }));
+                    StreamsInstance.authenticate(targetInstance, false, queuedActionId);
+                } else {
+                    const instanceName = InstanceSelector.selectInstanceName(store.getState(), targetInstance.connectionId);
+                    const toolkits = InstanceSelector.selectBuildServiceToolkits(store.getState(), targetInstance.connectionId);
+                    const userToolkitItems = toolkits
+                        .filter((toolkit) => toolkit.id.startsWith('streams-toolkits/'))
+                        .map((toolkit) => ({
+                            label: toolkit.name,
+                            description: toolkit.version,
+                            toolkit
+                        }));
+                    if (userToolkitItems.length > 0) {
+                        window.showQuickPick(userToolkitItems, {
+                            canPickMany: true,
+                            ignoreFocusOut: true,
+                            placeHolder: 'Select one or more Streams build service toolkits to remove'
+                        }).then(async (items: Array<any>): Promise<void> => {
+                            if (items) {
+                                const toolkits = items.map((item) => item.toolkit);
+                                const startRemoveAction = Build.removeToolkitsFromBuildService({
+                                    removedToolkits: toolkits,
+                                    targetInstance
+                                });
+                                store.dispatch(startRemoveAction)
+                                    .then(async () => {
+                                        // Refresh the toolkits
+                                        setTimeout(async () => {
+                                            await ToolkitUtils.refreshToolkits(targetInstance.connectionId);
+                                            getStreamsExplorer().refreshToolkitsView();
+                                        }, 10000);
+                                    })
+                                    .catch((err) => {
+                                        const instanceName = InstanceSelector.selectInstanceName(store.getState(), targetInstance.connectionId);
+                                        const errorMsg = `Failed to remove the toolkit(s) from the build service using the Streams instance ${instanceName}.`;
+                                        this.handleError(err, Registry.getDefaultMessageHandler(), errorMsg);
+                                    });
+                            }
+                        });
+                    } else {
+                        this._defaultMessageHandler.handleInfo(`There are no build service toolkits available to remove from the Streams instance ${instanceName}.`);
+                    }
+                }
+            }
+        }
+        removeToolkitsFromBuildService();
+    }
+
+    /**
      * Perform a build of an SPL file and either download the bundle or submit the application
      * @param filePath    The path to the SPL file
      * @param action      The post-build action to take
      */
     public static async buildApp(filePath: string, action: PostBuildAction): Promise<void> {
         await this.checkIfDirty();
-        const defaultInstance = Streams.checkDefaultInstance();
+        Streams.checkDefaultInstance();
         if (filePath) {
             const filePaths = [filePath];
-            const zeroInstancesCallbackFn = (): void => { this.runBuildApp(Streams.getDefaultInstance(), filePaths, action); };
-            const oneInstanceCallbackFn = (): void => { this.runBuildApp(defaultInstance, filePaths, action); };
-            const multipleInstancesCallbackFn = (): void => { this.showInstancePanel('build', filePaths, action); }
-            this.handleAction('build', zeroInstancesCallbackFn, oneInstanceCallbackFn, multipleInstancesCallbackFn);
+            const zeroOrOneInstancesCallbackFn = this.getZeroOrOneInstancesCallbackFn(
+                action,
+                (instance: any) => { this.runBuildApp(instance, filePaths, action); },
+                () => { this.buildApp(filePath, action); }
+            );
+            const multipleInstancesCallbackFn = (): void => { this.showInstancePanel(ActionType.BuildApp, filePaths, action); }
+            this.handleAction(ActionType.BuildApp, action, zeroOrOneInstancesCallbackFn, multipleInstancesCallbackFn);
         } else {
             this._defaultMessageHandler.handleError('The build failed. Unable to retrieve the application file path.');
         }
@@ -135,9 +359,21 @@ export default class StreamsBuild {
                         { showNotification: false }
                     );
                     store.dispatch(startBuildAction)
-                        .then(() => {
+                        .then((buildResults) => {
                             if (action === PostBuildAction.Submit) {
                                 setTimeout(() => StreamsInstance.refreshInstances(), 2000);
+                                return;
+                            }
+                            if (action === PostBuildAction.BuildImage && buildResults && buildResults.length) {
+                                buildResults.forEach(({ bundlePath, artifact }: { bundlePath: string, artifact: any }) => {
+                                    const newMessageHandler = bundlePath ? Registry.getMessageHandler(bundlePath) : messageHandler;
+                                    if (artifact) {
+                                        newMessageHandler.handleInfo(
+                                            'Image details:',
+                                            { detail: JSON.stringify(artifact, null, 2), showNotification: false }
+                                        );
+                                    }
+                                });
                             }
                         })
                         .catch((err) => {
@@ -149,7 +385,13 @@ export default class StreamsBuild {
                                 errorMsg = err.message;
                             } else {
                                 const instanceName = InstanceSelector.selectInstanceName(store.getState(), targetInstance.connectionId);
-                                errorMsg = `Failed to build${action === PostBuildAction.Submit ? ' and submit' : ''} the application ${compositeToBuild} using the Streams instance ${instanceName}.`;
+                                let type = '';
+                                if (action === PostBuildAction.Submit) {
+                                    type = ' and submit';
+                                } else if (action === PostBuildAction.BuildImage) {
+                                    type = ' an image for';
+                                }
+                                errorMsg = `Failed to build${type} the application ${compositeToBuild} using the Streams instance ${instanceName}.`;
                             }
                             this.handleError(err, messageHandler, errorMsg);
                         });
@@ -166,13 +408,16 @@ export default class StreamsBuild {
      */
     public static async buildMake(filePath: string, action: PostBuildAction): Promise<void> {
         await this.checkIfDirty();
-        const defaultInstance = Streams.checkDefaultInstance();
+        Streams.checkDefaultInstance();
         if (filePath) {
             const filePaths = [filePath];
-            const zeroInstancesCallbackFn = (): void => { this.runBuildMake(Streams.getDefaultInstance(), filePaths, action); };
-            const oneInstanceCallbackFn = (): void => { this.runBuildMake(defaultInstance, filePaths, action); };
-            const multipleInstancesCallbackFn = (): void => { this.showInstancePanel('build-make', filePaths, action); }
-            this.handleAction('build', zeroInstancesCallbackFn, oneInstanceCallbackFn, multipleInstancesCallbackFn);
+            const zeroOrOneInstancesCallbackFn = this.getZeroOrOneInstancesCallbackFn(
+                action,
+                (instance: any) => { this.runBuildMake(instance, filePaths, action); },
+                () => { this.buildMake(filePath, action); }
+            );
+            const multipleInstancesCallbackFn = (): void => { this.showInstancePanel(ActionType.BuildMake, filePaths, action); }
+            this.handleAction(ActionType.BuildMake, action, zeroOrOneInstancesCallbackFn, multipleInstancesCallbackFn);
         } else {
             this._defaultMessageHandler.handleError('The build failed. Unable to retrieve the Makefile file path.');
         }
@@ -208,9 +453,21 @@ export default class StreamsBuild {
                         { showNotification: false }
                     );
                     store.dispatch(startBuildAction)
-                        .then(() => {
+                        .then((buildResults) => {
                             if (action === PostBuildAction.Submit) {
                                 setTimeout(() => StreamsInstance.refreshInstances(), 2000);
+                                return;
+                            }
+                            if (action === PostBuildAction.BuildImage && buildResults && buildResults.length) {
+                                buildResults.forEach(({ bundlePath, artifact }: { bundlePath: string, artifact: any }) => {
+                                    const newMessageHandler = bundlePath ? Registry.getMessageHandler(bundlePath) : messageHandler;
+                                    if (artifact) {
+                                        newMessageHandler.handleInfo(
+                                            'Image details:',
+                                            { detail: JSON.stringify(artifact, null, 2), showNotification: false }
+                                        );
+                                    }
+                                });
                             }
                         })
                         .catch((err) => {
@@ -223,7 +480,13 @@ export default class StreamsBuild {
                             } else {
                                 const identifier = `${path.basename(appRoot)}${path.sep}${path.relative(appRoot, filePaths[0])}`;
                                 const instanceName = InstanceSelector.selectInstanceName(store.getState(), targetInstance.connectionId);
-                                errorMsg = `Failed to build${action === PostBuildAction.Submit ? ' and submit' : ''} the application(s) in ${identifier} using the Streams instance ${instanceName}.`;
+                                let type = '';
+                                if (action === PostBuildAction.Submit) {
+                                    type = ' and submit';
+                                } else if (action === PostBuildAction.BuildImage) {
+                                    type = ' an image for';
+                                }
+                                errorMsg = `Failed to build${type} the application(s) in ${identifier} using the Streams instance ${instanceName}.`;
                             }
                             this.handleError(err, messageHandler, errorMsg);
                         });
@@ -239,18 +502,21 @@ export default class StreamsBuild {
      */
     public static async submit(filePaths: string[]): Promise<void> {
         if (filePaths) {
-            const defaultInstance = Streams.checkDefaultInstance();
+            Streams.checkDefaultInstance();
             const bundleFilePaths = this.initSubmit(filePaths);
             if (!bundleFilePaths.length) {
                 this._defaultMessageHandler.handleInfo('There are no Streams application bundles to submit.');
                 return;
             }
-            const zeroInstancesCallbackFn = (): void => { this.runSubmit(Streams.getDefaultInstance(), bundleFilePaths); };
-            const oneInstanceCallbackFn = (): void => { this.runSubmit(defaultInstance, bundleFilePaths); };
-            const multipleInstancesCallbackFn = (): void => { this.showInstancePanel('submit', bundleFilePaths, null); }
-            this.handleAction('submission(s)', zeroInstancesCallbackFn, oneInstanceCallbackFn, multipleInstancesCallbackFn);
+            const zeroOrOneInstancesCallbackFn = this.getZeroOrOneInstancesCallbackFn(
+                null,
+                (instance: any) => { this.runSubmit(instance, bundleFilePaths); },
+                () => { this.submit(filePaths); }
+            );
+            const multipleInstancesCallbackFn = (): void => { this.showInstancePanel(ActionType.Submit, bundleFilePaths, null); }
+            this.handleAction(ActionType.Submit, null, zeroOrOneInstancesCallbackFn, multipleInstancesCallbackFn);
         } else {
-            this._defaultMessageHandler.handleError('The submission failed. Unable to retrieve the application bundle file paths.');
+            this._defaultMessageHandler.handleError('The submission(s) failed. Unable to retrieve the application bundle file paths.');
         }
     }
 
@@ -271,24 +537,37 @@ export default class StreamsBuild {
                     }));
                     StreamsInstance.authenticate(targetInstance, false, queuedActionId);
                 } else {
-                    this._defaultMessageHandler.handleInfo(
-                        `Selected Streams instance: ${InstanceSelector.selectInstanceName(store.getState(), targetInstance.connectionId)}.`,
-                        { showNotification: false }
-                    );
+                    bundleFilePaths.forEach((bundleFilePath) => {
+                        const messageHandler = Registry.getMessageHandler(bundleFilePath);
+                        if (messageHandler) {
+                            messageHandler.handleInfo(
+                                `Selected Streams instance: ${InstanceSelector.selectInstanceName(store.getState(), targetInstance.connectionId)}.`,
+                                { showNotification: false }
+                            );
+                        }
+                    });
                     store.dispatch(startSubmitJobAction)
                         .then(() => {
                             setTimeout(() => StreamsInstance.refreshInstances(), 2000);
                         })
                         .catch((err) => {
                             setTimeout(() => StreamsInstance.refreshInstances(), 2000);
-                            let errorMsg: string;
-                            if (err && err.message && err.message.startsWith('Failed to submit')) {
-                                errorMsg = err.message;
-                            } else {
-                                const instanceName = InstanceSelector.selectInstanceName(store.getState(), targetInstance.connectionId);
-                                errorMsg = `Failed to submit the applications to the Streams instance ${instanceName}.`;
-                            }
-                            this.handleError(err, this._defaultMessageHandler, errorMsg);
+                            const getErrorMsg = (bundleFilePath: string): string => {
+                                let errorMsg: string;
+                                if (err && err.message && err.message.startsWith('Failed to submit')) {
+                                    errorMsg = err.message;
+                                } else {
+                                    const instanceName = InstanceSelector.selectInstanceName(store.getState(), targetInstance.connectionId);
+                                    errorMsg = `Failed to submit the application ${path.basename(bundleFilePath)} to the Streams instance ${instanceName}.`;
+                                }
+                                return errorMsg;
+                            };
+                            bundleFilePaths.forEach((bundleFilePath) => {
+                                const messageHandler = Registry.getMessageHandler(bundleFilePath);
+                                if (messageHandler) {
+                                    this.handleError(err, messageHandler, getErrorMsg(bundleFilePath));
+                                }
+                            });
                         });
                 }
             }
@@ -297,12 +576,109 @@ export default class StreamsBuild {
     }
 
     /**
-     * Get display path for builds
-     * @param appRoot     The application root path
-     * @param filePath    The path to the SPL file or Makefile
+     * Perform build(s) of edge application image(s)
+     * @param filePaths    The paths to the application bundle(s)
      */
-    public static getDisplayPath(appRoot: string, filePath: string): string {
-        return `${path.basename(appRoot)}${path.sep}${path.relative(appRoot, filePath)}`;
+    public static async buildImage(filePaths: string[]): Promise<void> {
+        if (filePaths) {
+            const bundleFilePaths = this.initBuildImage(filePaths);
+            if (!bundleFilePaths.length) {
+                this._defaultMessageHandler.handleInfo('There are no Streams application bundles to build.');
+                return;
+            }
+            const zeroOrOneInstancesCallbackFn = this.getZeroOrOneInstancesCallbackFn(
+                ActionType.BuildImage,
+                (instance: any) => { this.runBuildImage(instance, bundleFilePaths, null); },
+                () => { this.buildImage(filePaths); }
+            );
+            const multipleInstancesCallbackFn = (): void => { this.showInstancePanel(ActionType.BuildImage, bundleFilePaths, null); }
+            this.handleAction(ActionType.BuildImage, null, zeroOrOneInstancesCallbackFn, multipleInstancesCallbackFn);
+        } else {
+            this._defaultMessageHandler.handleError('The build(s) failed. Unable to retrieve the application bundle file paths.');
+        }
+    }
+
+    /**
+     * Handle building of an edge application image
+     * @param targetInstance    The target Streams instance
+     * @param filePaths         The selected file paths
+     * @param baseImage         The base image
+     */
+    public static runBuildImage(targetInstance: any, bundleFilePaths: string[], baseImage = null): void {
+        const buildImage = (): void => {
+            if (targetInstance) {
+                const startSubmitJobAction = BuildImage.startBuildImageFromApplicationBundles(bundleFilePaths, null, baseImage, targetInstance);
+                if (!Authentication.isAuthenticated(targetInstance)) {
+                    const queuedActionId = generateRandomId('queuedAction');
+                    store.dispatch(EditorAction.addQueuedAction({
+                        id: queuedActionId,
+                        action: Editor.executeCallbackFn(buildImage)
+                    }));
+                    StreamsInstance.authenticate(targetInstance, false, queuedActionId);
+                } else {
+                    bundleFilePaths.forEach((bundleFilePath) => {
+                        const messageHandler = Registry.getMessageHandler(bundleFilePath);
+                        if (messageHandler) {
+                            messageHandler.handleInfo(
+                                `Selected Streams instance: ${InstanceSelector.selectInstanceName(store.getState(), targetInstance.connectionId)}.`,
+                                { showNotification: false }
+                            );
+                        }
+                    });
+                    store.dispatch(startSubmitJobAction)
+                        .then((buildResults) => {
+                            if (buildResults && buildResults.length) {
+                                buildResults.forEach(({ bundlePath, artifact }: { bundlePath: string, artifact: any }) => {
+                                    const messageHandler = Registry.getMessageHandler(bundlePath);
+                                    if (messageHandler && artifact) {
+                                        messageHandler.handleInfo(
+                                            'Image details:',
+                                            { detail: JSON.stringify(artifact, null, 2), showNotification: false }
+                                        );
+                                    }
+                                });
+                            }
+                        })
+                        .catch((err) => {
+                            const getErrorMsg = (bundleFilePath: string): string => {
+                                let errorMsg: string;
+                                if (err && err.message && err.message.startsWith('Failed to build an image')) {
+                                    errorMsg = err.message;
+                                } else {
+                                    const instanceName = InstanceSelector.selectInstanceName(store.getState(), targetInstance.connectionId);
+                                    errorMsg = `Failed to build an image for the application ${path.basename(bundleFilePath)} using the Streams instance ${instanceName}.`;
+                                }
+                                return errorMsg;
+                            };
+                            bundleFilePaths.forEach((bundleFilePath) => {
+                                const messageHandler = Registry.getMessageHandler(bundleFilePath);
+                                if (messageHandler) {
+                                    this.handleError(err, messageHandler, getErrorMsg(bundleFilePath));
+                                }
+                            });
+                        });
+                }
+            }
+        }
+        buildImage();
+    }
+
+
+    /**
+     * Get display path for builds
+     * @param appRoot           The application root path
+     * @param filePath          The path to the SPL file or Makefile
+     * @param bundleFilePath    The path to the application bundle file
+     */
+    public static getDisplayPath(appRoot: string, filePath: string, bundleFilePath: string): string {
+        if (appRoot && filePath) {
+            return `${path.basename(appRoot)}${path.sep}${path.relative(appRoot, filePath)}`;
+        }
+        if (bundleFilePath) {
+            const displayPath = this.getFilePathRelativeToWorkspaceFolder(bundleFilePath);
+            return displayPath;
+        }
+        return null;
     }
 
     /**
@@ -468,7 +844,7 @@ export default class StreamsBuild {
         this._sendLspNotificationHandler = (param: object) => SplLanguageClient.getClient().sendNotification(DidChangeConfigurationNotification.type.method, param);
         Registry.setSendLspNotificationHandler(this._sendLspNotificationHandler);
 
-        const copyToClipboardHandler = (text: string): Thenable<void> => env.clipboard.writeText(text);
+        const copyToClipboardHandler = (text: string): Thenable<void> => VSCode.copyToClipboard(text);
         Registry.setCopyToClipboardHandler(copyToClipboardHandler);
 
         const showJobGraphHandler = (properties: object): Thenable<void> => commands.executeCommand(Commands.ENVIRONMENT.SHOW_JOB_GRAPH, properties);
@@ -476,6 +852,9 @@ export default class StreamsBuild {
 
         const showJobSubmitDialogHandler = (opts: object): Thenable<void> => commands.executeCommand(Commands.BUILD.CONFIGURE_JOB_SUBMISSION, opts);
         Registry.setShowJobSubmitHandler(showJobSubmitDialogHandler);
+
+        const showImageBuildHandler = (opts: object): Thenable<void> => commands.executeCommand(Commands.BUILD.CONFIGURE_IMAGE_BUILD, opts);
+        Registry.setShowImageBuildHandler(showImageBuildHandler);
     }
 
     /**
@@ -609,14 +988,44 @@ export default class StreamsBuild {
     }
 
     /**
-     * Handle build/submit action based on number of instances
-     * @param type                           the action type
-     * @param zeroInstancesCallbackFn        function to execute when there are no instances
-     * @param oneInstanceCallbackFn          function to execute when there is one instance
-     * @param multipleInstancesCallbackFn    function to execute when there are multiple instances
+     * Get zero or one instances callback function
+     * @param action                            The post-build action to take
+     * @param instanceExistsCallbackFn          The callback function to execute if the instance exists
+     * @param instanceDoesNotExistCallbackFn    The callback function to execute if the instance does not exist
      */
-    private static handleAction(type: string, zeroInstancesCallbackFn: Function, oneInstanceCallbackFn: Function, multipleInstancesCallbackFn: Function): void {
-        const storedInstances = Streams.getInstances();
+    private static getZeroOrOneInstancesCallbackFn(
+        action: PostBuildAction | ActionType,
+        instanceExistsCallbackFn: Function,
+        instanceDoesNotExistCallbackFn: Function
+    ): Function {
+        return (): void => {
+            let instance = null;
+            if (action === PostBuildAction.BuildImage || action === ActionType.BuildImage) {
+                const instancesWithImageBuildEnabled = Streams.getInstancesWithImageBuildEnabled();
+                if (instancesWithImageBuildEnabled && instancesWithImageBuildEnabled.length) {
+                    [instance] = instancesWithImageBuildEnabled;
+                }
+            } else {
+                instance = Streams.getDefaultInstance();
+            }
+            if (instance) {
+                instanceExistsCallbackFn(instance);
+            } else {
+                instanceDoesNotExistCallbackFn();
+            }
+        };
+    }
+
+    /**
+     * Handle build/submit action based on number of instances
+     * @param action                          The action
+     * @param postBuildAction                 The post-build action
+     * @param zeroOrOneInstancesCallbackFn    Function to execute when there are no or one instances
+     * @param multipleInstancesCallbackFn     Function to execute when there are multiple instances
+     */
+    private static handleAction(action: ActionType, postBuildAction: PostBuildAction, zeroOrOneInstancesCallbackFn: Function, multipleInstancesCallbackFn: Function): void {
+        const isPerformingImageBuild = action === ActionType.BuildImage || postBuildAction === PostBuildAction.BuildImage;
+        const storedInstances = isPerformingImageBuild ? Streams.getInstancesWithImageBuildEnabled() : Streams.getInstances();
         if (!storedInstances.length) {
             const notificationButtons = [{
                 label: 'Add Instance',
@@ -624,14 +1033,25 @@ export default class StreamsBuild {
                     const queuedActionId = generateRandomId('queuedAction');
                     store.dispatch(EditorAction.addQueuedAction({
                         id: queuedActionId,
-                        action: Editor.executeCallbackFn(zeroInstancesCallbackFn)
+                        action: Editor.executeCallbackFn(zeroOrOneInstancesCallbackFn)
                     }));
                     StreamsInstance.authenticate(null, false, queuedActionId);
                 }
             }];
-            this._defaultMessageHandler.handleInfo(`There are no Streams instances available. Add an instance to continue with the ${type}.`, { notificationButtons });
+            let actionLabel = '';
+            if (isPerformingImageBuild) {
+                actionLabel = 'edge application image build(s)'
+            } else if (action === ActionType.BuildApp || action === ActionType.BuildMake) {
+                actionLabel = 'build';
+            } else if (action === ActionType.Submit) {
+                actionLabel = 'submission(s)';
+            }
+            const message =  isPerformingImageBuild
+                ? `There are no Streams instances available that support edge application image builds. Add a supported instance to continue with the ${actionLabel}.`
+                : `There are no Streams instances available. Add an instance to continue with the ${actionLabel}.`;
+            this._defaultMessageHandler.handleInfo(message, { notificationButtons });
         } else if (storedInstances.length === 1) {
-            oneInstanceCallbackFn();
+            zeroOrOneInstancesCallbackFn();
         } else {
             multipleInstancesCallbackFn();
         }
@@ -679,7 +1099,7 @@ export default class StreamsBuild {
             Registry.addMessageHandler(messageHandlerId, messageHandler);
         }
 
-        const displayPath = this.getDisplayPath(appRoot, filePath);
+        const displayPath = this.getDisplayPath(appRoot, filePath, null);
         Logger.registerOutputChannel(filePath, displayPath);
 
         let statusMessage: string;
@@ -704,9 +1124,47 @@ export default class StreamsBuild {
     private static initSubmit(filePaths: string[]): string[] {
         const bundleFilePaths = filePaths.filter((filePath: string) => filePath.toLowerCase().endsWith('.sab'));
 
-        const statusMessage = `Received request to submit application bundle${bundleFilePaths.length > 1 ? 's.' : '.'}`;
-        this._defaultMessageHandler.handleInfo(statusMessage, { showNotification: false });
-        this._defaultMessageHandler.handleInfo(`Selected:\n${bundleFilePaths.join('\n')}`, { showNotification: false });
+        bundleFilePaths.forEach((bundleFilePath) => {
+            const messageHandlerId = bundleFilePath;
+            let messageHandler = Registry.getMessageHandler(messageHandlerId);
+            if (!messageHandler) {
+                messageHandler = new MessageHandler({ bundleFilePath });
+                Registry.addMessageHandler(messageHandlerId, messageHandler);
+            }
+
+            const displayPath = this.getDisplayPath(null, null, bundleFilePath);
+            Logger.registerOutputChannel(bundleFilePath, displayPath);
+
+            const statusMessage = 'Received request to submit an application bundle.';
+            messageHandler.handleInfo(statusMessage, { showNotification: false });
+            messageHandler.handleInfo(`Selected: ${bundleFilePath}`, { showNotification: false });
+        });
+
+        return bundleFilePaths;
+    }
+
+    /**
+     * Initialize a Streams edge application image build
+     * @param filePaths    The paths to the application bundle(s)
+     */
+    private static initBuildImage(filePaths: string[]): string[] {
+        const bundleFilePaths = filePaths.filter((filePath: string) => filePath.toLowerCase().endsWith('.sab'));
+
+        bundleFilePaths.forEach((bundleFilePath) => {
+            const messageHandlerId = bundleFilePath;
+            let messageHandler = Registry.getMessageHandler(messageHandlerId);
+            if (!messageHandler) {
+                messageHandler = new MessageHandler({ bundleFilePath });
+                Registry.addMessageHandler(messageHandlerId, messageHandler);
+            }
+
+            const displayPath = this.getDisplayPath(null, null, bundleFilePath);
+            Logger.registerOutputChannel(bundleFilePath, displayPath);
+
+            const statusMessage = 'Received request to build an edge application image using an application bundle.';
+            messageHandler.handleInfo(statusMessage, { showNotification: false });
+            messageHandler.handleInfo(`Selected: ${bundleFilePath}`, { showNotification: false });
+        });
 
         return bundleFilePaths;
     }

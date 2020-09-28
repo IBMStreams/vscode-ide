@@ -1,12 +1,12 @@
 import * as path from 'path';
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
-import { InfoTreeItem, JobTreeItem } from '.';
+import { InfoTreeItem, JobTreeItem, TreeItemType } from '.';
 
 /**
  * Tree item that represents a Streams job group
  */
 export default class JobGroupTreeItem extends TreeItem {
-    public type = 'jobGroup';
+    public type = TreeItemType.JobGroup;
 
     constructor(
         private _extensionPath: string,
