@@ -9,7 +9,8 @@ import MainContainer from './MainContainer';
  */
 const App = () => {
   const { panelTitle } = params;
-  const helpUrl = 'https://github.com/IBMStreams/vscode-ide/wiki/Working-with-SPL-application-sets';
+  const helpUrl =
+    'https://ibmstreams.github.io/vscode-ide/docs/spl-application-sets/';
 
   return (
     <div className="app-container">

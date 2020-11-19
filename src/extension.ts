@@ -9,23 +9,23 @@ import { initialize as initWebviews } from './webviews';
 
 /**
  * Called when the extension is activated
- * @param context    The extension context
+ * @param context the extension context
  */
 export async function activate(context: ExtensionContext): Promise<void> {
-    initUtils(context);
-    initCommands(context);
-    initTreeViews(context);
-    initWebviews(context);
-    Streams.initialize(context);
-    await StreamsBuild.configure(context);
-    Streams.setDefaultInstanceEnvContext();
+  initUtils(context);
+  initCommands(context);
+  initTreeViews(context);
+  initWebviews(context);
+  Streams.initialize(context);
+  await StreamsBuild.configure(context);
+  Streams.setDefaultInstanceEnvContext();
 
-    await SplLanguageClient.initialize(context);
+  await SplLanguageClient.initialize(context);
 }
 
 /**
  * Called when the extension is deactivated
  */
 export function deactivate(): Thenable<void> {
-    return SplLanguageClient.cleanUp();
+  return SplLanguageClient.cleanUp();
 }

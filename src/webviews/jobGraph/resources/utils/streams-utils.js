@@ -1,3 +1,4 @@
+/* eslint-disable consistent-return */
 import _cloneDeep from 'lodash/cloneDeep';
 import MessageHandler from '../../../message.ts';
 
@@ -5,15 +6,18 @@ import MessageHandler from '../../../message.ts';
 const messageHandler = new MessageHandler();
 const messageCommandId = 'call-streams-rest-api';
 
-async function callStreamsRestAPI(endPoint, callback, reserved = false, options = {}) {
+async function callStreamsRestAPI(
+  endPoint,
+  callback,
+  reserved = false,
+  options = {}
+) {
   try {
     const response = await messageHandler.postMessage({
       command: messageCommandId,
       args: { endpoint: endPoint, reserved, options }
     });
-    const {
-      error, data, headers, status
-    } = response;
+    const { error, data, headers, status } = response;
     return callback(error, data, headers, status);
   } catch (err) {
     return callback(err);
@@ -34,7 +38,12 @@ async function getStreamsJobDetails(jobId, callback) {
       command: messageCommandId,
       args: { endpoint: `jobs/${jobId}/padl`, reserved: true }
     });
-    if (jobSnapshotResponse && jobSnapshotResponse.data && jobPadlResponse && jobPadlResponse.data) {
+    if (
+      jobSnapshotResponse &&
+      jobSnapshotResponse.data &&
+      jobPadlResponse &&
+      jobPadlResponse.data
+    ) {
       const jobDetails = {
         ...jobSnapshotResponse.data,
         padl: jobPadlResponse.data
@@ -51,26 +60,27 @@ async function getStreamsJobDetails(jobId, callback) {
 /**
  * Gets job details for all jobs in specified instanceId
  */
-async function getStreamsJobsDetails(/* instanceId, callback */ {
-  jobIds,
-  callback
-}) {
+async function getStreamsJobsDetails(
+  /* instanceId, callback */ { jobIds, callback }
+) {
   const padlMap = new Map();
-  await Promise.all(jobIds.map(async (jobId) => {
-    try {
-      const jobPadlResponse = await messageHandler.postMessage({
-        command: messageCommandId,
-        args: { endpoint: `jobs/${jobId}/padl`, reserved: true }
-      });
-      if (jobPadlResponse && jobPadlResponse.data) {
-        padlMap.set(jobId, jobPadlResponse.data);
-      } else if (jobPadlResponse && jobPadlResponse.error) {
-        callback(jobPadlResponse.error);
+  await Promise.all(
+    jobIds.map(async (jobId) => {
+      try {
+        const jobPadlResponse = await messageHandler.postMessage({
+          command: messageCommandId,
+          args: { endpoint: `jobs/${jobId}/padl`, reserved: true }
+        });
+        if (jobPadlResponse && jobPadlResponse.data) {
+          padlMap.set(jobId, jobPadlResponse.data);
+        } else if (jobPadlResponse && jobPadlResponse.error) {
+          callback(jobPadlResponse.error);
+        }
+      } catch (err) {
+        return callback(err);
       }
-    } catch (err) {
-      return callback(err);
-    }
-  }));
+    })
+  );
 
   // call the REST api to get a list of job snapshots -- this contains pes information for each job
   try {
@@ -81,15 +91,21 @@ async function getStreamsJobsDetails(/* instanceId, callback */ {
     if (jobsSnapshotResponse && jobsSnapshotResponse.data) {
       const jobSnapshots = _cloneDeep(jobsSnapshotResponse.data);
       // add padl to job list
-      jobSnapshots.jobs.forEach(job => {
+      jobSnapshots.jobs.forEach((job) => {
         const padl = padlMap.get(job.id);
         if (padl) {
           // eslint-disable-next-line no-param-reassign
           job.padl = JSON.parse(JSON.stringify(padl));
         }
       });
-      callback(null, jobSnapshots, jobsSnapshotResponse.headers, jobsSnapshotResponse.status);
-    } if (jobsSnapshotResponse && jobsSnapshotResponse.error) {
+      callback(
+        null,
+        jobSnapshots,
+        jobsSnapshotResponse.headers,
+        jobsSnapshotResponse.status
+      );
+    }
+    if (jobsSnapshotResponse && jobsSnapshotResponse.error) {
       callback(jobsSnapshotResponse.error);
     }
   } catch (err) {
@@ -97,15 +113,12 @@ async function getStreamsJobsDetails(/* instanceId, callback */ {
   }
 }
 
-function getJobMetricsSnapshot(
-  {
-    showingConnectedJobs,
-    jobIds,
-    callback,
-    metricsSnapshotCount,
-    includeMetricStats = false
-  }
-) {
+function getJobMetricsSnapshot({
+  showingConnectedJobs,
+  jobIds,
+  callback,
+  includeMetricStats = false
+}) {
   const jobId = !showingConnectedJobs ? `${jobIds[0]}/` : '';
   const jobList = showingConnectedJobs ? `&restid=${jobIds.join()}` : '';
   const metricsEndpoint = `jobs/${jobId}metricssnapshot?includeStatistics=${includeMetricStats}${jobList}`;
@@ -116,8 +129,7 @@ function getJobSnapshot({
   showingConnectedJobs,
   jobIds,
   includeStaticDetails = false,
-  callback,
-  jobDetailsSnapshotCount
+  callback
 }) {
   const jobId = !showingConnectedJobs ? `${jobIds[0]}/` : '';
   const jobList = showingConnectedJobs ? `&restid=${jobIds.join()}` : '';
@@ -135,10 +147,17 @@ function getExportedStreams(callback) {
   const exportedStreamsEndpoint = 'exportedstreams';
   const exportedStreams = [];
 
-  callStreamsRestAPI(exportedStreamsEndpoint, async (ResponseError, ResponseData, ResponseHeaders, ResponseStatus) => {
-    if (!ResponseError && ResponseStatus === 200 && ResponseData && ResponseData.exportedStreams) {
-      // the response data looks like this
-      /*
+  callStreamsRestAPI(
+    exportedStreamsEndpoint,
+    async (ResponseError, ResponseData, ResponseHeaders, ResponseStatus) => {
+      if (
+        !ResponseError &&
+        ResponseStatus === 200 &&
+        ResponseData &&
+        ResponseData.exportedStreams
+      ) {
+        // the response data looks like this
+        /*
       {
         "exportedStreams": [
           {
@@ -151,20 +170,19 @@ function getExportedStreams(callback) {
         "total": 1
       }
       */
-      // the actual export property is in the operatorOutputPort
-      await Promise.all(ResponseData.exportedStreams.map(async (exportedStream) => {
-        try {
-          const {
-            operatorOutputPort
-          } = exportedStream;
-          if (operatorOutputPort) {
-            const outputPortResponse = await messageHandler.postMessage({
-              command: messageCommandId,
-              args: { endpoint: operatorOutputPort, reserved: false }
-            });
-            if (outputPortResponse && outputPortResponse.data) {
-              // the response data looks like this:
-              /*
+        // the actual export property is in the operatorOutputPort
+        await Promise.all(
+          ResponseData.exportedStreams.map(async (exportedStream) => {
+            try {
+              const { operatorOutputPort } = exportedStream;
+              if (operatorOutputPort) {
+                const outputPortResponse = await messageHandler.postMessage({
+                  command: messageCommandId,
+                  args: { endpoint: operatorOutputPort, reserved: false }
+                });
+                if (outputPortResponse && outputPortResponse.data) {
+                  // the response data looks like this:
+                  /*
                 {
                   "connections": "https://syss160.pok.stglabs.ibm.com:32707/streams-rest/instances/sample-streams/tooling/jobs/5/operators/Functor_5/outputports/0/operatorconnections",
                   "export": {
@@ -177,21 +195,23 @@ function getExportedStreams(callback) {
                   ...
                 }
               */
-              exportedStreams.push({
-                streamName: outputPortResponse.data.streamName,
-                export: outputPortResponse.data.export
-              });
+                  exportedStreams.push({
+                    streamName: outputPortResponse.data.streamName,
+                    export: outputPortResponse.data.export
+                  });
+                }
+              }
+            } catch (err) {
+              return callback(err);
             }
-          }
-        } catch (err) {
-          return callback(err);
-        }
-      }));
-      callback(null, exportedStreams);
-    } else {
-      callback(ResponseError, exportedStreams);
+          })
+        );
+        callback(null, exportedStreams);
+      } else {
+        callback(ResponseError, exportedStreams);
+      }
     }
-  });
+  );
 }
 
 const streamsUtils = {

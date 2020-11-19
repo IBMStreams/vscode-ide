@@ -8,13 +8,19 @@ import React, { Component } from 'react';
 import MessageHandler from '../../../message.ts';
 import ThemeHandler from '../../../theme.ts';
 import ButtonContainer from './ButtonContainer';
-import { ConnectionFormV4, ConnectionFormV5Cpd, ConnectionFormV5Standalone } from './ConnectionForm';
+import {
+  ConnectionFormV4,
+  ConnectionFormV5Cpd,
+  ConnectionFormV5Standalone
+} from './ConnectionForm';
 
 export default class StreamsAuthContainer extends Component {
   constructor(props) {
     super(props);
 
-    const { params: { instanceTypes, instance } } = this.props;
+    const {
+      params: { instanceTypes, instance }
+    } = this.props;
 
     this.typeOptions = [];
     _each(instanceTypes, (value, key) => {
@@ -34,7 +40,7 @@ export default class StreamsAuthContainer extends Component {
 
   setInstanceDropdownDisabled = (disabled) => {
     this.setState({ isInstanceDropdownDisabled: disabled });
-  }
+  };
 
   getInstanceTypeDropdown = () => {
     const { selectedInstanceType, isInstanceDropdownDisabled } = this.state;
@@ -45,12 +51,18 @@ export default class StreamsAuthContainer extends Component {
         tabIndex={0}
         className="streams-auth-container__help-tooltip"
       >
-        An <strong>IBM Cloud Pak for Data deployment</strong> delivers a platform for combining streaming and
-        stored data with AI to build solutions that impact business decisions in real time.<br /><br />
-        An <strong>IBM Streams standalone deployment</strong> delivers a programming language and IDE for applications, a runtime system and
-        analytic toolkits to speed development.<br /><br />
-        <strong>IBM Streaming Analytics on IBM Cloud</strong> offers most of the features of IBM Streams on an agile, cloud-based
-        platform.
+        An <strong>IBM Cloud Pak for Data deployment</strong> delivers a
+        platform for combining streaming and stored data with AI to build
+        solutions that impact business decisions in real time.
+        <br />
+        <br />
+        An <strong>IBM Streams standalone deployment</strong> delivers a
+        programming language and IDE for applications, a runtime system and
+        analytic toolkits to speed development.
+        <br />
+        <br />
+        <strong>IBM Streaming Analytics on IBM Cloud</strong> offers most of the
+        features of IBM Streams on an agile, cloud-based platform.
       </Tooltip>
     );
     return (
@@ -63,14 +75,14 @@ export default class StreamsAuthContainer extends Component {
           disabled={isInstanceDropdownDisabled}
           selectedItem={selectedInstanceType}
           items={this.typeOptions}
-          itemToString={item => (item ? item.text : '')}
+          itemToString={(item) => (item ? item.text : '')}
           onChange={(e) => {
             this.setState({ selectedInstanceType: e.selectedItem });
           }}
         />
       </div>
     );
-  }
+  };
 
   getConnectionForm = () => {
     const { selectedInstanceType } = this.state;
@@ -86,7 +98,9 @@ export default class StreamsAuthContainer extends Component {
           instanceType={id}
           closePanel={this.closePanel}
           renderLoadingOverlay={this.renderLoadingOverlay}
-          renderTestConnectionNotification={this.renderTestConnectionNotification}
+          renderTestConnectionNotification={
+            this.renderTestConnectionNotification
+          }
           renderErrorNotification={this.renderErrorNotification}
           setInstanceDropdownDisabled={this.setInstanceDropdownDisabled}
           {...this.props}
@@ -98,7 +112,9 @@ export default class StreamsAuthContainer extends Component {
           instanceType={id}
           closePanel={this.closePanel}
           renderLoadingOverlay={this.renderLoadingOverlay}
-          renderTestConnectionNotification={this.renderTestConnectionNotification}
+          renderTestConnectionNotification={
+            this.renderTestConnectionNotification
+          }
           renderErrorNotification={this.renderErrorNotification}
           {...this.props}
         />
@@ -109,14 +125,16 @@ export default class StreamsAuthContainer extends Component {
           instanceType={id}
           closePanel={this.closePanel}
           renderLoadingOverlay={this.renderLoadingOverlay}
-          renderTestConnectionNotification={this.renderTestConnectionNotification}
+          renderTestConnectionNotification={
+            this.renderTestConnectionNotification
+          }
           renderErrorNotification={this.renderErrorNotification}
           {...this.props}
         />
       );
     }
     return connectionForm;
-  }
+  };
 
   getButtonContainer = () => {
     return (
@@ -130,13 +148,18 @@ export default class StreamsAuthContainer extends Component {
         tertiaryBtn={null}
       />
     );
-  }
+  };
 
-  renderLoadingOverlay = (loading, isAuthenticating, description = 'Loading...') => {
+  renderLoadingOverlay = (
+    loading,
+    isAuthenticating,
+    description = 'Loading...'
+  ) => {
     if (loading || isAuthenticating) {
       return <Loading description={description} />;
     }
-  }
+    return null;
+  };
 
   renderTestConnectionNotification = (connectionSuccessful, callbackFn) => {
     if (connectionSuccessful === null) {
@@ -147,30 +170,28 @@ export default class StreamsAuthContainer extends Component {
     if (errorMsg) {
       errorMsg = this.handleErrorMsg(errorMsg);
     }
-    return result
-      ? (
-        <InlineNotification
-          title="Success"
-          subtitle="Connection test succeeded."
-          iconDescription="Close"
-          kind="success"
-          statusIconDescription="Success"
-          onCloseButtonClick={callbackFn}
-          className="connection-form__connection-notification"
-        />
-      )
-      : (
-        <InlineNotification
-          title="Error"
-          subtitle={`Connection test failed.${errorMsg ? ` ${errorMsg}` : ''}`}
-          iconDescription="Close"
-          kind="error"
-          statusIconDescription="Error"
-          onCloseButtonClick={callbackFn}
-          className="connection-form__connection-notification"
-        />
-      );
-  }
+    return result ? (
+      <InlineNotification
+        title="Success"
+        subtitle="Connection test succeeded."
+        iconDescription="Close"
+        kind="success"
+        statusIconDescription="Success"
+        onCloseButtonClick={callbackFn}
+        className="connection-form__connection-notification"
+      />
+    ) : (
+      <InlineNotification
+        title="Error"
+        subtitle={`Connection test failed.${errorMsg ? ` ${errorMsg}` : ''}`}
+        iconDescription="Close"
+        kind="error"
+        statusIconDescription="Error"
+        onCloseButtonClick={callbackFn}
+        className="connection-form__connection-notification"
+      />
+    );
+  };
 
   renderErrorNotification = (authError, type, callbackFn) => {
     if (!authError) {
@@ -189,20 +210,27 @@ export default class StreamsAuthContainer extends Component {
         className="connection-form__error-notification"
       />
     );
-  }
+  };
 
   closePanel = () => {
     this.messageHandler.postMessage({ command: 'close-panel' });
-  }
+  };
 
   handleErrorMsg = (msg) => {
-    const requestTimedOut = msg.includes('The request timed out')
-      && msg.includes('Try updating the request timeout setting to a larger value');
-    const verifyMessage = 'Verify that the instance exists and the connection details you have provided are correct';
+    const requestTimedOut =
+      msg.includes('The request timed out') &&
+      msg.includes(
+        'Try updating the request timeout setting to a larger value'
+      );
+    const verifyMessage =
+      'Verify that the instance exists and the connection details you have provided are correct';
     let newMsg = msg;
     if (!msg.includes(verifyMessage)) {
       if (requestTimedOut) {
-        newMsg = msg.replace(/Try updating/, `${verifyMessage}, or try updating`);
+        newMsg = msg.replace(
+          /Try updating/,
+          `${verifyMessage}, or try updating`
+        );
       } else {
         if (!msg.endsWith('.')) {
           newMsg += '.';
@@ -211,7 +239,7 @@ export default class StreamsAuthContainer extends Component {
       }
     }
     return newMsg;
-  }
+  };
 
   render() {
     const { loading } = this.state;

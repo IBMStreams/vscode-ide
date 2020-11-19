@@ -12,17 +12,38 @@ export default class ConnectionFormV5Standalone extends Component {
   constructor(props) {
     super(props);
 
-    const { params: { instance } } = this.props;
+    const {
+      params: { instance }
+    } = this.props;
 
-    const authentication = instance && instance.authentication ? instance.authentication : null;
+    const authentication =
+      instance && instance.authentication ? instance.authentication : null;
 
     this.state = {
-      streamsBuildServiceUrl: (authentication && authentication.streamsBuildServiceUrl) ? authentication.streamsBuildServiceUrl : '',
-      streamsRestServiceUrl: (authentication && authentication.streamsRestServiceUrl) ? authentication.streamsRestServiceUrl : '',
-      streamsSecurityServiceUrl: (authentication && authentication.streamsSecurityServiceUrl) ? authentication.streamsSecurityServiceUrl : '',
-      streamsConsoleUrl: (authentication && authentication.streamsConsoleUrl) ? authentication.streamsConsoleUrl : '',
-      username: (authentication && authentication.username) ? authentication.username : '',
-      password: (authentication && authentication.password) ? authentication.password : '',
+      streamsBuildServiceUrl:
+        authentication && authentication.streamsBuildServiceUrl
+          ? authentication.streamsBuildServiceUrl
+          : '',
+      streamsRestServiceUrl:
+        authentication && authentication.streamsRestServiceUrl
+          ? authentication.streamsRestServiceUrl
+          : '',
+      streamsSecurityServiceUrl:
+        authentication && authentication.streamsSecurityServiceUrl
+          ? authentication.streamsSecurityServiceUrl
+          : '',
+      streamsConsoleUrl:
+        authentication && authentication.streamsConsoleUrl
+          ? authentication.streamsConsoleUrl
+          : '',
+      username:
+        authentication && authentication.username
+          ? authentication.username
+          : '',
+      password:
+        authentication && authentication.password
+          ? authentication.password
+          : '',
       rememberPassword: authentication ? authentication.rememberPassword : true,
       loading: false,
       isTestingConnection: false,
@@ -61,26 +82,31 @@ export default class ConnectionFormV5Standalone extends Component {
           break;
       }
     }
-  }
+  };
 
   getBaseUrl = (urlString) => {
     const url = new URL(urlString);
     const baseUrl = `${url.protocol}//${url.host}`;
     return baseUrl;
-  }
+  };
 
   onTextChange = (e) => {
     const { id, value } = e.target;
     this.setState({ [id]: value });
-  }
+  };
 
   onCheckboxChange = (checked, id) => {
     this.setState({ [id]: checked });
-  }
+  };
 
   validate = () => {
     const {
-      streamsBuildServiceUrl, streamsRestServiceUrl, streamsSecurityServiceUrl, streamsConsoleUrl, username, password
+      streamsBuildServiceUrl,
+      streamsRestServiceUrl,
+      streamsSecurityServiceUrl,
+      streamsConsoleUrl,
+      username,
+      password
     } = this.state;
     // True if errors, false otherwise
     const errors = {
@@ -122,19 +148,29 @@ export default class ConnectionFormV5Standalone extends Component {
     }
 
     return errors;
-  }
+  };
 
   isFormValid = () => {
     const errors = this.validate();
     const isValid = !Object.keys(errors).some((e) => errors[e]);
     return isValid;
-  }
+  };
 
   getButtonContainer = () => {
     const {
-      streamsBuildServiceUrl, streamsRestServiceUrl, streamsSecurityServiceUrl, streamsConsoleUrl, username, password, rememberPassword
+      streamsBuildServiceUrl,
+      streamsRestServiceUrl,
+      streamsSecurityServiceUrl,
+      streamsConsoleUrl,
+      username,
+      password,
+      rememberPassword
     } = this.state;
-    const { instanceType, closePanel, params: { instance } } = this.props;
+    const {
+      instanceType,
+      closePanel,
+      params: { instance }
+    } = this.props;
     const isValid = this.isFormValid();
     return (
       <ButtonContainer
@@ -147,9 +183,18 @@ export default class ConnectionFormV5Standalone extends Component {
               command: 'authenticate',
               args: {
                 instanceType,
-                streamsBuildServiceUrl: this.sanitizeUrl(streamsBuildServiceUrl, false),
-                streamsRestServiceUrl: this.sanitizeUrl(streamsRestServiceUrl, false),
-                streamsSecurityServiceUrl: this.sanitizeUrl(streamsSecurityServiceUrl, false),
+                streamsBuildServiceUrl: this.sanitizeUrl(
+                  streamsBuildServiceUrl,
+                  false
+                ),
+                streamsRestServiceUrl: this.sanitizeUrl(
+                  streamsRestServiceUrl,
+                  false
+                ),
+                streamsSecurityServiceUrl: this.sanitizeUrl(
+                  streamsSecurityServiceUrl,
+                  false
+                ),
                 streamsConsoleUrl: this.sanitizeUrl(streamsConsoleUrl, true),
                 username,
                 password,
@@ -162,18 +207,18 @@ export default class ConnectionFormV5Standalone extends Component {
         secondaryBtn={{
           label: 'Cancel',
           isValid: true,
-          onClick: () => { closePanel(); }
+          onClick: () => {
+            closePanel();
+          }
         }}
       />
     );
-  }
+  };
 
   sanitizeUrl(urlString, keepWholeUrl) {
     try {
       const url = new URL(urlString);
-      return keepWholeUrl
-        ? url.href
-        : `${url.protocol}//${url.host}`;
+      return keepWholeUrl ? url.href : `${url.protocol}//${url.host}`;
     } catch (error) {
       return null;
     }
@@ -212,9 +257,13 @@ export default class ConnectionFormV5Standalone extends Component {
           tabIndex={0}
           className="streams-auth-container__help-tooltip"
         >
-          IBM Streams provides a REST API that can be used to retrieve information about the
-          instance. This service has a URL associated with it. For example, when the service is
-          exposed as a node port: <span className="streams-auth-container__code">https://123.45.67.89:30001</span>.
+          IBM Streams provides a REST API that can be used to retrieve
+          information about the instance. This service has a URL associated with
+          it. For example, when the service is exposed as a node port:{' '}
+          <span className="streams-auth-container__code">
+            https://123.45.67.89:30001
+          </span>
+          .
         </Tooltip>
         <Button
           className="connection-form__test-connection-button"
@@ -229,9 +278,18 @@ export default class ConnectionFormV5Standalone extends Component {
               command: 'test-connection',
               args: {
                 instanceType,
-                streamsBuildServiceUrl: this.sanitizeUrl(streamsBuildServiceUrl, false),
-                streamsRestServiceUrl: this.sanitizeUrl(streamsRestServiceUrl, false),
-                streamsSecurityServiceUrl: this.sanitizeUrl(streamsSecurityServiceUrl, false),
+                streamsBuildServiceUrl: this.sanitizeUrl(
+                  streamsBuildServiceUrl,
+                  false
+                ),
+                streamsRestServiceUrl: this.sanitizeUrl(
+                  streamsRestServiceUrl,
+                  false
+                ),
+                streamsSecurityServiceUrl: this.sanitizeUrl(
+                  streamsSecurityServiceUrl,
+                  false
+                ),
                 streamsConsoleUrl: this.sanitizeUrl(streamsConsoleUrl, true),
                 username,
                 password,
@@ -258,10 +316,16 @@ export default class ConnectionFormV5Standalone extends Component {
         tabIndex={0}
         className="streams-auth-container__help-tooltip"
       >
-        IBM Streams provides an optional build service for compiling and building Streams applications.
-        This service has a URL associated with it. For example, when the service is exposed as a node
-        port: <span className="streams-auth-container__code">https://123.45.67.89:30002</span>.<br /><br />
-        If not specified, you will not be able to build your Streams applications.
+        IBM Streams provides an optional build service for compiling and
+        building Streams applications. This service has a URL associated with
+        it. For example, when the service is exposed as a node port:{' '}
+        <span className="streams-auth-container__code">
+          https://123.45.67.89:30002
+        </span>
+        .<br />
+        <br />
+        If not specified, you will not be able to build your Streams
+        applications.
       </Tooltip>
     );
     const securityServiceUrlLabel = (
@@ -271,12 +335,19 @@ export default class ConnectionFormV5Standalone extends Component {
         tabIndex={0}
         className="streams-auth-container__help-tooltip"
       >
-        IBM Streams provides an optional security service for managing a set of security realms to provide
-        single sign-on support for Streams services. You can use the security service for both the
-        Streams instance and the build service. The security service is required for the build service.
-        The security service has a URL associated with it. For example, when the service is exposed as a node
-        port: <span className="streams-auth-container__code">https://123.45.67.89:30003</span>.<br /><br />
-        If not specified, the security service URL will be generated using the REST service URL.
+        IBM Streams provides an optional security service for managing a set of
+        security realms to provide single sign-on support for Streams services.
+        You can use the security service for both the Streams instance and the
+        build service. The security service is required for the build service.
+        The security service has a URL associated with it. For example, when the
+        service is exposed as a node port:{' '}
+        <span className="streams-auth-container__code">
+          https://123.45.67.89:30003
+        </span>
+        .<br />
+        <br />
+        If not specified, the security service URL will be generated using the
+        REST service URL.
       </Tooltip>
     );
     const consoleUrlLabel = (
@@ -286,20 +357,30 @@ export default class ConnectionFormV5Standalone extends Component {
         tabIndex={0}
         className="streams-auth-container__help-tooltip"
       >
-        IBM Streams includes an integrated console that you can use to view the health of the
-        instance and its applications. You can manage instances and resources, configure security,
-        and monitor jobs from a single location.<br /><br />
-        If not specified, the Console URL will be retrieved from the Streams REST API.
+        IBM Streams includes an integrated console that you can use to view the
+        health of the instance and its applications. You can manage instances
+        and resources, configure security, and monitor jobs from a single
+        location.
+        <br />
+        <br />
+        If not specified, the Console URL will be retrieved from the Streams
+        REST API.
       </Tooltip>
     );
     let passwordDisabled = false;
-    if (instance && instance.authentication.rememberPassword && instance.authentication.password) {
+    if (
+      instance &&
+      instance.authentication.rememberPassword &&
+      instance.authentication.password
+    ) {
       passwordDisabled = true;
     }
     return (
       <>
         {renderLoadingOverlay(loading, isAuthenticating)}
-        {renderTestConnectionNotification(connectionSuccessful, () => { this.setState({ connectionSuccessful: null }); })}
+        {renderTestConnectionNotification(connectionSuccessful, () => {
+          this.setState({ connectionSuccessful: null });
+        })}
         <div className="connection-form__form-item">
           <TextInput
             type="text"
@@ -308,7 +389,9 @@ export default class ConnectionFormV5Standalone extends Component {
             placeholder="https://123.45.67.89:30001"
             value={streamsRestServiceUrl}
             disabled={!!instance}
-            invalid={!!errors.streamsRestServiceUrl && streamsRestServiceUrl.length > 0}
+            invalid={
+              !!errors.streamsRestServiceUrl && streamsRestServiceUrl.length > 0
+            }
             invalidText={errors.streamsRestServiceUrl || null}
             onChange={this.onTextChange}
           />
@@ -321,7 +404,10 @@ export default class ConnectionFormV5Standalone extends Component {
             placeholder={instance ? null : 'https://123.45.67.89:30002'}
             value={streamsBuildServiceUrl}
             disabled={!!instance}
-            invalid={!!errors.streamsBuildServiceUrl && streamsBuildServiceUrl.length > 0}
+            invalid={
+              !!errors.streamsBuildServiceUrl &&
+              streamsBuildServiceUrl.length > 0
+            }
             invalidText={errors.streamsBuildServiceUrl || null}
             onChange={this.onTextChange}
           />
@@ -334,7 +420,10 @@ export default class ConnectionFormV5Standalone extends Component {
             placeholder={instance ? null : 'https://123.45.67.89:30003'}
             value={streamsSecurityServiceUrl}
             disabled={!!instance}
-            invalid={!!errors.streamsSecurityServiceUrl && streamsSecurityServiceUrl.length > 0}
+            invalid={
+              !!errors.streamsSecurityServiceUrl &&
+              streamsSecurityServiceUrl.length > 0
+            }
             invalidText={errors.streamsSecurityServiceUrl || null}
             onChange={this.onTextChange}
           />
@@ -371,7 +460,7 @@ export default class ConnectionFormV5Standalone extends Component {
             value={password}
             disabled={passwordDisabled}
             onChange={this.onTextChange}
-            ref={input => !!instance && input && input.focus && input.focus()}
+            ref={(input) => !!instance && input && input.focus && input.focus()}
           />
         </div>
         <div className="connection-form__form-item">
@@ -383,7 +472,9 @@ export default class ConnectionFormV5Standalone extends Component {
             onChange={this.onCheckboxChange}
           />
         </div>
-        {renderErrorNotification(authError, 'IBM Streams', () => { this.setState({ authError: null }); })}
+        {renderErrorNotification(authError, 'IBM Streams', () => {
+          this.setState({ authError: null });
+        })}
         {this.getButtonContainer()}
       </>
     );

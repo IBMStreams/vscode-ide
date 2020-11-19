@@ -8,7 +8,8 @@ import ThemeHandler from '../../../theme.ts';
 import ButtonContainer from './ButtonContainer';
 
 const LOCATION_LABEL = 'Location';
-const LOCATION_HELP_TEXT = 'The location of the folder where you want to create the SPL application set.';
+const LOCATION_HELP_TEXT =
+  'The location of the folder where you want to create the SPL application set.';
 const NAME_LABEL = 'Name';
 const NAME_HELP_TEXT = 'The name of the SPL application set.';
 
@@ -60,7 +61,11 @@ const MainContainer = ({ params: { folderPath } }) => {
   const isNameValueInvalid = () => !name.trim().length;
 
   const getButtonContainer = () => {
-    const isValid = location.trim() !== '' && name.trim() !== '' && !isLocationValueInvalid(location) && !isNameValueInvalid(name);
+    const isValid =
+      location.trim() !== '' &&
+      name.trim() !== '' &&
+      !isLocationValueInvalid(location) &&
+      !isNameValueInvalid(name);
     return (
       <ButtonContainer
         primaryBtn={{

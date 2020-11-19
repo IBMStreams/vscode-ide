@@ -17,10 +17,13 @@ const ExistingConfigContainer = ({ messageHandler }) => {
     setShouldOverrideExistingAppBundles
   } = useContext(BuildImageContext);
 
-  const docLink = 'https://github.com/IBMStreams/vscode-ide/wiki/Building-edge-applications#build-configuration-properties';
+  const docLink =
+    'https://ibmstreams.github.io/vscode-ide/docs/building-edge-applications/#build-configuration-properties';
 
   const handleBrowse = async () => {
-    const configFile = await messageHandler.postMessage({ command: 'browse-for-buildconfig-json' });
+    const configFile = await messageHandler.postMessage({
+      command: 'browse-for-buildconfig-json'
+    });
     if (configFile) {
       const { filePath, error, errorLink } = configFile;
       setSelectedExistingConfigFile({ filePath, error, errorLink });
@@ -29,24 +32,24 @@ const ExistingConfigContainer = ({ messageHandler }) => {
 
   const overrideTooltip = (
     <Tooltip
-      triggerText={<span>Override <code>applicationBundles</code> property</span>}
+      triggerText={
+        <span>
+          Override <code>applicationBundles</code> property
+        </span>
+      }
       iconDescription="Override applicationBundles property"
       direction="right"
       tabIndex={0}
       className="build-image-container__help-tooltip"
     >
       <p>
-        The <code>applicationBundles</code> property identifies one or more Streams
-        application bundles (<code>.sab</code>) that are to be included in the image.
-        If checked, this property will be replaced with the bundle information for the
-        selected bundle.
+        The <code>applicationBundles</code> property identifies one or more
+        Streams application bundles (<code>.sab</code>) that are to be included
+        in the image. If checked, this property will be replaced with the bundle
+        information for the selected bundle.
       </p>
       <div className="bx--tooltip__footer">
-        <Button
-          kind="primary"
-          size="small"
-          href={docLink}
-        >
+        <Button kind="primary" size="small" href={docLink}>
           Learn more
         </Button>
       </div>
@@ -74,47 +77,46 @@ const ExistingConfigContainer = ({ messageHandler }) => {
                   iconDescription="Learn more"
                 >
                   <p>
-                    An image build configuration file allows you to customize the edge application image build.
+                    An image build configuration file allows you to customize
+                    the edge application image build.
                   </p>
                   <div className="bx--tooltip__footer">
-                    <Button
-                      kind="primary"
-                      size="small"
-                      href={docLink}
-                    >
+                    <Button kind="primary" size="small" href={docLink}>
                       Learn more
                     </Button>
                   </div>
                 </Tooltip>
               </div>
-              {
-                selectedExistingConfigFile && (
-                  <div className="existing-config-container__file-uploader-item">
-                    <FileUploaderItem
-                      errorBody={selectedExistingConfigFile.errorLink
-                        ? (
-                          <span>
-                            {selectedExistingConfigFile.error}
-                            <Link
-                              href={docLink}
-                              className="existing-config-container__file-uploader-item__link"
-                            >
-                              here
-                            </Link>.
-                          </span>
-                        )
-                        : selectedExistingConfigFile.error
-                      }
-                      errorSubject="File could not be imported. Import a different file."
-                      iconDescription={null}
-                      invalid={!!selectedExistingConfigFile.error}
-                      name={path.basename(selectedExistingConfigFile.filePath)}
-                      status="edit"
-                      onDelete={() => { setSelectedExistingConfigFile(null) }}
-                    />
-                  </div>
-                )
-              }
+              {selectedExistingConfigFile && (
+                <div className="existing-config-container__file-uploader-item">
+                  <FileUploaderItem
+                    errorBody={
+                      selectedExistingConfigFile.errorLink ? (
+                        <span>
+                          {selectedExistingConfigFile.error}
+                          <Link
+                            href={docLink}
+                            className="existing-config-container__file-uploader-item__link"
+                          >
+                            here
+                          </Link>
+                          .
+                        </span>
+                      ) : (
+                        selectedExistingConfigFile.error
+                      )
+                    }
+                    errorSubject="File could not be imported. Import a different file."
+                    iconDescription={null}
+                    invalid={!!selectedExistingConfigFile.error}
+                    name={path.basename(selectedExistingConfigFile.filePath)}
+                    status="edit"
+                    onDelete={() => {
+                      setSelectedExistingConfigFile(null);
+                    }}
+                  />
+                </div>
+              )}
             </>
           </div>
         </div>
@@ -124,13 +126,15 @@ const ExistingConfigContainer = ({ messageHandler }) => {
               id="override-application-bundles-checkbox"
               checked={shouldOverrideExistingAppBundles}
               labelText={overrideTooltip}
-              onChange={(checked) => { setShouldOverrideExistingAppBundles(checked); }}
+              onChange={(checked) => {
+                setShouldOverrideExistingAppBundles(checked);
+              }}
             />
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 };
 
 ExistingConfigContainer.propTypes = {

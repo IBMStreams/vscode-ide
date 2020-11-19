@@ -7,6 +7,14 @@ import React, { Component } from 'react';
 import MessageHandler from '../../../message.ts';
 import JobConfigOverlayUtils from '../job-config-overlay-utils';
 
+const traceOptions = [
+  { id: 'error', text: 'error', value: 'error' },
+  { id: 'warn', text: 'warn', value: 'warn' },
+  { id: 'info', text: 'info', value: 'info' },
+  { id: 'debug', text: 'debug', value: 'debug' },
+  { id: 'trace', text: 'trace', value: 'trace' }
+];
+
 export default class JobConfigContainer extends Component {
   constructor(props) {
     super(props);
@@ -33,7 +41,7 @@ export default class JobConfigContainer extends Component {
         {tooltipText}
       </Tooltip>
     );
-  }
+  };
 
   getJobGroups = () => {
     const { jobGroups } = this.state;
@@ -42,7 +50,7 @@ export default class JobConfigContainer extends Component {
       return { id: name, text: name, value: name };
     });
     return jobGroupsOptions;
-  }
+  };
 
   setJobGroups = (jobGroups) => {
     const newState = { isLoadingJobGroups: false };
@@ -50,24 +58,32 @@ export default class JobConfigContainer extends Component {
       newState.jobGroups = jobGroups;
     }
     this.setState(newState);
-  }
+  };
 
   render() {
     const { isLoadingJobGroups } = this.state;
     const {
-      jobConfig, handleJobConfigUpdate, handleTracingUpdate, handleJobGroupConfigUpdate
+      jobConfig,
+      handleJobConfigUpdate,
+      handleTracingUpdate,
+      handleJobGroupConfigUpdate
     } = this.props;
     const jobName = JobConfigOverlayUtils.getJobName(jobConfig) || '';
     const jobGroup = JobConfigOverlayUtils.getJobGroup(jobConfig) || 'default';
-    const dataDirectory = JobConfigOverlayUtils.getDataDirectory(jobConfig) || '';
-    const regex = RegExp(/[\^!#$%&'*+,/;<>=?@[\]`{|}~()\s\u0000-\u0019\u007F-\u009F\ud800-\uF8FF\uFFF0-\uFFFF]/);
+    const dataDirectory =
+      JobConfigOverlayUtils.getDataDirectory(jobConfig) || '';
+    const regex = RegExp(
+      /[\^!#$%&'*+,/;<>=?@[\]`{|}~()\s\u0000-\u0019\u007F-\u009F\ud800-\uF8FF\uFFF0-\uFFFF]/
+    );
     const jobGroupsOptions = this.getJobGroups();
-    const findJobGroup = jobGroupsOptions.find(group => group.text === jobGroup);
+    const findJobGroup = jobGroupsOptions.find(
+      (group) => group.text === jobGroup
+    );
     let tracing = JobConfigOverlayUtils.getTracing(jobConfig);
     tracing = _find(traceOptions, ['text', tracing]);
     let jobNameIsInvalid = (jobName && regex.test(jobName)) || false;
     let jobNameInvalidText = `The name must contain alphanumeric characters.
-      You cannot use the following alphanumeric characters: ^!#$%&'*+,/;<>=?@[]\`{|}~().
+      You cannot use the following characters: ^!#$%&'*+,/;<>=?@[]\`{|}~().
       You also cannot use the following Unicode and hexadecimal characters:
       u0000; u0001-u001F; u007F-u009F; ud800-uF8FF; uFFF0-uFFFF; x{10000}-x{10FFFF}.`;
     if (jobName && jobName.length > 1024) {
@@ -91,7 +107,10 @@ export default class JobConfigContainer extends Component {
           <TextInput
             type="text"
             id="jobName"
-            labelText={this.getHelpTooltip('Job name', 'The name that is assigned to the job.')}
+            labelText={this.getHelpTooltip(
+              'Job name',
+              'The name that is assigned to the job.'
+            )}
             invalid={jobNameIsInvalid}
             invalidText={jobNameInvalidText}
             value={jobName}
@@ -101,26 +120,26 @@ export default class JobConfigContainer extends Component {
         <div className="job-config-container__config-input">
           <Dropdown
             id="jobGroup"
-            titleText={this.getHelpTooltip('Job group', 'The job group to use to control the permissions for the submitted job.')}
+            titleText={this.getHelpTooltip(
+              'Job group',
+              'The job group to use to control the permissions for the submitted job.'
+            )}
             label={dropdownLabel}
             ariaLabel="Job group dropdown"
             selectedItem={selectedDropdownItem}
             items={dropdownItems}
-            itemToString={item => (item ? item.text : '')}
+            itemToString={(item) => (item ? item.text : '')}
             onChange={handleJobGroupConfigUpdate}
             downshiftProps={{
-              stateReducer: (state, changes) => {
-                const { isOpen } = changes;
-                if (isOpen) {
-                  this.setState(
-                    { isLoadingJobGroups: true },
-                    async () => {
-                      const jobGroups = await this.messageHandler.postMessage({ command: 'get-job-groups' });
-                      this.setJobGroups(jobGroups);
-                    }
-                  );
+              onStateChange: (changes) => {
+                if (changes.isOpen) {
+                  this.setState({ isLoadingJobGroups: true }, async () => {
+                    const jobGroups = await this.messageHandler.postMessage({
+                      command: 'get-job-groups'
+                    });
+                    this.setJobGroups(jobGroups);
+                  });
                 }
-                return changes;
               }
             }}
           />
@@ -128,12 +147,17 @@ export default class JobConfigContainer extends Component {
         <div className="job-config-container__config-input">
           <Dropdown
             id="tracing"
-            titleText={this.getHelpTooltip('Tracing', 'Specifies the trace setting for the PEs.')}
+            titleText={this.getHelpTooltip(
+              'Tracing',
+              'Specifies the trace setting for the PEs.'
+            )}
             label="Tracing"
             ariaLabel="Tracing dropdown"
-            selectedItem={tracing || traceOptions.find((option) => option.id === 'error')}
+            selectedItem={
+              tracing || traceOptions.find((option) => option.id === 'error')
+            }
             items={traceOptions}
-            itemToString={item => (item ? item.text : '')}
+            itemToString={(item) => (item ? item.text : '')}
             onChange={handleTracingUpdate}
           />
         </div>
@@ -141,7 +165,10 @@ export default class JobConfigContainer extends Component {
           <TextInput
             type="text"
             id="dataDirectory"
-            labelText={this.getHelpTooltip('Data directory', 'Specifies the location of the data directory.')}
+            labelText={this.getHelpTooltip(
+              'Data directory',
+              'Specifies the location of the data directory.'
+            )}
             value={dataDirectory}
             onChange={handleJobConfigUpdate}
           />
@@ -150,14 +177,6 @@ export default class JobConfigContainer extends Component {
     );
   }
 }
-
-const traceOptions = [
-  { id: 'error', text: 'error', value: 'error' },
-  { id: 'warn', text: 'warn', value: 'warn' },
-  { id: 'info', text: 'info', value: 'info' },
-  { id: 'debug', text: 'debug', value: 'debug' },
-  { id: 'trace', text: 'trace', value: 'trace' }
-];
 
 JobConfigContainer.propTypes = {
   jobConfig: PropTypes.shape({

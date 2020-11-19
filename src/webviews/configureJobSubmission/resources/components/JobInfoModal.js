@@ -8,9 +8,7 @@ import {
 import PropTypes from 'prop-types';
 import React from 'react';
 
-const JobInfoModal = ({
- isOpen, close, instanceName, jobDetails
-}) => {
+const JobInfoModal = ({ isOpen, close, instanceName, jobDetails }) => {
   return (
     <Modal
       iconDescription="Close"
@@ -24,15 +22,21 @@ const JobInfoModal = ({
       <div className="job-details-container">
         <StructuredListWrapper className="job-details-container__list">
           <StructuredListBody>
-            {jobDetails && Object.keys(jobDetails).length && Object.keys(jobDetails).map((label) => (
-              <StructuredListRow className="structured-row" key={label}>
-                <StructuredListCell noWrap>{label}</StructuredListCell>
-                <StructuredListCell className="job-details-container__list-value">{jobDetails[label]}</StructuredListCell>
-              </StructuredListRow>
-            ))}
+            {jobDetails &&
+              Object.keys(jobDetails).length &&
+              Object.keys(jobDetails).map((label) => (
+                <StructuredListRow className="structured-row" key={label}>
+                  <StructuredListCell noWrap>{label}</StructuredListCell>
+                  <StructuredListCell className="job-details-container__list-value">
+                    {jobDetails[label]}
+                  </StructuredListCell>
+                </StructuredListRow>
+              ))}
             <StructuredListRow className="structured-row">
               <StructuredListCell noWrap>Instance</StructuredListCell>
-              <StructuredListCell className="job-details-container__list-value">{instanceName}</StructuredListCell>
+              <StructuredListCell className="job-details-container__list-value">
+                {instanceName}
+              </StructuredListCell>
             </StructuredListRow>
           </StructuredListBody>
         </StructuredListWrapper>

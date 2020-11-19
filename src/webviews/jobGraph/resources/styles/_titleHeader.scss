@@ -30,7 +30,7 @@
       margin: 0;
       min-height: $spacing-08;
       height: $spacing-08;
-      
+
       .bx--inline-notification__icon {
         margin-top: 0.6rem;
       }
@@ -45,7 +45,7 @@
     }
 
     .title-header__job-dropdown.bx--list-box--expanded .bx--list-box__menu {
-      max-height: $spacing-08	* 10; // 10 items
+      max-height: $spacing-08 * 10; // 10 items
     }
 
     .title-header__icon-button {
@@ -86,7 +86,7 @@
 
 .bx--tooltip.title-header__job-info-tooltip {
   max-width: 800px !important;
-  
+
   .bx--tooltip__caret {
     background: none;
     transform: none;

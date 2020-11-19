@@ -1,0 +1,40 @@
+.create-primitive-operator-container {
+  padding-left: 0;
+  padding-right: 0;
+
+  .create-primitive-operator-container__form-item {
+    padding-bottom: $layout-02;
+  }
+
+  .create-primitive-operator-container__form-item--flex {
+    display: flex;
+  }
+
+  .create-primitive-operator-container__form-item--last {
+    padding-bottom: 0;
+  }
+
+  .create-primitive-operator-container__browse-button {
+    height: $spacing-08;
+    margin-top: $spacing-06;
+    margin-left: $spacing-03;
+  }
+
+  .create-primitive-operator-container__generic-operator-checkbox {
+    padding-bottom: $layout-03;
+
+    .bx--tooltip__label {
+      font-size: 0.875rem;
+    }
+  }
+
+  .create-primitive-operator-container__operator-processing-pattern-radio-button-group {
+    .bx--tooltip__label {
+      font-size: 0.875rem;
+    }
+  }
+}
+
+.create-primitive-operator-container__help-tooltip {
+  @include carbon--type-style('body-long-01');
+}

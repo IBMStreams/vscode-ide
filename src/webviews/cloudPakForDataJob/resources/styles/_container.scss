@@ -1,0 +1,128 @@
+.main-container {
+  padding-left: 0;
+  padding-right: 0;
+
+  .main-container__row {
+    flex-wrap: nowrap;
+  }
+
+  .main-container__form-group {
+    margin-bottom: $layout-02;
+  }
+
+  legend.main-container__form-group {
+    display: none;
+  }
+
+  .main-container__section-header {
+    font-size: unset;
+    line-height: unset;
+    padding-bottom: $layout-02;
+
+    .bx--tooltip__label {
+      @include carbon--type-style('productive-heading-02');
+      color: unset;
+    }
+  }
+
+  .main-container__toggle .bx--toggle-input__label .bx--toggle__switch {
+    margin-top: 0;
+  }
+
+  .main-container__progress-indicator {
+    padding-left: $layout-01;
+    padding-right: $layout-03;
+    flex-shrink: 0;
+
+    .bx--progress-step-button:focus {
+      outline-color: transparent;
+    }
+
+    .bx--progress--vertical .bx--progress-label {
+      max-width: 12rem;
+    }
+  }
+
+  .main-container__info {
+    @include carbon--type-style('body-short-01');
+  }
+
+  .main-container__form-item {
+    padding-bottom: $layout-02;
+  }
+
+  .main-container__form-item--flex {
+    display: flex;
+  }
+
+  .main-container__form-item--last {
+    padding-bottom: $layout-03;
+  }
+
+  .main-container__form-item-inner {
+    margin-bottom: $spacing-03;
+  }
+
+  .submit-params-container {
+    .submit-params-container__body {
+      @include carbon--type-style('body-long-01');
+    }
+
+    .submit-params-container__composite-section:not(:first-of-type) {
+      padding-top: $layout-02;
+    }
+
+    .submit-params-container__composite-title {
+      @include carbon--type-style('productive-heading-01');
+      padding-bottom: $layout-01;
+    }
+
+    .submit-params-container__parameter-input:not(:last-of-type) {
+      padding-bottom: $layout-01;
+    }
+  }
+
+  .job-config-overlay-container {
+    .job-config-overlay-container__file-uploader-item {
+      padding-bottom: $spacing-03;
+
+      .job-config-overlay-container__import-jco__file-uploader-item__link {
+        @include carbon--type-style('label-01');
+      }
+
+      .bx--file__selected-file {
+        max-width: none;
+        width: 24.5rem;
+      }
+    }
+  }
+
+  .main-container__inline-notification {
+    margin: 0;
+    max-width: none;
+  }
+
+  .main-container__structured-list {
+    margin-bottom: 0;
+
+    .bx--structured-list-td {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  .main-container__code-snippet {
+    background: $ui-01;
+
+    pre {
+      max-width: 47rem;
+    }
+  }
+
+  .main-container__browse-button {
+    height: $spacing-08;
+    margin-top: $spacing-06;
+    margin-left: $spacing-03;
+  }
+}

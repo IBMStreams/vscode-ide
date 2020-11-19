@@ -1,4 +1,6 @@
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
 }
 
@@ -19,6 +21,11 @@ html, body, #root {
     .header-container__header {
       @include carbon--type-style('productive-heading-03');
       word-break: break-all;
+    }
+
+    .header-container__subheader {
+      @include carbon--type-style('body-short-01');
+      padding-top: $layout-01;
     }
 
     .header-container__info-button {
@@ -45,4 +52,8 @@ html, body, #root {
 .bx--text-area:disabled {
   background-color: $disabled-01;
   color: $disabled-02;
+}
+
+.help-tooltip {
+  @include carbon--type-style('body-long-01');
 }

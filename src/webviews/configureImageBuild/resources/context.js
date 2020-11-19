@@ -9,7 +9,9 @@ const BuildImageContext = createContext({
   baseImages: null,
   selectedBaseImage: null,
   imageName: '',
+  imageNameError: false,
   imageTag: '',
+  imageTagError: false,
   selectedNewConfigType: null,
   selectedNewConfigFile: null,
   setSelectedConfigFileType: () => {},
@@ -19,7 +21,9 @@ const BuildImageContext = createContext({
   setBaseImages: () => {},
   setSelectedBaseImage: () => {},
   setImageName: () => {},
+  setImageNameError: () => {},
   setImageTag: () => {},
+  setImageTagError: () => {},
   setSelectedNewConfigType: () => {},
   setSelectedNewConfigFile: () => {}
 });

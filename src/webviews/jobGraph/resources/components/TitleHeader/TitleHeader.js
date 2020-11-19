@@ -19,9 +19,7 @@ const statusIcons = {
     />
   ),
   ERROR: (
-    <ErrorFilled16
-      className="title-header__status-icon title-header__status-icon-red"
-    >
+    <ErrorFilled16 className="title-header__status-icon title-header__status-icon-red">
       <title>Error</title>
     </ErrorFilled16>
   ),
@@ -34,9 +32,7 @@ const statusIcons = {
     </WarningAltFilled16>
   ),
   UNKNOWN: (
-    <HelpFilled16
-      className="title-header__status-icon title-header__status-icon-faded"
-    >
+    <HelpFilled16 className="title-header__status-icon title-header__status-icon-faded">
       <title>Unknown</title>
     </HelpFilled16>
   ),
@@ -88,25 +84,27 @@ export default class TitleHeader extends Component {
     }
 
     if (status) {
-      return showJobGraphModal
-        ? (
-          <>
-            {jobsDropdownMenu}
-            <Button
-              hasIconOnly
-              type="button"
-              kind="ghost"
-              renderIcon={InfoIcon16}
-              iconDescription="Show job details"
-              tabIndex={0}
-              onClick={() => showJobGraphModal()}
-              className="title-header__icon-button"
-            />
-            {statusIcons[status]}
-          </>
-        )
-        : jobsDropdownMenu;
+      return showJobGraphModal ? (
+        <>
+          {jobsDropdownMenu}
+          <Button
+            hasIconOnly
+            type="button"
+            kind="ghost"
+            renderIcon={InfoIcon16}
+            iconDescription="Show job details"
+            tabIndex={0}
+            onClick={() => showJobGraphModal()}
+            className="title-header__icon-button"
+          />
+          {statusIcons[status]}
+        </>
+      ) : (
+        jobsDropdownMenu
+      );
     }
+
+    return null;
   }
 
   getJobsDropdownMenu() {
@@ -120,16 +118,19 @@ export default class TitleHeader extends Component {
     } else if (isLoadingJobs) {
       placeholder = 'Loading jobs...';
     } else {
-      dropdownItems = jobs && jobs.length
-        ? jobs.map((job) => ({
-          id: job.id,
-          text: `${job.id}: ${job.name}`,
-          jobId: job.id,
-          jobName: job.name
-        }))
-        : [{ id: 'message', text: 'There are no jobs available.' }];
+      dropdownItems =
+        jobs && jobs.length
+          ? jobs.map((job) => ({
+              id: job.id,
+              text: `${job.id}: ${job.name}`,
+              jobId: job.id,
+              jobName: job.name
+            }))
+          : [{ id: 'message', text: 'There are no jobs available.' }];
       selectedDropdownItem = selectedJobId
-        ? (dropdownItems.find((dropdownItem) => dropdownItem.jobId === selectedJobId) || null)
+        ? dropdownItems.find(
+            (dropdownItem) => dropdownItem.jobId === selectedJobId
+          ) || null
         : null;
     }
     return (
@@ -140,18 +141,15 @@ export default class TitleHeader extends Component {
         ariaLabel="Streams instances dropdown"
         selectedItem={selectedDropdownItem}
         items={dropdownItems}
-        itemToString={item => (item ? item.text : '')}
+        itemToString={(item) => (item ? item.text : '')}
         onChange={this.onDropdownChange}
         downshiftProps={{
-          stateReducer: (state, changes) => {
-            const { isOpen } = changes;
-            if (isOpen) {
-              this.setState(
-                { isLoadingJobs: true, jobsError: false },
-                () => { getStreamsJobs(this.setStreamsJobs); }
-              );
+          onStateChange: (changes) => {
+            if (changes.isOpen) {
+              this.setState({ isLoadingJobs: true, jobsError: false }, () => {
+                getStreamsJobs(this.setStreamsJobs);
+              });
             }
-            return changes;
           }
         }}
         className="title-header__job-dropdown"
@@ -161,7 +159,9 @@ export default class TitleHeader extends Component {
 
   onDropdownChange(dropdownItem) {
     const { handleJobSelected } = this.props;
-    const { selectedItem: { id, jobId, jobName } } = dropdownItem;
+    const {
+      selectedItem: { id, jobId, jobName }
+    } = dropdownItem;
     if (id === 'message') {
       return;
     }
@@ -174,14 +174,10 @@ export default class TitleHeader extends Component {
 
     return (
       <div className="title-header">
-        <div className="title-header__left">
-          {this.getTitle()}
-        </div>
+        <div className="title-header__left">{this.getTitle()}</div>
         <div className="title-header__right">
           {lastUpdatedTimestamp && (
-            <div className="title-header__text">
-              {lastUpdatedTimestamp}
-            </div>
+            <div className="title-header__text">{lastUpdatedTimestamp}</div>
           )}
           {buttonsToRender}
         </div>

@@ -9,8 +9,10 @@
 !images
 !language-configuration.json
 !LICENSE
+!jars
 !node_modules/@ibmstreams/spl-lsp
 !package.json
 !README.md
 !syntaxes
+!templates
 !themes

@@ -2,7 +2,7 @@
   "name": "ibm-streams",
   "displayName": "IBM Streams",
   "description": "IBM Streams Support for Visual Studio Code",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "publisher": "IBM",
   "license": "Apache-2.0",
   "icon": "images/ibm-streams.png",
@@ -28,6 +28,9 @@
     "Streaming Analytics",
     "SPL",
     "theme"
+  ],
+  "extensionDependencies": [
+    "redhat.java"
   ],
   "activationEvents": [
     "*"
@@ -70,6 +73,24 @@
         "key": "ctrl+alt+e",
         "mac": "cmd+alt+e",
         "when": "editorLangId == spl"
+      },
+      {
+        "command": "ibm-streams.build.toolkit",
+        "key": "ctrl+alt+k",
+        "mac": "cmd+alt+k",
+        "when": "explorerResourceIsFolder || resourceFilename =~ /(toolkit.xml|info.xml)/ || editorLangId == makefile"
+      },
+      {
+        "command": "ibm-streams.build.cppPrimitiveOperator",
+        "key": "ctrl+alt+p",
+        "mac": "cmd+alt+p",
+        "when": "explorerResourceIsFolder || resourceExtname =~ /(.cgt|.pm|.xml)/ || editorLangId == makefile"
+      },
+      {
+        "command": "ibm-streams.build.javaPrimitiveOperator",
+        "key": "ctrl+alt+j",
+        "mac": "cmd+alt+j",
+        "when": "explorerResourceIsFolder || editorLangId == java || editorLangId == makefile"
       }
     ],
     "configuration": {
@@ -84,7 +105,7 @@
         },
         "ibm-streams.environment.timeoutForRequests": {
           "type": "number",
-          "default": 30,
+          "default": 60,
           "minimum": 1,
           "description": "Timeout in seconds before a request times out."
         },
@@ -155,6 +176,16 @@
         "category": "IBM Streams"
       },
       {
+        "command": "ibm-streams.createCppPrimitiveOperator",
+        "title": "Create C++ Primitive Operator",
+        "category": "IBM Streams"
+      },
+      {
+        "command": "ibm-streams.createJavaPrimitiveOperator",
+        "title": "Create Java Primitive Operator",
+        "category": "IBM Streams"
+      },
+      {
         "command": "ibm-streams.removeOutputChannels",
         "title": "Remove Build Output Channels",
         "category": "IBM Streams"
@@ -195,8 +226,28 @@
         "category": "IBM Streams"
       },
       {
+        "command": "ibm-streams.build.uploadApplicationBundle",
+        "title": "Upload Application Bundle",
+        "category": "IBM Streams"
+      },
+      {
         "command": "ibm-streams.build.edgeAnalyticsImage",
         "title": "Build Edge Application Image",
+        "category": "IBM Streams"
+      },
+      {
+        "command": "ibm-streams.build.toolkit",
+        "title": "Build Toolkit",
+        "category": "IBM Streams"
+      },
+      {
+        "command": "ibm-streams.build.cppPrimitiveOperator",
+        "title": "Build C++ Primitive Operator",
+        "category": "IBM Streams"
+      },
+      {
+        "command": "ibm-streams.build.javaPrimitiveOperator",
+        "title": "Build Java Primitive Operator",
         "category": "IBM Streams"
       },
       {
@@ -303,6 +354,15 @@
         }
       },
       {
+        "command": "ibm-streams.view.streamsExplorer.streamsInstances.instance.submitJob",
+        "title": "Submit Job",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/timer--add.svg",
+          "dark": "images/icons/dark/timer--add.svg"
+        }
+      },
+      {
         "command": "ibm-streams.view.streamsExplorer.streamsInstances.instance.openCpdDetails",
         "title": "Open Cloud Pak for Data Instance Details",
         "category": "IBM Streams",
@@ -348,6 +408,24 @@
         }
       },
       {
+        "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdSpace.openCpdDetails",
+        "title": "Open Cloud Pak for Data Deployment Space Details",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/information.svg",
+          "dark": "images/icons/dark/information.svg"
+        }
+      },
+      {
+        "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdProject.openCpdDetails",
+        "title": "Open Cloud Pak for Data Deployment Project Details",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/information.svg",
+          "dark": "images/icons/dark/information.svg"
+        }
+      },
+      {
         "command": "ibm-streams.view.streamsExplorer.streamsInstances.job.openCpdDetails",
         "title": "Open Cloud Pak for Data Job Details",
         "category": "IBM Streams",
@@ -381,6 +459,105 @@
         "icon": {
           "light": "images/icons/light/delete.svg",
           "dark": "images/icons/dark/delete.svg"
+        }
+      },
+      {
+        "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdJob.openCpdDetails",
+        "title": "Open Cloud Pak for Data Job Definition Details",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/information.svg",
+          "dark": "images/icons/dark/information.svg"
+        }
+      },
+      {
+        "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdJob.edit",
+        "title": "Edit Job",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/edit.svg",
+          "dark": "images/icons/dark/edit.svg"
+        }
+      },
+      {
+        "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdJob.delete",
+        "title": "Delete Job",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/delete.svg",
+          "dark": "images/icons/dark/delete.svg"
+        }
+      },
+      {
+        "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdJob.startRun",
+        "title": "Start Job Run",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/play.svg",
+          "dark": "images/icons/dark/play.svg"
+        }
+      },
+      {
+        "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdJobRun.openCpdDetails",
+        "title": "Open Cloud Pak for Data Job Run Details",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/information.svg",
+          "dark": "images/icons/dark/information.svg"
+        }
+      },
+      {
+        "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdJobRun.createLogSnapshot",
+        "title": "Create Log Snapshot",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/camera.svg",
+          "dark": "images/icons/dark/camera.svg"
+        }
+      },
+      {
+        "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdJobRun.cancel",
+        "title": "Cancel Job Run",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/stop.svg",
+          "dark": "images/icons/dark/stop.svg"
+        }
+      },
+      {
+        "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdJobRun.delete",
+        "title": "Delete Job Run",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/delete.svg",
+          "dark": "images/icons/dark/delete.svg"
+        }
+      },
+      {
+        "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdJobRunLog.deleteMultiple",
+        "title": "Delete Job Run Logs",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/delete.svg",
+          "dark": "images/icons/dark/delete.svg"
+        }
+      },
+      {
+        "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdJobRunLog.delete",
+        "title": "Delete Job Run Log",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/delete.svg",
+          "dark": "images/icons/dark/delete.svg"
+        }
+      },
+      {
+        "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdJobRunLog.download",
+        "title": "Download Job Run Log",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/document--download.svg",
+          "dark": "images/icons/dark/document--download.svg"
         }
       },
       {
@@ -528,6 +705,12 @@
           "command": "ibm-streams.createSplApplicationSet"
         },
         {
+          "command": "ibm-streams.createCppPrimitiveOperator"
+        },
+        {
+          "command": "ibm-streams.createJavaPrimitiveOperator"
+        },
+        {
           "command": "ibm-streams.removeOutputChannels"
         },
         {
@@ -559,8 +742,24 @@
           "when": "resourceExtname == .sab"
         },
         {
+          "command": "ibm-streams.build.uploadApplicationBundle",
+          "when": "resourceExtname == .sab"
+        },
+        {
           "command": "ibm-streams.build.edgeAnalyticsImage",
           "when": "resourceExtname == .sab"
+        },
+        {
+          "command": "ibm-streams.build.toolkit",
+          "when": "explorerResourceIsFolder || resourceFilename =~ /(toolkit.xml|info.xml)/ || editorLangId == makefile"
+        },
+        {
+          "command": "ibm-streams.build.cppPrimitiveOperator",
+          "when": "explorerResourceIsFolder || resourceExtname =~ /(.cgt|.pm|.xml)/ || editorLangId == makefile"
+        },
+        {
+          "command": "ibm-streams.build.javaPrimitiveOperator",
+          "when": "explorerResourceIsFolder || editorLangId == java || editorLangId == makefile"
         },
         {
           "command": "ibm-streams.environment.cloudPakForData.openConsole",
@@ -637,6 +836,14 @@
           "when": "false"
         },
         {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdSpace.openCpdDetails",
+          "when": "false"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdProject.openCpdDetails",
+          "when": "false"
+        },
+        {
           "command": "ibm-streams.view.streamsExplorer.streamsInstances.job.openCpdDetails",
           "when": "false"
         },
@@ -650,6 +857,50 @@
         },
         {
           "command": "ibm-streams.view.streamsExplorer.streamsInstances.job.cancel",
+          "when": "false"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdJob.openCpdDetails",
+          "when": "false"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdJob.edit",
+          "when": "false"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdJob.delete",
+          "when": "false"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdJob.startRun",
+          "when": "false"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdJobRun.openCpdDetails",
+          "when": "false"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdJobRun.createLogSnapshot",
+          "when": "false"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdJobRun.cancel",
+          "when": "false"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdJobRun.delete",
+          "when": "false"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdJobRunLog.deleteMultiple",
+          "when": "false"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdJobRunLog.delete",
+          "when": "false"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdJobRunLog.download",
           "when": "false"
         },
         {
@@ -712,42 +963,62 @@
         {
           "command": "ibm-streams.build.appDownload",
           "when": "resourceLangId == spl",
-          "group": "STREAMS@1"
+          "group": "STREAMS1@1"
         },
         {
           "command": "ibm-streams.build.appSubmit",
           "when": "resourceLangId == spl",
-          "group": "STREAMS@2"
+          "group": "STREAMS1@2"
         },
         {
           "command": "ibm-streams.build.appEdgeAnalyticsImage",
           "when": "resourceLangId == spl",
-          "group": "STREAMS@3"
+          "group": "STREAMS1@3"
         },
         {
           "command": "ibm-streams.build.makeDownload",
           "when": "resourceLangId == makefile",
-          "group": "STREAMS@1"
+          "group": "STREAMS1@1"
         },
         {
           "command": "ibm-streams.build.makeSubmit",
           "when": "resourceLangId == makefile",
-          "group": "STREAMS@2"
+          "group": "STREAMS1@2"
         },
         {
           "command": "ibm-streams.build.makeEdgeAnalyticsImage",
           "when": "resourceLangId == makefile",
-          "group": "STREAMS@3"
+          "group": "STREAMS1@3"
         },
         {
           "command": "ibm-streams.build.submit",
           "when": "resourceExtname == .sab",
-          "group": "STREAMS@3"
+          "group": "STREAMS1@3"
+        },
+        {
+          "command": "ibm-streams.build.uploadApplicationBundle",
+          "when": "resourceExtname == .sab",
+          "group": "STREAMS1@4"
         },
         {
           "command": "ibm-streams.build.edgeAnalyticsImage",
           "when": "resourceExtname == .sab",
-          "group": "STREAMS@4"
+          "group": "STREAMS1@5"
+        },
+        {
+          "command": "ibm-streams.build.toolkit",
+          "when": "explorerResourceIsFolder || resourceFilename =~ /(toolkit.xml|info.xml)/ || resourceLangId == makefile",
+          "group": "STREAMS1@5"
+        },
+        {
+          "command": "ibm-streams.build.cppPrimitiveOperator",
+          "when": "explorerResourceIsFolder || resourceExtname =~ /(.cgt|.pm|.xml)/ || resourceLangId == makefile",
+          "group": "STREAMS1@6"
+        },
+        {
+          "command": "ibm-streams.build.javaPrimitiveOperator",
+          "when": "explorerResourceIsFolder || resourceLangId == java || resourceLangId == makefile",
+          "group": "STREAMS1@7"
         },
         {
           "command": "ibm-streams.environment.cloudPakForData.openDashboard",
@@ -811,6 +1082,14 @@
         {
           "command": "ibm-streams.createSplApplicationSet",
           "group": "STREAMS3@2"
+        },
+        {
+          "command": "ibm-streams.createCppPrimitiveOperator",
+          "group": "STREAMS3@3"
+        },
+        {
+          "command": "ibm-streams.createJavaPrimitiveOperator",
+          "group": "STREAMS3@4"
         }
       ],
       "editor/context": [
@@ -832,42 +1111,62 @@
         {
           "command": "ibm-streams.build.appDownload",
           "when": "editorLangId == spl",
-          "group": "STREAMS@1"
+          "group": "STREAMS1@1"
         },
         {
           "command": "ibm-streams.build.appSubmit",
           "when": "editorLangId == spl",
-          "group": "STREAMS@2"
+          "group": "STREAMS1@2"
         },
         {
           "command": "ibm-streams.build.appEdgeAnalyticsImage",
           "when": "editorLangId == spl",
-          "group": "STREAMS@3"
+          "group": "STREAMS1@3"
         },
         {
           "command": "ibm-streams.build.makeDownload",
           "when": "editorLangId == makefile",
-          "group": "STREAMS@1"
+          "group": "STREAMS1@1"
         },
         {
           "command": "ibm-streams.build.makeSubmit",
           "when": "editorLangId == makefile",
-          "group": "STREAMS@2"
+          "group": "STREAMS1@2"
         },
         {
           "command": "ibm-streams.build.makeEdgeAnalyticsImage",
           "when": "resourceLangId == makefile",
-          "group": "STREAMS@3"
+          "group": "STREAMS1@3"
         },
         {
           "command": "ibm-streams.build.submit",
           "when": "resourceExtname == .sab",
-          "group": "STREAMS@3"
+          "group": "STREAMS1@3"
+        },
+        {
+          "command": "ibm-streams.build.uploadApplicationBundle",
+          "when": "resourceExtname == .sab",
+          "group": "STREAMS1@4"
         },
         {
           "command": "ibm-streams.build.edgeAnalyticsImage",
           "when": "resourceExtname == .sab",
-          "group": "STREAMS@4"
+          "group": "STREAMS1@5"
+        },
+        {
+          "command": "ibm-streams.build.toolkit",
+          "when": "explorerResourceIsFolder || resourceFilename =~ /(toolkit.xml|info.xml)/ || resourceLangId == makefile",
+          "group": "STREAMS1@5"
+        },
+        {
+          "command": "ibm-streams.build.cppPrimitiveOperator",
+          "when": "explorerResourceIsFolder || resourceExtname =~ /(.cgt|.pm|.xml)/ || resourceLangId == makefile",
+          "group": "STREAMS1@6"
+        },
+        {
+          "command": "ibm-streams.build.javaPrimitiveOperator",
+          "when": "explorerResourceIsFolder || editorLangId == java || resourceLangId == makefile",
+          "group": "STREAMS1@7"
         },
         {
           "command": "ibm-streams.environment.cloudPakForData.openDashboard",
@@ -931,6 +1230,14 @@
         {
           "command": "ibm-streams.createSplApplicationSet",
           "group": "STREAMS3@2"
+        },
+        {
+          "command": "ibm-streams.createCppPrimitiveOperator",
+          "group": "STREAMS3@3"
+        },
+        {
+          "command": "ibm-streams.createJavaPrimitiveOperator",
+          "group": "STREAMS3@4"
         }
       ],
       "editor/title/context": [
@@ -952,42 +1259,62 @@
         {
           "command": "ibm-streams.build.appDownload",
           "when": "resourceLangId == spl",
-          "group": "STREAMS@1"
+          "group": "STREAMS1@1"
         },
         {
           "command": "ibm-streams.build.appSubmit",
           "when": "resourceLangId == spl",
-          "group": "STREAMS@2"
+          "group": "STREAMS1@2"
         },
         {
           "command": "ibm-streams.build.appEdgeAnalyticsImage",
           "when": "resourceLangId == spl",
-          "group": "STREAMS@3"
+          "group": "STREAMS1@3"
         },
         {
           "command": "ibm-streams.build.makeDownload",
           "when": "resourceLangId == makefile",
-          "group": "STREAMS@1"
+          "group": "STREAMS1@1"
         },
         {
           "command": "ibm-streams.build.makeSubmit",
           "when": "resourceLangId == makefile",
-          "group": "STREAMS@2"
+          "group": "STREAMS1@2"
         },
         {
           "command": "ibm-streams.build.makeEdgeAnalyticsImage",
           "when": "resourceLangId == makefile",
-          "group": "STREAMS@3"
+          "group": "STREAMS1@3"
         },
         {
           "command": "ibm-streams.build.submit",
           "when": "resourceExtname == .sab",
-          "group": "STREAMS@3"
+          "group": "STREAMS1@3"
+        },
+        {
+          "command": "ibm-streams.build.uploadApplicationBundle",
+          "when": "resourceExtname == .sab",
+          "group": "STREAMS1@4"
         },
         {
           "command": "ibm-streams.build.edgeAnalyticsImage",
           "when": "resourceExtname == .sab",
-          "group": "STREAMS@4"
+          "group": "STREAMS1@5"
+        },
+        {
+          "command": "ibm-streams.build.toolkit",
+          "when": "explorerResourceIsFolder || resourceFilename =~ /(toolkit.xml|info.xml)/ || resourceLangId == makefile",
+          "group": "STREAMS1@5"
+        },
+        {
+          "command": "ibm-streams.build.cppPrimitiveOperator",
+          "when": "explorerResourceIsFolder || resourceExtname =~ /(.cgt|.pm|.xml)/ || resourceLangId == makefile",
+          "group": "STREAMS1@6"
+        },
+        {
+          "command": "ibm-streams.build.javaPrimitiveOperator",
+          "when": "explorerResourceIsFolder || resourceLangId == java || resourceLangId == makefile",
+          "group": "STREAMS1@7"
         },
         {
           "command": "ibm-streams.environment.cloudPakForData.openDashboard",
@@ -1051,6 +1378,14 @@
         {
           "command": "ibm-streams.createSplApplicationSet",
           "group": "STREAMS3@2"
+        },
+        {
+          "command": "ibm-streams.createCppPrimitiveOperator",
+          "group": "STREAMS3@3"
+        },
+        {
+          "command": "ibm-streams.createJavaPrimitiveOperator",
+          "group": "STREAMS3@4"
         }
       ],
       "view/title": [
@@ -1092,19 +1427,34 @@
           "group": "inline@3"
         },
         {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.instance.submitJob",
+          "when": "view == streamsInstances && viewItem =~ /auth.*cpdSpaces.*v5_cpd.*_instanceTreeItem/",
+          "group": "inline@4"
+        },
+        {
           "command": "ibm-streams.view.streamsExplorer.streamsInstances.instance.remove",
           "when": "view == streamsInstances && viewItem =~ /instanceTreeItem/",
-          "group": "inline@4"
+          "group": "inline@5"
         },
         {
           "command": "ibm-streams.view.streamsExplorer.streamsInstances.instance.openCpdDetails",
           "when": "view == streamsInstances && viewItem =~ /v5_cpd_instanceTreeItem/",
-          "group": "inline@5"
+          "group": "inline@6"
         },
         {
           "command": "ibm-streams.view.streamsExplorer.streamsInstances.instance.openConsole",
           "when": "view == streamsInstances && viewItem =~ /consoleEnabled_.*_instanceTreeItem/",
-          "group": "inline@6"
+          "group": "inline@7"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdSpace.openCpdDetails",
+          "when": "view == streamsInstances && viewItem =~ /cpdSpaceTreeItem/",
+          "group": "inline@1"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdProject.openCpdDetails",
+          "when": "view == streamsInstances && viewItem =~ /cpdProjectTreeItem/",
+          "group": "inline@1"
         },
         {
           "command": "ibm-streams.view.streamsExplorer.streamsInstances.job.openCpdDetails",
@@ -1130,6 +1480,66 @@
           "command": "ibm-streams.view.streamsExplorer.streamsInstances.job.cancel",
           "when": "view == streamsInstances && viewItem =~ /jobTreeItem/",
           "group": "inline@5"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdJob.openCpdDetails",
+          "when": "view == streamsInstances && viewItem =~ /cpdJobTreeItem/",
+          "group": "inline@1"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdJob.edit",
+          "when": "view == streamsInstances && viewItem =~ /^(?:finished_)?cpdJobTreeItem/",
+          "group": "inline@2"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdJob.delete",
+          "when": "view == streamsInstances && viewItem == finished_cpdJobTreeItem",
+          "group": "inline@3"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdJob.startRun",
+          "when": "view == streamsInstances && viewItem =~ /^(?:finished_)?cpdJobTreeItem/",
+          "group": "inline@4"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdJobRun.openCpdDetails",
+          "when": "view == streamsInstances && viewItem =~ /cpdJobRunTreeItem/",
+          "group": "inline@1"
+        },
+        {
+          "command": "ibm-streams.environment.showJobGraph",
+          "when": "view == streamsInstances && viewItem =~ /running_cpdJobRunTreeItem/",
+          "group": "inline@2"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdJobRun.createLogSnapshot",
+          "when": "view == streamsInstances && viewItem =~ /running_cpdJobRunTreeItem/",
+          "group": "inline@3"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdJobRun.cancel",
+          "when": "view == streamsInstances && viewItem =~ /running_cpdJobRunTreeItem/",
+          "group": "inline@4"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdJobRun.delete",
+          "when": "view == streamsInstances && viewItem =~ /finished_cpdJobRunTreeItem/",
+          "group": "inline@5"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdJobRunLog.deleteMultiple",
+          "when": "view == streamsInstances && viewItem == cpdJobRunLogsLabelTreeItem",
+          "group": "inline@1"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdJobRunLog.delete",
+          "when": "view == streamsInstances && viewItem =~ /cpdJobRunLogTreeItem/",
+          "group": "inline@1"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdJobRunLog.download",
+          "when": "view == streamsInstances && viewItem =~ /cpdJobRunLogTreeItem/",
+          "group": "inline@2"
         },
         {
           "command": "ibm-streams.view.streamsExplorer.streamsInstances.baseImage.buildImage",
@@ -1250,6 +1660,7 @@
     "@types/node": "^12.12.18",
     "@types/react": "^16.9.5",
     "@types/react-dom": "^16.9.1",
+    "@types/semver": "^7.1.0",
     "@types/shelljs": "^0.8.5",
     "@types/sinon": "^7.5.0",
     "@types/unzipper": "^0.10.2",
@@ -1266,6 +1677,7 @@
     "css-loader": "^3.2.0",
     "eslint": "^6.1.0",
     "eslint-config-airbnb": "^18.0.1",
+    "eslint-config-prettier": "^6.11.0",
     "eslint-import-resolver-webpack": "0.12.0",
     "eslint-plugin-babel": "^5.3.0",
     "eslint-plugin-compat": "^3.3.0",
@@ -1282,6 +1694,7 @@
     "mocha": "^6.2.1",
     "node-sass": "^4.12.0",
     "npm-run-all": "^4.1.5",
+    "prettier": "2.1.0",
     "raw-loader": "4.0.0",
     "remote-redux-devtools": "^0.5.16",
     "rimraf": "^3.0.0",
@@ -1295,26 +1708,27 @@
     "typescript": "^3.6.4",
     "unzipper": "^0.10.10",
     "url-loader": "3.0.0",
-    "vsce": "^1.67.1",
+    "vsce": "^1.81.1",
     "vscode-test": "^1.3.0",
     "webpack": "4.41.3",
     "webpack-cli": "^3.3.9"
   },
   "dependencies": {
-    "@carbon/icons-react": "^10.11.0",
-    "@carbon/themes": "^10.12.0",
-    "@ibmstreams/common": "0.9.4",
-    "@ibmstreams/graph": "0.9.0",
-    "@ibmstreams/spl-lsp": "1.0.1",
+    "@carbon/icons-react": "^10.19.0",
+    "@carbon/themes": "^10.20.0",
+    "@ibmstreams/common": "0.9.5",
+    "@ibmstreams/graph": "1.0.1",
+    "@ibmstreams/spl-lsp": "1.1.0",
     "axios": "^0.19.0",
-    "carbon-components": "^10.12.0",
-    "carbon-components-react": "^7.12.0",
+    "carbon-components": "10.21.0",
+    "carbon-components-react": "7.21.0",
     "lodash": "^4.17.19",
     "prop-types": "^15.7.2",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-intl": "^3.11.0",
     "react-redux": "^7.2.0",
+    "semver": "^7.1.2",
     "vscode-languageclient": "^5.2.1",
     "vscode-languageserver-protocol": "^3.14.1",
     "xml2js": "^0.4.23"
@@ -1324,19 +1738,23 @@
   },
   "scripts": {
     "clean": "rimraf dist out",
-    "compile": "npm-run-all clean webpack:dev",
-    "installdeps": "rimraf node_modules && yarn install",
+    "compile": "npm-run-all clean installdeps webpack:dev",
+    "installdeps:complete": "rimraf node_modules && yarn install",
+    "installdeps": "yarn install",
     "lint:fix": "eslint --ext .js,.ts,.d.ts --fix .",
     "lint": "eslint --ext .js,.ts,.d.ts .",
-    "package:ls": "npm-run-all clean installdeps && vsce ls --yarn",
-    "package": "npm-run-all clean installdeps && vsce package --yarn",
-    "publish": "vsce publish",
+    "package:dev": "npm-run-all clean && vsce package --yarn --githubBranch main",
+    "package:ls": "npm-run-all clean installdeps:complete && vsce ls --yarn",
+    "package": "npm-run-all clean installdeps:complete && vsce package --yarn --githubBranch main",
+    "pretty:fix": "prettier --config .prettierrc.js --write \"./**/*.{ts,js,scss,md,json}\"",
+    "pretty": "prettier --config .prettierrc.js --check \"./**/*.{ts,js,scss,md,json}\"",
+    "publish": "vsce publish --githubBranch main",
     "test:compile": "yarn run compile && tsc -p ./ && ts-node test/copyStaticAssets.ts",
     "test": "yarn run test:compile && node ./out/test/runTest.js",
     "typecheck": "tsc --noEmit --skipLibCheck",
     "vscode:prepublish": "yarn run webpack:prod",
-    "webpack:dev": "webpack --mode=development",
     "webpack:dev-watch": "webpack --mode=development --watch",
+    "webpack:dev": "webpack --mode=development",
     "webpack:prod": "webpack --mode=production"
   }
 }

@@ -5,12 +5,12 @@
   .job-graph-container__loading-icon {
     text-align: center;
   }
-  
+
   .job-graph-container__empty-canvas-message {
     @include carbon--type-style('productive-heading-03');
     text-align: center;
   }
-  
+
   .job-graph-container__job-action-canvas-message {
     @include carbon--type-style('productive-heading-03');
     text-align: center;

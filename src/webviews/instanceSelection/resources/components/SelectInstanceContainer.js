@@ -1,6 +1,9 @@
 import Dropdown from 'carbon-components-react/es/components/Dropdown';
 import {
-  StructuredListBody, StructuredListCell, StructuredListRow, StructuredListWrapper
+  StructuredListBody,
+  StructuredListCell,
+  StructuredListRow,
+  StructuredListWrapper
 } from 'carbon-components-react/es/components/StructuredList';
 import _each from 'lodash/each';
 import PropTypes from 'prop-types';
@@ -13,17 +16,24 @@ export default class SelectInstanceContainer extends Component {
   constructor(props) {
     super(props);
 
-    const { params: { storedInstances, displayPath, defaultInstance } } = this.props;
+    const {
+      params: { storedInstances, displayPath, defaultInstance }
+    } = this.props;
 
     this.instanceOptions = [];
     _each(storedInstances, (value) => {
-      this.instanceOptions.push({ id: value.connectionId, text: value.instanceName });
+      this.instanceOptions.push({
+        id: value.connectionId,
+        text: value.instanceName
+      });
     });
 
     this.state = {
       selectedInstance: storedInstances
-        ? this.instanceOptions.find((type) => type.id === defaultInstance.connectionId)
-        : null,
+        ? this.instanceOptions.find(
+            (type) => type.id === defaultInstance.connectionId
+          )
+        : null
     };
 
     this.themeHandler = new ThemeHandler();
@@ -42,18 +52,22 @@ export default class SelectInstanceContainer extends Component {
         disabled={false}
         selectedItem={selectedInstance}
         items={this.instanceOptions}
-        itemToString={item => (item ? item.text : '')}
+        itemToString={(item) => (item ? item.text : '')}
         onChange={(e) => {
           this.setState({ selectedInstance: e.selectedItem });
         }}
       />
     );
-  }
+  };
 
   getButtonContainer = () => {
     const { selectedInstance } = this.state;
-    const { params: { storedInstances, action } } = this.props;
-    const inst = storedInstances.find((type) => type.connectionId === selectedInstance.id);
+    const {
+      params: { storedInstances, action }
+    } = this.props;
+    const inst = storedInstances.find(
+      (type) => type.connectionId === selectedInstance.id
+    );
     return (
       <ButtonContainer
         primaryBtn={{
@@ -75,38 +89,75 @@ export default class SelectInstanceContainer extends Component {
         }}
       />
     );
-  }
+  };
 
   showConnectionDetails = () => {
     const { selectedInstance } = this.state;
-    const { params: { storedInstances } } = this.props;
-    const instance = storedInstances.find((type) => type.connectionId === selectedInstance.id);
-    const { instanceType, authentication } = instance;
+    const {
+      params: { storedInstances }
+    } = this.props;
+    const instance = storedInstances.find(
+      (type) => type.connectionId === selectedInstance.id
+    );
+    const { instanceType, authentication, cpdVersion } = instance;
     let structuredListData;
     switch (instanceType) {
       case 'v5_cpd':
         structuredListData = [
-          { label: 'Streams version', value: 'IBM Cloud Pak for Data deployment' },
-          { label: 'Cloud Pak for Data version', value: authentication.cpdVersion.substring(1) },
+          {
+            label: 'Streams version',
+            value: 'IBM Cloud Pak for Data deployment'
+          },
+          {
+            label: 'Cloud Pak for Data version',
+            value: cpdVersion
+          },
           { label: 'Cloud Pak for Data URL', value: authentication.cpdUrl },
-          { label: 'Cloud Pak for Data username', value: authentication.username }
+          {
+            label: 'Cloud Pak for Data username',
+            value: authentication.username
+          }
         ];
         break;
       case 'v5_standalone':
         structuredListData = [
-          { label: 'Streams version', value: 'IBM Streams standalone deployment' },
-          { label: 'Streams REST service URL', value: authentication.streamsRestServiceUrl },
-          { label: 'Streams build service URL', value: authentication.streamsBuildServiceUrl || '-' },
-          { label: 'Streams security service URL', value: authentication.streamsSecurityServiceUrl || '-' },
-          { label: 'Streams Console URL', value: authentication.streamsConsoleUrl || '-' },
+          {
+            label: 'Streams version',
+            value: 'IBM Streams standalone deployment'
+          },
+          {
+            label: 'Streams REST service URL',
+            value: authentication.streamsRestServiceUrl
+          },
+          {
+            label: 'Streams build service URL',
+            value: authentication.streamsBuildServiceUrl || '-'
+          },
+          {
+            label: 'Streams security service URL',
+            value: authentication.streamsSecurityServiceUrl || '-'
+          },
+          {
+            label: 'Streams Console URL',
+            value: authentication.streamsConsoleUrl || '-'
+          },
           { label: 'Streams username', value: authentication.username }
         ];
         break;
       case 'v4_streamingAnalytics':
         structuredListData = [
-          { label: 'Streams version', value: 'IBM Streaming Analytics on IBM Cloud' },
-          { label: 'Streaming Analytics service API key', value: authentication.credentials.apikey },
-          { label: 'Streaming Analytics service V2 REST URL', value: authentication.credentials.v2_rest_url }
+          {
+            label: 'Streams version',
+            value: 'IBM Streaming Analytics on IBM Cloud'
+          },
+          {
+            label: 'Streaming Analytics service API key',
+            value: authentication.credentials.apikey
+          },
+          {
+            label: 'Streaming Analytics service V2 REST URL',
+            value: authentication.credentials.v2_rest_url
+          }
         ];
         break;
       default:
@@ -114,31 +165,27 @@ export default class SelectInstanceContainer extends Component {
         break;
     }
 
-    return structuredListData
-      ? (
-        <div className="details-container">
-          <StructuredListWrapper className="structured-list">
-            <StructuredListBody>
-              {structuredListData.map((item) => (
-                <StructuredListRow className="structured-row" key={item.label}>
-                  <StructuredListCell noWrap>{item.label}</StructuredListCell>
-                  <StructuredListCell>{item.value}</StructuredListCell>
-                </StructuredListRow>
-              ))}
-            </StructuredListBody>
-          </StructuredListWrapper>
-        </div>
-      )
-      : (
-        <div>
-          {selectedInstance.instanceType}
-        </div>
-      );
-  }
+    return structuredListData ? (
+      <div className="details-container">
+        <StructuredListWrapper className="structured-list">
+          <StructuredListBody>
+            {structuredListData.map((item) => (
+              <StructuredListRow className="structured-row" key={item.label}>
+                <StructuredListCell noWrap>{item.label}</StructuredListCell>
+                <StructuredListCell>{item.value}</StructuredListCell>
+              </StructuredListRow>
+            ))}
+          </StructuredListBody>
+        </StructuredListWrapper>
+      </div>
+    ) : (
+      <div>{selectedInstance.instanceType}</div>
+    );
+  };
 
   closePanel = () => {
     this.messageHandler.postMessage({ command: 'close-panel' });
-  }
+  };
 
   render() {
     return (

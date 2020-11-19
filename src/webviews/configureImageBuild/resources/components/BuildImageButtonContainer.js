@@ -12,7 +12,9 @@ const BuildImageButtonContainer = ({ messageHandler }) => {
     shouldOverrideExistingAppBundles,
     selectedBaseImage,
     imageName,
+    imageNameError,
     imageTag,
+    imageTagError,
     selectedNewConfigType,
     selectedNewConfigFile
   } = useContext(BuildImageContext);
@@ -20,22 +22,28 @@ const BuildImageButtonContainer = ({ messageHandler }) => {
   const validate = () => {
     // True if errors, false otherwise
     const errors = {
-      selectedExistingConfigFile: selectedConfigFileType === ConfigFileType.EXISTING
-        && (!selectedExistingConfigFile || !!selectedExistingConfigFile.error),
-      selectedNewConfigFile: selectedConfigFileType === ConfigFileType.NEW
-        && (
-          (selectedNewConfigType === NewConfigType.SIMPLE && (!selectedBaseImage || !imageName.trim().length || !imageTag.trim().length))
-          || (selectedNewConfigType === NewConfigType.ADVANCED && !selectedNewConfigFile)
-        )
+      selectedExistingConfigFile:
+        selectedConfigFileType === ConfigFileType.EXISTING &&
+        (!selectedExistingConfigFile || !!selectedExistingConfigFile.error),
+      selectedNewConfigFile:
+        selectedConfigFileType === ConfigFileType.NEW &&
+        ((selectedNewConfigType === NewConfigType.SIMPLE &&
+          (!selectedBaseImage ||
+            !imageName.trim().length ||
+            !imageTag.trim().length ||
+            imageNameError ||
+            imageTagError)) ||
+          (selectedNewConfigType === NewConfigType.ADVANCED &&
+            !selectedNewConfigFile))
     };
     return errors;
-  }
+  };
 
   const isFormValid = () => {
     const errors = validate();
     const isValid = !Object.keys(errors).some((e) => errors[e]);
     return isValid;
-  }
+  };
 
   const buildImageArgs = {};
   if (isFormValid()) {
@@ -67,12 +75,12 @@ const BuildImageButtonContainer = ({ messageHandler }) => {
         label: 'Cancel',
         isValid: true,
         onClick: () => {
-          messageHandler.postMessage({ command: 'close-panel' })
+          messageHandler.postMessage({ command: 'close-panel' });
         }
       }}
     />
-  )
-}
+  );
+};
 
 BuildImageButtonContainer.propTypes = {
   messageHandler: PropTypes.instanceOf(MessageHandler).isRequired

@@ -3,11 +3,11 @@ import React from 'react';
 import StreamsJobGraphContainer from './StreamsJobGraphContainer';
 
 /**
- * Note: `jobGraphContainerParams` is defined when setting the webview HTML content
+ * Note: `params` is defined when setting the webview HTML content
  */
 const App = () => (
   <div className="app-container">
-    <StreamsJobGraphContainer params={jobGraphContainerParams} />
+    <StreamsJobGraphContainer params={params} />
   </div>
 );
 

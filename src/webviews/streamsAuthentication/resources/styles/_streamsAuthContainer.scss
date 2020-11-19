@@ -23,7 +23,9 @@
       }
     }
 
-    .connection-form__test-connection-button:not(.bx--btn--disabled) svg polygon {
+    .connection-form__test-connection-button:not(.bx--btn--disabled)
+      svg
+      polygon {
       fill: var(--color-icon01);
     }
   }

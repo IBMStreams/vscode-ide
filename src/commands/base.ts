@@ -2,11 +2,11 @@
  * The base command
  */
 export default interface BaseCommand {
-    commandName: string;
+  commandName: string;
 
-    /**
-     * Execute the command
-     * @param args    Array of arguments
-     */
-    execute(...args: any[]): any;
+  /**
+   * Execute the command
+   * @param args array of arguments
+   */
+  execute(...args: any[]): any;
 }
