@@ -1,0 +1,54 @@
+<div class="details-container">
+  <details>
+    <summary>Launching the Streams Console</summary>
+    <section class="detail-content">
+      <div>
+        In the <strong>Instances</strong> section of the Streams Explorer, hover over an instance and click on the
+        <strong>Open Streams Console</strong> icon
+        <img
+          src="{{ site.github_icon_prefix }}/branch.svg?raw=true"
+          alt="Open Streams Console icon"
+          title="Open Streams Console"
+          class="editor-button"
+        />
+        that appears on the right. This will open the Streams Console in a web browser. To view the graph for your job,
+        expand the <strong>Streams Graph</strong> card and locate your job.
+      </div>
+    </section>
+  </details>
+
+  <details>
+    <summary>Observe the data flowing through the job in real time</summary>
+    <section class="detail-content">
+      <div>
+        You can look at the data on a given stream to observe the data that is being processed or produced by an
+        operator.
+      </div>
+      <ol>
+        <li>In the Application Dashboard, expand the <strong>Streams Graph</strong> card and locate your job.</li>
+        <li>Hover over a stream coming out of an operator and select <strong>Create Dashboard View</strong>.</li>
+        <li>Configure the view options and click on the <strong>OK</strong> button.</li>
+        <li>Minimize the <strong>Streams Graph</strong> card.</li>
+        <li>
+          A new dashboard card is created that displays the tuples in the stream produced by the operator. Notice that
+          the view is processed as new data arrives.
+        </li>
+      </ol>
+    </section>
+  </details>
+
+  <details>
+    <summary>View application logs</summary>
+    <section class="detail-content">
+      <div>
+        All application output, including messages printed to standard out, errors, and trace data are sent to the logs.
+      </div>
+      <ol>
+        <li>Click on the <strong>Log Viewer</strong> icon on the left side.</li>
+        <li>Drill down to the object (job, PE, or operator) that you want to view the logs for.</li>
+        <li>Choose one of the log types and the log data will be displayed.</li>
+        <li>If you want to see the latest logs, click <strong>Reload</strong>.</li>
+      </ol>
+    </section>
+  </details>
+</div>

@@ -1,0 +1,256 @@
+---
+# Only the main Sass file needs front matter (the dashes are enough)
+---
+
+@charset "utf-8";
+
+// Use IBM Plex fonts
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Serif&display=swap');
+$serif: 'IBM Plex Serif', Georgia, Times, serif !default;
+$sans-serif: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande',
+  Arial, sans-serif !default;
+$monospace: 'IBM Plex Mono', Monaco, Consolas, 'Lucida Console', monospace !default;
+
+// Set primary color
+$primary-color: #1593ba !default;
+
+// Set max width
+$max-width: 1366px !default;
+
+@import "minimal-mistakes/skins/{{ site.minimal_mistakes_skin | default: 'default' }}"; // skin
+@import 'minimal-mistakes'; // main partials
+
+// Set base font sizes
+html {
+  font-size: 16px;
+
+  @include breakpoint($medium) {
+    font-size: 16px;
+  }
+
+  @include breakpoint($large) {
+    font-size: 18px;
+  }
+
+  @include breakpoint($x-large) {
+    font-size: 18px;
+  }
+}
+
+// Style nested ordered lists
+ol ol {
+  list-style-type: lower-alpha;
+}
+
+ol ol ol {
+  list-style-type: lower-roman;
+}
+
+// Hide hero title
+.page__hero--overlay .page__title {
+  display: none;
+}
+
+// Set text alignment for right-aligned feature items
+.feature__item--right {
+  .archive__item-title,
+  .archive__item-excerpt {
+    text-align: left;
+  }
+
+  a.btn {
+    float: left;
+  }
+}
+
+.page__title {
+  display: flex;
+  align-items: center;
+  padding-bottom: 1rem;
+
+  // Style GitHub buttons
+  .github-btn {
+    font-size: 0.5em;
+    margin-bottom: 0;
+    margin-left: 0.8em;
+  }
+}
+
+.page__content {
+  // Set page font sizes
+  & > p,
+  & > ol > li,
+  & > ul > li {
+    font-size: 0.9em;
+  }
+
+  // Style images
+  figure {
+    margin: 1rem 0;
+
+    img {
+      margin-bottom: 0;
+    }
+  }
+
+  // Style bold code
+  strong > code {
+    padding-top: 0.1rem;
+    padding-bottom: 0.1rem;
+    font-size: 0.8em;
+    background: #fafafa;
+    border-radius: 4px;
+
+    &:before,
+    &:after {
+      letter-spacing: -0.2em;
+      content: '\00a0';
+    }
+  }
+
+  // Style list items with nested code snippets
+  ol li > p,
+  ul li > p {
+    margin-bottom: 0;
+  }
+
+  // Style nested code snippets
+  ol li div.highlighter-rouge,
+  ul li div.highlighter-rouge {
+    margin-top: 1em;
+  }
+
+  // Style nested notices
+  ol li .notice--info,
+  ul li .notice--info {
+    margin: 0.5em 0 !important;
+  }
+
+  // Style nested images
+  ol li figure,
+  ul li figure {
+    margin: 0.5em 0;
+  }
+
+  // Style pagination buttons
+  .pagination--pager {
+    padding-top: 0.8em;
+    padding-bottom: 0.8em;
+    font-size: 0.9em;
+  }
+
+  // Style notices
+  .notice--primary,
+  .notice--info,
+  .notice--warning,
+  .notice--success,
+  .notice--danger {
+    font-size: 0.9em !important;
+
+    div.highlighter-rouge {
+      font-size: 0.825em;
+    }
+  }
+
+  // Style code links
+  a > code {
+    padding: 0 0.3rem;
+
+    &:before,
+    &:after {
+      content: none;
+    }
+  }
+
+  // Style editor buttons
+  .editor-button {
+    margin-top: -3px;
+    margin-left: 1px;
+    max-height: 16px;
+  }
+
+  // Style <details> elements
+  .details-container {
+    padding-bottom: 1rem;
+
+    details {
+      font-size: 0.9em;
+      border-top: 1px solid $border-color;
+      border-left: 1px solid $border-color;
+      border-right: 1px solid $border-color;
+
+      &:first-of-type {
+        border-top-left-radius: 4px;
+        border-top-right-radius: 4px;
+      }
+
+      &:last-of-type {
+        border-bottom: 1px solid $border-color;
+        border-bottom-left-radius: 4px;
+        border-bottom-right-radius: 4px;
+      }
+
+      summary {
+        &:hover {
+          background-color: $border-color;
+        }
+
+        cursor: pointer;
+        outline: none;
+        padding: 0.5em;
+      }
+
+      &[open] summary {
+        background-color: $active-color;
+        border-bottom: 1px solid $border-color;
+      }
+
+      .detail-content {
+        padding: 0.5rem;
+
+        div:not(:last-of-type) {
+          margin-bottom: $indent-var;
+        }
+
+        table {
+          font-size: 0.9em;
+          margin-top: $indent-var;
+
+          th:first-of-type {
+            min-width: 150px;
+          }
+        }
+      }
+    }
+  }
+
+  // Style custom tables
+  .custom-table {
+    th:first-of-type {
+      min-width: 150px;
+    }
+
+    td > ul,
+    td > ol {
+      padding-inline-start: 1rem;
+    }
+  }
+
+  // Style videos
+  .notice--video {
+    @include notice($text-color);
+    background-color: $text-color;
+    color: $background-color;
+    font-size: 0.9em !important;
+  }
+
+  .tutorial-video {
+    width: 100%;
+    border-radius: $border-radius;
+  }
+}
+
+// Set sidebar font size
+.sidebar li {
+  font-size: 0.8em;
+}

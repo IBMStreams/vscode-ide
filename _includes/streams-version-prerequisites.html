@@ -1,0 +1,127 @@
+<div class="details-container">
+  <details>
+    <summary>IBM Cloud Pak for Data deployment</summary>
+    <section class="detail-content">
+      <div>
+        A provisioned IBM Streams service instance is required. If you need to provision a service instance, start
+        <a href="{{ site.doc.cloud_pak_for_data.install }}">here</a> and follow the instructions.
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Property</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>IBM Cloud Pak for Data version</td>
+            <td>
+              You can find the version number in the <b>About</b> section after logging in to the IBM Cloud Pak for Data
+              web client in your browser.
+            </td>
+          </tr>
+          <tr>
+            <td>IBM Cloud Pak for Data web client URL</td>
+            <td>
+              This is the URL used to access the IBM Cloud Pak for Data web client in your browser. It should be of the
+              form: <code>https://HOST:PORT</code> (e.g., <code>https://123.45.67.89:12345</code>).
+            </td>
+          </tr>
+          <tr>
+            <td>IBM Cloud Pak for Data credentials</td>
+            <td>
+              These are the credentials (username and password) used to log in to the IBM Cloud Pak for Data environment
+              in your browser.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </details>
+
+  <details>
+    <summary>IBM Streams standalone deployment</summary>
+    <section class="detail-content">
+      <div>
+        An IBM Streams instance is required. If you need to install an instance, start
+        <a href="{{ site.doc.standalone.install }}">here</a> and follow the instructions.
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Property</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>IBM Streams REST service URL</td>
+            <td>
+              IBM Streams provides a REST API that can be used to retrieve information about the instance. This service
+              has a URL associated with it. For example, when the service is exposed as a node port:
+              <code>https://123.45.67.89:30001</code>.
+            </td>
+          </tr>
+          <tr>
+            <td>IBM Streams build service URL <em>(optional)</em></td>
+            <td>
+              IBM Streams provides an optional build service for compiling and building Streams applications. This
+              service has a URL associated with it. For example, when the service is exposed as a node port:
+              <code>https://123.45.67.89:30002</code>. <br /><br />If not specified, you will <em>not</em> be able to
+              build your Streams applications.
+            </td>
+          </tr>
+          <tr>
+            <td>IBM Streams security service URL <em>(optional)</em></td>
+            <td>
+              IBM Streams provides an optional security service for managing a set of security realms to provide single
+              sign-on support for Streams services. This service has a URL associated with it. For example, when the
+              service is exposed as a node port: <code>https://123.45.67.89:30003</code>.<br /><br />If not specified,
+              the security service URL will be generated using the REST service URL.
+            </td>
+          </tr>
+          <tr>
+            <td>IBM Streams Console URL <em>(optional)</em></td>
+            <td>
+              IBM Streams includes an integrated console that you can use to view the health of the instance and its
+              applications. You can manage instances and resources, configure security, and monitor jobs from a single
+              location.<br /><br />If not specified, the Console URL will be retrieved from the Streams REST API.
+            </td>
+          </tr>
+          <tr>
+            <td>IBM Streams credentials</td>
+            <td>These are the credentials (username and password) used to authenticate to the IBM Streams instance.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </details>
+
+  <details>
+    <summary>IBM Streaming Analytics on IBM Cloud</summary>
+    <section class="detail-content">
+      <div>
+        An IBM Streaming Analytics service is required. If you need to create a service, start
+        <a href="{{ site.doc.streaming_analytics.install }}">here</a> and follow the instructions.
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Property</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>IBM Streaming Analytics service credentials</td>
+            <td>
+              These are the credentials (in JSON format) used to authenticate to the IBM Streams instance. You can add
+              or view your credentials in the service details page.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </details>
+</div>

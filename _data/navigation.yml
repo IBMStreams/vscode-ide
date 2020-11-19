@@ -1,0 +1,67 @@
+# main links
+main:
+  - title: 'Documentation'
+    url: /docs/quick-start-guide/
+  - title: 'FAQ'
+    url: /faq
+  - title: 'GitHub'
+    url: https://github.com/IBMStreams/vscode-ide
+
+# documentation links
+docs:
+  - title: Getting Started
+    children:
+      - title: 'Quick start guide'
+        url: /docs/quick-start-guide/
+      - title: 'Streams Explorer'
+        url: /docs/streams-explorer/
+      - title: 'Using toolkits'
+        url: /docs/using-toolkits/
+      - title: 'Developing SPL applications'
+        url: /docs/developing-spl-applications/
+      - title: 'Building and running applications'
+        url: /docs/building-running-applications/
+      - title: 'Building edge applications'
+        url: /docs/building-edge-applications/
+  - title: Extending SPL
+    children:
+      - title: 'Developing toolkits'
+        url: /docs/developing-toolkits/
+      - title: 'Developing C++ primitive operators'
+        url: /docs/developing-cpp-primitive-operators/
+      - title: 'Developing Java primitive operators'
+        url: /docs/developing-java-primitive-operators/
+  - title: Extras
+    children:
+      - title: 'SPL application sets'
+        url: /docs/spl-application-sets/
+      - title: 'Excluding files or folders from builds'
+        url: /docs/excluding-files-or-folders-from-builds/
+  - title: Guides
+    children:
+      - title: 'SPL application'
+        url: /docs/spl-application-guide/
+      - title: 'C++ primitive operator'
+        url: /docs/cpp-primitive-operator-guide/
+      - title: 'C++ primitive operator with a shared library'
+        url: /docs/cpp-primitive-operator-with-a-shared-library-guide/
+      - title: 'Java primitive operator'
+        url: /docs/java-primitive-operator-guide/
+  - title: Reference
+    children:
+      - title: 'Commands'
+        url: /docs/commands/
+      - title: 'Settings'
+        url: /docs/settings/
+  - title: Other
+    children:
+      - title: 'Changelog'
+        url: https://github.com/IBMStreams/vscode-ide/blob/main/CHANGELOG.md
+      - title: 'License'
+        url: https://github.com/IBMStreams/vscode-ide/blob/main/LICENSE
+      - title: 'Troubleshooting'
+        url: /docs/troubleshooting/
+      - title: 'Contributing'
+        url: /docs/contributing/
+      - title: 'Resources'
+        url: /docs/resources/

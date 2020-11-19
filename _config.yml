@@ -1,0 +1,135 @@
+# Welcome to Jekyll!
+#
+# This config file is meant for settings that affect your whole blog, values
+# which you are expected to set up once and rarely edit after that. If you find
+# yourself editing this file very often, consider using Jekyll's data files
+# feature for the data you need to update frequently.
+#
+# For technical reasons, this file is *NOT* reloaded automatically when you use
+# 'bundle exec jekyll serve'. If you change this file, please restart the server process.
+
+# Site settings
+# These are used to personalize your new site. If you look in the HTML files,
+# you will see them accessed via {{ site.title }}, {{ site.email }}, and so on.
+# You can create any custom variable you would like, and they will be accessible
+# in the templates via {{ site.myvariable }}.
+name: IBM Streams
+title: IBM Streams extension for Visual Studio Code
+title_separator: '|'
+description: An extension provides support for IBM Streams within the Visual Studio Code editor.
+url: https://ibmstreams.github.io
+baseurl: /vscode-ide
+marketplace: https://marketplace.visualstudio.com/items?itemName=IBM.ibm-streams
+logo: /assets/images/ibm-streams.png
+github: https://github.com/IBMStreams/vscode-ide
+github_icon_prefix: https://github.com/IBMStreams/vscode-ide/blob/main/images/icons/light
+github_streams_icon: https://github.com/IBMStreams/vscode-ide/blob/main/images/ibm-streams.png?raw=true
+github_carbon_icon_prefix: https://github.com/carbon-design-system/carbon/blob/master/packages/icons/src/svg
+repository: IBMStreams/vscode-ide
+minimal_mistakes_skin: air
+
+doc:
+  cloud_pak_for_data:
+    general: https://www.ibm.com/support/knowledgecenter/SSQNUZ_3.5.0/svc-welcome/streams.html
+    install: https://www.ibm.com/support/knowledgecenter/SSQNUZ_3.5.0/svc-streams/streams-install.html
+  standalone:
+    general: https://www.ibm.com/support/knowledgecenter/SSCRJU_5.2.0/com.ibm.streams.welcome.doc/doc/kc-homepage.html
+    install: https://www.ibm.com/support/knowledgecenter/SSCRJU_5.2.0/com.ibm.streams.install.doc/doc/install-container.html
+  streaming_analytics:
+    general: https://cloud.ibm.com/docs/StreamingAnalytics
+    install: https://cloud.ibm.com/catalog/services/streaming-analytics
+
+videos:
+  quick_start_guide:
+    instance_add_first: https://ibm.box.com/shared/static/8pljou931kmxtiwihu22kap7g38cuq6v.mp4
+  streams_explorer:
+    instance_add: https://ibm.box.com/shared/static/ptx2i4og9hpo9aewacg8f9ke4rsn1w5v.mp4
+    instance_remove: https://ibm.box.com/shared/static/4mgwpygk97872x3itzck8ogc13y9quad.mp4
+    instance_authenticate: https://ibm.box.com/shared/static/mn6ogu087how0vw1x5qdj80jvnrb4g0q.mp4
+    instance_set_default: https://ibm.box.com/shared/static/hnqoift6yddgbo2uojsnjbara6gkdr0c.mp4
+    details: https://ibm.box.com/shared/static/7dpgk4mql2reewxchlaze9lu8dr86gau.mp4
+    toolkits: https://ibm.box.com/shared/static/hncjpnk0wcw5zodqct0z3ygerfl0cafq.mp4
+    toolkit_build_service: https://ibm.box.com/shared/static/i4bmq74zklxh2p0j9skujl996y6m4ble.mp4
+    toolkit_local: https://ibm.box.com/shared/static/eeiac6dp2brqt13f8g6dwnczckotqqvq.mp4
+  developing_spl_applications:
+    create_spl_application: https://ibm.box.com/shared/static/8w2e38r76ceo1j42ksj32tkxtfkwvmq8.mp4
+    editing_features: https://ibm.box.com/shared/static/f7ngbe1jrxcchf6zpef7ncmh1gqtl5jn.mp4
+  building_running_applications:
+    build_submit_spl_application: https://ibm.box.com/shared/static/iwza9qs9anij353kxezr3udtkt4do9rv.mp4
+  building_edge_applications:
+    build_edge_application: https://ibm.box.com/shared/static/gtsfdilongpor45u7tw3tr2bshlz0aoe.mp4
+  developing_toolkits:
+    build_toolkit: https://ibm.box.com/shared/static/oebyx9r149sitgcrgdn9ui0ny7xz2vr6.mp4
+  cpp_primitive_operator_guide:
+    create_cpp_primitive_operator: https://ibm.box.com/shared/static/bggw1hsuxdpenvkrq6yof1tu4fdpvbgn.mp4
+    build_cpp_primitive_operator: https://ibm.box.com/shared/static/pwh7l1wjfbnhkq53b89mg3nqwhsam9bx.mp4
+    create_spl_application: https://ibm.box.com/shared/static/x5ksvtpo64u1qv15p94d0lnhrqd3y3bn.mp4
+    build_submit_spl_application: https://ibm.box.com/shared/static/i4sjbcshqofqalaypbqh585m7h78msr1.mp4
+
+# Build settings
+markdown: kramdown
+remote_theme: mmistakes/minimal-mistakes
+# Outputting
+permalink: /:categories/:title/
+timezone: # https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+
+include:
+  - _pages
+
+# Exclude from processing.
+# The following items will not be processed, by default. Create a custom list
+# to override the default setting.
+# exclude:
+#   - Gemfile
+#   - Gemfile.lock
+#   - node_modules
+#   - vendor/bundle/
+#   - vendor/cache/
+#   - vendor/gems/
+#   - vendor/ruby/
+
+# Plugins (previously gems:)
+plugins:
+  - jekyll-paginate
+  - jekyll-sitemap
+  - jekyll-gist
+  - jekyll-feed
+  - jemoji
+  - jekyll-include-cache
+
+# Collections
+collections:
+  docs:
+    output: true
+    permalink: /:collection/:path/
+
+# Defaults
+defaults:
+  # _pages
+  - scope:
+      path: '_pages'
+      type: pages
+    values:
+      layout: single
+      author_profile: false
+      sidebar:
+        nav: 'docs'
+  # _docs
+  - scope:
+      path: ''
+      type: docs
+    values:
+      layout: single
+      read_time: false
+      author_profile: false
+      share: false
+      comments: false
+      sidebar:
+        nav: 'docs'
+
+category_archive:
+  type: liquid
+  path: /categories/
+tag_archive:
+  type: liquid
+  path: /tags/

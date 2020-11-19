@@ -1,0 +1,81 @@
+<table class="custom-table">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Environment: Refresh Interval</td>
+      <td><em>(number)</em> Interval in minutes at which an IBM Streams instance is automatically refreshed.</td>
+      <td><code>5</code></td>
+    </tr>
+    <tr>
+      <td>Environment: Timeout for Requests</td>
+      <td><em>(number)</em> Timeout in seconds before a request times out.</td>
+      <td><code>60</code></td>
+    </tr>
+    <tr>
+      <td>Environment: Toolkit Paths</td>
+      <td>
+        <em>(string)</em> Specifies paths to directories, comma or semicolon separated, containing additional IBM
+        Streams toolkits.
+      </td>
+      <td><code>/path/to/toolkits/directory</code></td>
+    </tr>
+    <tr>
+      <td>Log Level</td>
+      <td>
+        <em>(string)</em> Log level for the extension.
+        <div>
+          <ul>
+            <li><code>off</code>: no logging</li>
+            <li><code>debug</code>: debug logging</li>
+          </ul>
+        </div>
+      </td>
+      <td><code>off</code></td>
+    </tr>
+    <tr>
+      <td>Server: Mode</td>
+      <td>
+        <em>(string)</em> Controls how the SPL language server runs. Running the server in <code>embedded</code> mode is
+        recommended unless you are experiencing issues with SPL language features.
+        <div>
+          <ul>
+            <li><code>embedded</code>: runs using an embedded server</li>
+            <li><code>socket</code>: runs a separate server using a socket</li>
+          </ul>
+        </div>
+        If you choose to run the server in <code>socket</code> mode <em>and</em> you have multiple VS Code windows open,
+        you <em>must</em> use different port values for the <strong>Server: Port</strong> setting in the
+        <a href="https://code.visualstudio.com/docs/getstarted/settings">workspace settings</a> for each window.
+        Otherwise, the SPL language server will fail to start.
+      </td>
+      <td><code>embedded</code></td>
+    </tr>
+    <tr>
+      <td>Server: Port</td>
+      <td>
+        <em>(number)</em> The port where the SPL language server runs when <strong>Server: Mode</strong> is
+        <code>socket</code>.
+      </td>
+      <td><code>5007</code></td>
+    </tr>
+    <tr>
+      <td>Trace: Server</td>
+      <td>
+        <em>(string)</em> Traces the communication between VS Code and the SPL language server.
+        <div>
+          <ul>
+            <li><code>off</code>: tracing turned off</li>
+            <li><code>verbose</code>: tracing turned on</li>
+          </ul>
+        </div>
+      </td>
+      <td><code>off</code></td>
+    </tr>
+  </tbody>
+</table>

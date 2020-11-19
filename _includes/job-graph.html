@@ -1,0 +1,61 @@
+<div class="details-container">
+  <details>
+    <summary>Launching the job graph</summary>
+    <section class="detail-content">
+      <div>
+        In the <strong>Instances</strong> section of the Streams Explorer, hover over a job and click on the
+        <strong>Show Job Graph</strong> icon
+        <img
+          src="{{ site.github_icon_prefix }}/branch.svg?raw=true"
+          alt="Show Job Graph icon"
+          title="Show Job Graph"
+          class="editor-button"
+        />
+        that appears on the right. This will display the graph for the selected job.
+      </div>
+    </section>
+  </details>
+
+  <details>
+    <summary>Observe the data flowing through the job in real time</summary>
+    <section class="detail-content">
+      <div>
+        You can look at the data on a given stream to observe the data that is being processed or produced by an
+        operator.
+      </div>
+      <ol>
+        <li>
+          Hover over a link coming out of an operator node. Right-click and select <strong>View data</strong> >
+          <strong>Create new view</strong>.
+        </li>
+        <li>
+          A dynamic view is created and a panel appears at the bottom that displays the tuples in the stream produced by
+          the operator. Notice that the view is processed as new data arrives.
+        </li>
+      </ol>
+    </section>
+  </details>
+
+  <details>
+    <summary>View application logs</summary>
+    <section class="detail-content">
+      <div>
+        All application output, including messages printed to standard out, errors, and trace data are sent to the logs.
+      </div>
+      <ul>
+        <li>To view an operator’s logs, click on the trace icon in the bottom left corner of a node.</li>
+        <li>
+          To view the logs for an entire job, bring up the Streams Explorer. Hover over a job and click on the
+          <strong>Download Job Logs</strong> icon
+          <img
+            src="{{ site.github_icon_prefix }}/document--download.svg?raw=true"
+            alt="Download Job Logs icon"
+            title="Download Job Logs"
+            class="editor-button"
+          />
+          that appears on the right. You will be prompted to select a download location on your machine.
+        </li>
+      </ul>
+    </section>
+  </details>
+</div>
