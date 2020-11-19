@@ -1,4 +1,8 @@
-import { EditorAction, Logger as StreamsLogger, store } from '@ibmstreams/common';
+import {
+  EditorAction,
+  Logger as StreamsLogger,
+  store
+} from '@ibmstreams/common';
 import { env, ExtensionContext } from 'vscode';
 import { Configuration, Diagnostics, Logger } from '.';
 import * as Settings from './settings';
@@ -14,38 +18,48 @@ export { default as VSCode } from './vscode';
 export { Settings, State };
 
 /**
- * Initialize utilities
- * @param context    The extension context
- */
-export function initialize(context: ExtensionContext): void {
-    Configuration.configure(context);
-    Diagnostics.configure(context);
-    Logger.configure();
-
-    if (isLoggingEnabled()) {
-        store.dispatch(EditorAction.setIsLoggingEnabled(true));
-        StreamsLogger.enable();
-    } else {
-        store.dispatch(EditorAction.setIsLoggingEnabled(false));
-        StreamsLogger.disable();
-    }
-}
-
-/**
  * Determine whether the extension is being debugged or not
  */
 export function inDebugMode(): boolean {
-    const { sessionId, machineId } = env;
-    return sessionId === 'someValue.sessionId' || machineId === 'someValue.machineId';
+  const { sessionId, machineId } = env;
+  return (
+    sessionId === 'someValue.sessionId' || machineId === 'someValue.machineId'
+  );
 }
 
 /**
  * Determine if logging is enabled
  */
 export function isLoggingEnabled(): boolean {
-    // Do not enable logging when running the "Launch Extension (Extensions and Logging Disabled)" configuration
-    if (process.env && process.env.LOGGING_ENABLED && process.env.LOGGING_ENABLED === 'false') {
-        return false;
-    }
-    return inDebugMode() || Configuration.getSetting(Settings.LOG_LEVEL) === Settings.LOG_LEVEL_VALUE.DEBUG;
+  // Do not enable logging when running the "Launch Extension (Extensions and Logging Disabled)" configuration
+  if (
+    process.env &&
+    process.env.LOGGING_ENABLED &&
+    process.env.LOGGING_ENABLED === 'false'
+  ) {
+    return false;
+  }
+  return (
+    inDebugMode() ||
+    Configuration.getSetting(Settings.LOG_LEVEL) ===
+      Settings.LOG_LEVEL_VALUE.DEBUG
+  );
+}
+
+/**
+ * Initialize utilities
+ * @param context the extension context
+ */
+export function initialize(context: ExtensionContext): void {
+  Configuration.configure(context);
+  Diagnostics.configure(context);
+  Logger.configure();
+
+  if (isLoggingEnabled()) {
+    store.dispatch(EditorAction.setIsLoggingEnabled(true));
+    StreamsLogger.enable();
+  } else {
+    store.dispatch(EditorAction.setIsLoggingEnabled(false));
+    StreamsLogger.disable();
+  }
 }

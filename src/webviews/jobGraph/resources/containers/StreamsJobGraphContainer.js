@@ -14,10 +14,7 @@ export default class StreamsJobGraphContainer extends Component {
     super(props);
 
     const { params } = this.props;
-    const {
-      instanceName,
-      jobId
-    } = params;
+    const { instanceName, jobId } = params;
 
     // initial state
     this.state = {
@@ -56,10 +53,18 @@ export default class StreamsJobGraphContainer extends Component {
   }
 
   getStreamsJobs(callback) {
-    StreamsUtils.getStreamsJobs((error, data, headers, status) => { callback(error, data); });
+    StreamsUtils.getStreamsJobs((error, data) => {
+      callback(error, data);
+    });
   }
 
-  getJobMetricsSnapshot(showingConnectedJobs, jobIds, callback, metricsSnapshotCount, includeMetricStats) {
+  getJobMetricsSnapshot(
+    showingConnectedJobs,
+    jobIds,
+    callback,
+    metricsSnapshotCount,
+    includeMetricStats
+  ) {
     StreamsUtils.getJobMetricsSnapshot({
       showingConnectedJobs,
       jobIds,
@@ -69,7 +74,13 @@ export default class StreamsJobGraphContainer extends Component {
     });
   }
 
-  getJobSnapshot(showingConnectedJobs, jobIds, callback, jobDetailsSnapshotCount, includeStaticDetails) {
+  getJobSnapshot(
+    showingConnectedJobs,
+    jobIds,
+    callback,
+    jobDetailsSnapshotCount,
+    includeStaticDetails
+  ) {
     StreamsUtils.getJobSnapshot({
       showingConnectedJobs,
       jobIds,
@@ -79,11 +90,7 @@ export default class StreamsJobGraphContainer extends Component {
     });
   }
 
-  getStreamsJobsDetails({
-    jobIds,
-    callback,
-    sampleJobDir
-  }) {
+  getStreamsJobsDetails({ jobIds, callback }) {
     StreamsUtils.getStreamsJobsDetails({
       jobIds,
       callback
@@ -126,32 +133,36 @@ export default class StreamsJobGraphContainer extends Component {
   }
 
   callStreamsRestAPI(endpoint, callback, reserved, options) {
-    return StreamsUtils.callStreamsRestAPI(endpoint, callback, reserved, options);
+    return StreamsUtils.callStreamsRestAPI(
+      endpoint,
+      callback,
+      reserved,
+      options
+    );
   }
 
   getDefaultEmptyCanvasContent() {
     const { jobId } = this.state;
-    return jobId
-      ? (
-        <div className="job-graph-container__loading-icon">
-          <div style={{
+    return jobId ? (
+      <div className="job-graph-container__loading-icon">
+        <div
+          style={{
             height: '100vh',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
           }}
-          >
-            <div style={{ width: '10.5rem', height: '10.5rem' }}>
-              <img src={LoadingIcon} alt="Loading..." />
-            </div>
+        >
+          <div style={{ width: '10.5rem', height: '10.5rem' }}>
+            <img src={LoadingIcon} alt="Loading..." />
           </div>
         </div>
-      )
-      : (
-        <div className="job-graph-container__empty-canvas-message">
-          Select a Streams job from the dropdown above to view a graph.
-        </div>
-      );
+      </div>
+    ) : (
+      <div className="job-graph-container__empty-canvas-message">
+        Select a Streams job from the dropdown above to view a graph.
+      </div>
+    );
   }
 
   getJobActionCanvasMessage() {
@@ -178,10 +189,7 @@ export default class StreamsJobGraphContainer extends Component {
   }
 
   render() {
-    const {
-      instanceName,
-      jobId
-    } = this.state;
+    const { instanceName, jobId } = this.state;
 
     const streamsJobGraph = (
       <StreamsJobGraph
@@ -205,11 +213,7 @@ export default class StreamsJobGraphContainer extends Component {
       </StreamsJobGraph>
     );
 
-    return (
-      <div className="job-graph-container">
-        {streamsJobGraph}
-      </div>
-    );
+    return <div className="job-graph-container">{streamsJobGraph}</div>;
   }
 }
 

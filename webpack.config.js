@@ -1,21 +1,8 @@
 const path = require('path');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-
-const htmlMinifyOptions = {
-  collapseWhitespace: true,
-  removeComments: true,
-  removeRedundantAttributes: true,
-  removeScriptTypeAttributes: true,
-  removeStyleLinkTypeAttributes: true,
-  useShortDoctype: true
-};
 
 module.exports = function (env, argv) {
   const { mode } = argv;
-  return [
-    getExtensionConfig(mode),
-    getWebviewsConfig(mode)
-  ];
+  return [getExtensionConfig(mode), getWebviewsConfig(mode)];
 };
 
 function getExtensionConfig(mode) {
@@ -52,17 +39,16 @@ function getExtensionConfig(mode) {
           exclude: /node_modules/,
           options: {
             sourceMaps: true,
+            cacheDirectory: true
           }
         },
         {
           test: /\.js$/,
           loader: 'babel-loader',
-          exclude: [
-            /node_modules/,
-            /src\/webviews/
-          ],
+          exclude: [/node_modules/, /src\/webviews/],
           options: {
             sourceMaps: true,
+            cacheDirectory: true
           }
         }
       ]
@@ -75,16 +61,20 @@ function getWebviewsConfig(mode) {
     name: 'webviews',
     context: path.resolve(__dirname, 'src/webviews'),
     entry: {
-      streamsAuthentication: ['./streamsAuthentication/resources/index.js'],
+      cloudPakForDataJob: ['./cloudPakForDataJob/resources/index.js'],
       configureImageBuild: ['./configureImageBuild/resources/index.js'],
       configureJobSubmission: ['./configureJobSubmission/resources/index.js'],
-      jobGraph: ['./jobGraph/resources/index.js'],
+      createPrimitiveOperator: ['./createPrimitiveOperator/resources/index.js'],
+      createSplApplication: ['./createSplApplication/resources/index.js'],
+      createSplApplicationSet: ['./createSplApplicationSet/resources/index.js'],
       instanceSelection: ['./instanceSelection/resources/index.js'],
-      createSplApplicationSet: ['./createSplApplicationSet/resources/index.js']
+      jobGraph: ['./jobGraph/resources/index.js'],
+      streamsAuthentication: ['./streamsAuthentication/resources/index.js']
     },
     output: {
       path: path.resolve(__dirname, 'dist/webviews'),
-      filename: '[name].js'
+      filename: '[name].js',
+      crossOriginLoading: 'anonymous'
     },
     devtool: mode === 'production' ? undefined : 'eval-source-map',
     resolve: {
@@ -99,12 +89,18 @@ function getWebviewsConfig(mode) {
         {
           test: /\.ts$/,
           loader: 'babel-loader',
-          exclude: /node_modules/
+          exclude: /node_modules/,
+          options: {
+            cacheDirectory: true
+          }
         },
         {
           test: /\.(js)$/,
           loader: 'babel-loader',
-          exclude: /node_modules/
+          exclude: /node_modules/,
+          options: {
+            cacheDirectory: true
+          }
         },
         {
           test: /\.jsx?$/,
@@ -161,33 +157,6 @@ function getWebviewsConfig(mode) {
       tls: 'empty',
       fs: 'empty'
     },
-    plugins: [
-      new HtmlWebpackPlugin({
-        template: 'streamsAuthentication/resources/index.html',
-        filename: path.resolve(__dirname, 'dist/webviews/streamsAuthentication.html'),
-        minify: mode === 'production' ? htmlMinifyOptions : false
-      }),
-      new HtmlWebpackPlugin({
-        template: 'configureImageBuild/resources/index.html',
-        filename: path.resolve(__dirname, 'dist/webviews/configureImageBuild.html'),
-        minify: mode === 'production' ? htmlMinifyOptions : false
-      }),
-      new HtmlWebpackPlugin({
-        template: 'configureJobSubmission/resources/index.html',
-        filename: path.resolve(__dirname, 'dist/webviews/configureJobSubmission.html'),
-        minify: mode === 'production' ? htmlMinifyOptions : false
-      }),
-      new HtmlWebpackPlugin({
-        template: 'jobGraph/resources/index.html',
-        filename: path.resolve(__dirname, 'dist/webviews/jobGraph.html'),
-        minify: mode === 'production' ? htmlMinifyOptions : false
-      }),
-      new HtmlWebpackPlugin({
-        template: 'instanceSelection/resources/index.html',
-        filename: path.resolve(__dirname, 'dist/webviews/instanceSelection.html'),
-        minify: mode === 'production' ? htmlMinifyOptions : false
-      })
-    ],
     performance: {
       hints: false
     }

@@ -18,24 +18,29 @@ export default class SubmitJobContainer extends Component {
   constructor(props) {
     super(props);
 
-    const { params: { submissionTimeParameters } } = this.props;
+    const {
+      params: { submissionTimeParameters }
+    } = this.props;
     const submissionParameters = [];
     submissionTimeParameters.forEach((param) => {
-    const strippedDefaultValue = param.defaultValue
-      ? param.defaultValue
-          // Remove surrounding quotes/square brackets
-          .replace(/^"|"$|^\[|\]$/g, '')
-          // Unescape escape sequences
-          .replace(/\\f/g, '\f') // form feed
-          .replace(/\\n/g, '\n') // new line
-          .replace(/\\r/g, '\r') // carriage return
-          .replace(/\\t/g, '\t') // horizontal tab
-          .replace(/\\v/g, '\v') // vertical tab
-          .replace(/\\'/g, '\'') // single quote
-          .replace(/\\"/g, '"') // double quote
-          .replace(/\\/g, '\\') // backslash
-      : '';
-      submissionParameters.push({ name: `${param.compositeName}.${param.name}`, value: strippedDefaultValue });
+      const strippedDefaultValue = param.defaultValue
+        ? param.defaultValue
+            // Remove surrounding quotes/square brackets
+            .replace(/^"|"$|^\[|\]$/g, '')
+            // Unescape escape sequences
+            .replace(/\\f/g, '\f') // form feed
+            .replace(/\\n/g, '\n') // new line
+            .replace(/\\r/g, '\r') // carriage return
+            .replace(/\\t/g, '\t') // horizontal tab
+            .replace(/\\v/g, '\v') // vertical tab
+            .replace(/\\'/g, "'") // single quote
+            .replace(/\\"/g, '"') // double quote
+            .replace(/\\/g, '\\') // backslash
+        : '';
+      submissionParameters.push({
+        name: `${param.compositeName}.${param.name}`,
+        value: strippedDefaultValue
+      });
     });
 
     this.state = {
@@ -56,23 +61,21 @@ export default class SubmitJobContainer extends Component {
     this.messageHandler = new MessageHandler();
     this.handleSubmitParamUpdate = this.handleSubmitParamUpdate.bind(this);
     this.handleJobConfigUpdate = this.handleJobConfigUpdate.bind(this);
-    this.handleJobGroupConfigUpdate = this.handleJobGroupConfigUpdate.bind(this);
+    this.handleJobGroupConfigUpdate = this.handleJobGroupConfigUpdate.bind(
+      this
+    );
     this.submitClicked = this.submitClicked.bind(this);
     this.handleTracingUpdate = this.handleTracingUpdate.bind(this);
     this.importJCO = this.importJCO.bind(this);
     this.exportJCO = this.exportJCO.bind(this);
   }
 
-  componentDidMount() {
-    this.messageHandler.postMessage({ command: 'webview-ready' });
-  }
-
   async importJCO() {
-    const jcoFile = await this.messageHandler.postMessage({ command: 'import-jco' });
+    const jcoFile = await this.messageHandler.postMessage({
+      command: 'import-jco'
+    });
     if (jcoFile) {
-      const {
-        fileName, json, error, errorLink
-      } = jcoFile;
+      const { fileName, json, error, errorLink } = jcoFile;
       this.setState({
         ...(json && { jobConfigOverlay: json }),
         selectedJcoFile: { name: fileName, error, errorLink }
@@ -82,8 +85,11 @@ export default class SubmitJobContainer extends Component {
 
   exportJCO() {
     const { jobConfigOverlay } = this.state;
-    const { params: { name } } = this.props;
-    const fileNamePrefix = JobConfigOverlayUtils.getJobName(jobConfigOverlay) || name;
+    const {
+      params: { name }
+    } = this.props;
+    const fileNamePrefix =
+      JobConfigOverlayUtils.getJobName(jobConfigOverlay) || name;
     const fileName = `${fileNamePrefix}-jobConfiguration.json`;
     this.messageHandler.postMessage({
       command: 'save-file',
@@ -103,12 +109,18 @@ export default class SubmitJobContainer extends Component {
     if (!jobConfig.submissionParameters) {
       jobConfig.submissionParameters = [];
     }
-    const itemIndex = _findIndex(jobConfig.submissionParameters, ['name', param.name]);
+    const itemIndex = _findIndex(jobConfig.submissionParameters, [
+      'name',
+      param.name
+    ]);
     if (itemIndex >= 0) {
       jobConfig.submissionParameters[itemIndex].value = param.value;
       this.setState({ jobConfigOverlay: jobConfigState });
     } else {
-      jobConfig.submissionParameters.push({ name: param.name, value: param.value });
+      jobConfig.submissionParameters.push({
+        name: param.name,
+        value: param.value
+      });
       this.setState({ jobConfigOverlay: jobConfigState });
     }
   }
@@ -145,10 +157,17 @@ export default class SubmitJobContainer extends Component {
     if (!jobConfig.submissionParameters) {
       jobConfig.submissionParameters = [];
     }
-    jobConfig.submissionParameters = jobConfig.submissionParameters.filter(({ name, value }) => {
-      const initialSubmissionParameter = initialSubmissionParameters.find((param) => param.name === name);
-      return initialSubmissionParameter && value !== initialSubmissionParameter.value;
-    });
+    jobConfig.submissionParameters = jobConfig.submissionParameters.filter(
+      ({ name, value }) => {
+        const initialSubmissionParameter = initialSubmissionParameters.find(
+          (param) => param.name === name
+        );
+        return (
+          initialSubmissionParameter &&
+          value !== initialSubmissionParameter.value
+        );
+      }
+    );
 
     this.messageHandler.postMessage({
       command: 'submit-job',
@@ -160,14 +179,34 @@ export default class SubmitJobContainer extends Component {
   }
 
   render() {
-    const { initialSubmissionParameters, jobConfigOverlay, selectedJcoFile } = this.state;
-    const submitParamsFromJobConfig = JobConfigOverlayUtils.getSubmissionTimeParameters(jobConfigOverlay);
-    const { params: { submissionTimeParameters, targetInstance: { streamsJobGroups } } } = this.props;
-    const regex = RegExp(/[\^!#$%&'*+,/;<>=?@[\]`{|}~()\s\u0000-\u0019\u007F-\u009F\ud800-\uF8FF\uFFF0-\uFFFF]/);
+    const {
+      initialSubmissionParameters,
+      jobConfigOverlay,
+      selectedJcoFile
+    } = this.state;
+    const submitParamsFromJobConfig = JobConfigOverlayUtils.getSubmissionTimeParameters(
+      jobConfigOverlay
+    );
+    const {
+      params: {
+        submissionTimeParameters,
+        targetInstance: { streamsJobGroups }
+      }
+    } = this.props;
+    const regex = RegExp(
+      /[\^!#$%&'*+,/;<>=?@[\]`{|}~()\s\u0000-\u0019\u007F-\u009F\ud800-\uF8FF\uFFF0-\uFFFF]/
+    );
     let jobNameIsInvalid = JobConfigOverlayUtils.getJobName(jobConfigOverlay);
-    jobNameIsInvalid = jobNameIsInvalid && (regex.test(jobNameIsInvalid) || jobNameIsInvalid.length > 1024);
-    const isDisabled = _findIndex(submitParamsFromJobConfig, (param) => param.value.trim() === '') >= 0 || jobNameIsInvalid;
-    const jcoDocLink = 'https://www.ibm.com/support/knowledgecenter/SSCRJU_4.3.0/com.ibm.streams.admin.doc/doc/job_configuration_overlays.html';
+    jobNameIsInvalid =
+      jobNameIsInvalid &&
+      (regex.test(jobNameIsInvalid) || jobNameIsInvalid.length > 1024);
+    const isDisabled =
+      _findIndex(
+        submitParamsFromJobConfig,
+        (param) => param.value.trim() === ''
+      ) >= 0 || jobNameIsInvalid;
+    const jcoDocLink =
+      'https://www.ibm.com/support/knowledgecenter/SSCRJU_4.3.0/com.ibm.streams.admin.doc/doc/job_configuration_overlays.html';
     return (
       <div className="bx--grid bx--grid--no-gutter submit-job-container">
         <div className="bx--row submit-job-container__import-jco">
@@ -181,23 +220,16 @@ export default class SubmitJobContainer extends Component {
               >
                 Import job configuration overlay file
               </Button>
-              <Tooltip
-                showIcon
-                direction="bottom"
-                iconDescription="Learn more"
-              >
+              <Tooltip showIcon direction="bottom" iconDescription="Learn more">
                 <p>
-                  A job configuration overlay file is a JSON file that contains name-value pairs
-                  for job configuration parameters. You can use a job configuration overlay file
-                  to define, save, and distribute the submission-time configuration or to change
-                  the configuration of a running job.
+                  A job configuration overlay file is a JSON file that contains
+                  name-value pairs for job configuration parameters. You can use
+                  a job configuration overlay file to define, save, and
+                  distribute the submission-time configuration or to change the
+                  configuration of a running job.
                 </p>
                 <div className="bx--tooltip__footer">
-                  <Button
-                    kind="primary"
-                    size="small"
-                    href={jcoDocLink}
-                  >
+                  <Button kind="primary" size="small" href={jcoDocLink}>
                     Learn more
                   </Button>
                 </div>
@@ -206,8 +238,8 @@ export default class SubmitJobContainer extends Component {
             {selectedJcoFile && (
               <div className="submit-job-container__import-jco__file-uploader-item">
                 <FileUploaderItem
-                  errorBody={selectedJcoFile.errorLink
-                    ? (
+                  errorBody={
+                    selectedJcoFile.errorLink ? (
                       <span>
                         {selectedJcoFile.error}
                         <Link
@@ -215,17 +247,21 @@ export default class SubmitJobContainer extends Component {
                           className="submit-job-container__import-jco__file-uploader-item__link"
                         >
                           here
-                        </Link>.
+                        </Link>
+                        .
                       </span>
+                    ) : (
+                      selectedJcoFile.error
                     )
-                    : selectedJcoFile.error
                   }
                   errorSubject="File could not be imported. Import a different file."
                   iconDescription={null}
                   invalid={!!selectedJcoFile.error}
                   name={selectedJcoFile.name}
                   status={selectedJcoFile.error ? 'edit' : 'complete'}
-                  onDelete={() => { this.setState({ selectedJcoFile: null }) }}
+                  onDelete={() => {
+                    this.setState({ selectedJcoFile: null });
+                  }}
                 />
               </div>
             )}
@@ -276,7 +312,9 @@ export default class SubmitJobContainer extends Component {
             <Button
               type="reset"
               kind="secondary"
-              onClick={() => this.messageHandler.postMessage({ command: 'close-panel' })}
+              onClick={() =>
+                this.messageHandler.postMessage({ command: 'close-panel' })
+              }
               className="submit-job-container__button-container__button"
             >
               Cancel
@@ -298,11 +336,13 @@ export default class SubmitJobContainer extends Component {
 SubmitJobContainer.propTypes = {
   params: PropTypes.shape({
     name: PropTypes.string.isRequired,
-    submissionTimeParameters: PropTypes.arrayOf(PropTypes.shape({
-      name: PropTypes.string.isRequired,
-      compositeName: PropTypes.string.isRequired,
-      defaultValue: PropTypes.string
-    })).isRequired,
+    submissionTimeParameters: PropTypes.arrayOf(
+      PropTypes.shape({
+        name: PropTypes.string.isRequired,
+        compositeName: PropTypes.string.isRequired,
+        defaultValue: PropTypes.string
+      })
+    ).isRequired,
     targetInstance: PropTypes.shape({
       instanceName: PropTypes.string,
       streamsJobGroups: PropTypes.arrayOf(PropTypes.object)

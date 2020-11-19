@@ -8,9 +8,7 @@ import {
 import PropTypes from 'prop-types';
 import React from 'react';
 
-const InfoModal = ({
- isOpen, close, instanceName, details
-}) => {
+const InfoModal = ({ isOpen, close, instanceName, details }) => {
   const getLabel = (key) => {
     switch (key) {
       case 'bundlePath':
@@ -35,22 +33,26 @@ const InfoModal = ({
       <div className="details-container">
         <StructuredListWrapper className="details-container__list">
           <StructuredListBody>
-            {
-              details && Object.keys(details).length && Object.keys(details).map((key) => {
-                const label = getLabel(key);
-                return label
-                  ? (
+            {details &&
+              Object.keys(details).length &&
+              Object.keys(details)
+                .map((key) => {
+                  const label = getLabel(key);
+                  return label ? (
                     <StructuredListRow className="structured-row" key={key}>
                       <StructuredListCell noWrap>{label}</StructuredListCell>
-                      <StructuredListCell className="details-container__list-value">{details[key]}</StructuredListCell>
+                      <StructuredListCell className="details-container__list-value">
+                        {details[key]}
+                      </StructuredListCell>
                     </StructuredListRow>
-                  )
-                  : null;
-              }).filter((el) => el !== null)
-            }
+                  ) : null;
+                })
+                .filter((el) => el !== null)}
             <StructuredListRow className="structured-row">
               <StructuredListCell noWrap>Instance</StructuredListCell>
-              <StructuredListCell className="details-container__list-value">{instanceName}</StructuredListCell>
+              <StructuredListCell className="details-container__list-value">
+                {instanceName}
+              </StructuredListCell>
             </StructuredListRow>
           </StructuredListBody>
         </StructuredListWrapper>
@@ -67,7 +69,9 @@ InfoModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   close: PropTypes.func.isRequired,
   instanceName: PropTypes.string.isRequired,
-  details: PropTypes.objectOf(PropTypes.oneOfType([PropTypes.string, PropTypes.object]))
+  details: PropTypes.objectOf(
+    PropTypes.oneOfType([PropTypes.string, PropTypes.object])
+  )
 };
 
 export default InfoModal;

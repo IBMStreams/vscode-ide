@@ -11,12 +11,13 @@ export const ENV_REFRESH_INTERVAL_DEFAULT = 5;
 /**
  * Timeout in seconds before a request times out
  */
-export const ENV_TIMEOUT_FOR_REQUESTS = 'ibm-streams.environment.timeoutForRequests';
+export const ENV_TIMEOUT_FOR_REQUESTS =
+  'ibm-streams.environment.timeoutForRequests';
 
 /**
  * Default value for the `timeoutForRequests` setting
  */
-export const ENV_TIMEOUT_FOR_REQUESTS_DEFAULT = 30;
+export const ENV_TIMEOUT_FOR_REQUESTS_DEFAULT = 60;
 
 /**
  * Paths to directories, comma or semicolon separated, containing additional IBM Streams toolkits
@@ -37,8 +38,8 @@ export const LOG_LEVEL = 'ibm-streams.logLevel';
  * Values for the `logLevel` setting
  */
 export const LOG_LEVEL_VALUE = {
-    OFF: 'off',
-    DEBUG: 'debug'
+  OFF: 'off',
+  DEBUG: 'debug'
 };
 
 /**
@@ -55,8 +56,8 @@ export const SERVER_MODE = 'ibm-streams.server.mode';
  * Values for the `server.mode` setting
  */
 export const SERVER_MODE_VALUE = {
-    EMBEDDED: 'embedded',
-    SOCKET: 'socket'
+  EMBEDDED: 'embedded',
+  SOCKET: 'socket'
 };
 
 /**
@@ -83,8 +84,8 @@ export const TRACE_SERVER = 'ibm-streams.trace.server';
  * Values for the `trace.server` setting
  */
 export const TRACE_SERVER_VALUE = {
-    OFF: 'off',
-    VERBOSE: 'verbose'
+  OFF: 'off',
+  VERBOSE: 'verbose'
 };
 
 /**

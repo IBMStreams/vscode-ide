@@ -7,9 +7,11 @@ import React, { Component } from 'react';
 export default class SubmitParamsContainer extends Component {
   initializeSubmissionParamsForSubmit = (submissionTimeValues) => {
     if (Array.isArray(submissionTimeValues)) {
-      return submissionTimeValues.map(submissionTimeValue => {
+      return submissionTimeValues.map((submissionTimeValue) => {
         const { compositeName, defaultValue, name } = submissionTimeValue;
-        const strippedDefaultValue = defaultValue ? defaultValue.replace(/^"|"$|^\[|\]$/g, '') : '';
+        const strippedDefaultValue = defaultValue
+          ? defaultValue.replace(/^"|"$|^\[|\]$/g, '')
+          : '';
         return {
           ...submissionTimeValue,
           fqn: `${compositeName}.${name}`,
@@ -32,10 +34,14 @@ export default class SubmitParamsContainer extends Component {
       .replace(/\\t/g, '\t') // horizontal tab
       .replace(/\\v/g, '\v'); // vertical tab
     handleSubmitParamUpdate(param);
-  }
+  };
 
   render() {
-    const { submitParamsFromApp, submitParamsFromJobConfig, initialSubmissionParameters } = this.props;
+    const {
+      submitParamsFromApp,
+      submitParamsFromJobConfig,
+      initialSubmissionParameters
+    } = this.props;
     if (!submitParamsFromApp || submitParamsFromApp.length === 0) {
       return (
         <div className="submit-params-container__body">
@@ -44,8 +50,12 @@ export default class SubmitParamsContainer extends Component {
       );
     }
 
-    const parsedParams = this.initializeSubmissionParamsForSubmit(submitParamsFromApp);
-    const composites = _uniq(parsedParams.map((subVal) => subVal.compositeName)).sort();
+    const parsedParams = this.initializeSubmissionParamsForSubmit(
+      submitParamsFromApp
+    );
+    const composites = _uniq(
+      parsedParams.map((subVal) => subVal.compositeName)
+    ).sort();
     return (
       <>
         {composites.map((composite) => {
@@ -60,48 +70,59 @@ export default class SubmitParamsContainer extends Component {
               <h1 className="submit-params-container__composite-title">
                 {composite}
               </h1>
-              {
-                sortedSubTimeValsForComp.map(subVal => {
-                  let paramValue = _find(submitParamsFromJobConfig, ['name', subVal.fqn]) || _find(submitParamsFromJobConfig, ['name', subVal.name]);
-                  if (paramValue) {
-                    paramValue = paramValue.value || '';
-                  } else {
-                    const initialSubmissionParameter = initialSubmissionParameters.find((param) => param.name === `${subVal.compositeName}.${subVal.name}`);
-                    paramValue = initialSubmissionParameter ? initialSubmissionParameter.value : '';
-                  }
-                  // Escape escape sequences
-                  paramValue = paramValue
-                    .replace(/\f/g, '\\f') // form feed
-                    .replace(/\n/g, '\\n') // new line
-                    .replace(/\r/g, '\\r') // carriage return
-                    .replace(/\t/g, '\\t') // horizontal tab
-                    .replace(/\v/g, '\\v'); // vertical tab
-                  const placeholder = subVal.kind === 'named' ? 'Enter a value' : 'Enter a comma-separated list of values';
-                  const invalidText = subVal.kind === 'named' ? 'A value is required.' : 'A comma-separated list of values is required.';
-                  let isInvalid = false;
-                  if (!paramValue || paramValue.trim().length < 1) {
-                    isInvalid = true;
-                  }
-                  return (
-                    <div
-                      className="submit-params-container__parameter-input"
-                      key={`SubmitValueInput-${subVal.fqn}`}
-                    >
-                      <TextInput
-                        labelText={subVal.name}
-                        name={subVal.fqn}
-                        id={subVal.fqn}
-                        value={paramValue}
-                        invalid={isInvalid}
-                        invalidText={invalidText}
-                        required
-                        placeholder={placeholder}
-                        onChange={this.handleSubmitParam}
-                      />
-                    </div>
+              {sortedSubTimeValsForComp.map((subVal) => {
+                let paramValue =
+                  _find(submitParamsFromJobConfig, ['name', subVal.fqn]) ||
+                  _find(submitParamsFromJobConfig, ['name', subVal.name]);
+                if (paramValue) {
+                  paramValue = paramValue.value || '';
+                } else {
+                  const initialSubmissionParameter = initialSubmissionParameters.find(
+                    (param) =>
+                      param.name === `${subVal.compositeName}.${subVal.name}`
                   );
-                })
-              }
+                  paramValue = initialSubmissionParameter
+                    ? initialSubmissionParameter.value
+                    : '';
+                }
+                // Escape escape sequences
+                paramValue = paramValue
+                  .replace(/\f/g, '\\f') // form feed
+                  .replace(/\n/g, '\\n') // new line
+                  .replace(/\r/g, '\\r') // carriage return
+                  .replace(/\t/g, '\\t') // horizontal tab
+                  .replace(/\v/g, '\\v'); // vertical tab
+                const placeholder =
+                  subVal.kind === 'named'
+                    ? 'Enter a value'
+                    : 'Enter a comma-separated list of values';
+                const invalidText =
+                  subVal.kind === 'named'
+                    ? 'A value is required.'
+                    : 'A comma-separated list of values is required.';
+                let isInvalid = false;
+                if (!paramValue || paramValue.trim().length < 1) {
+                  isInvalid = true;
+                }
+                return (
+                  <div
+                    className="submit-params-container__parameter-input"
+                    key={`SubmitValueInput-${subVal.fqn}`}
+                  >
+                    <TextInput
+                      labelText={subVal.name}
+                      name={subVal.fqn}
+                      id={subVal.fqn}
+                      value={paramValue}
+                      invalid={isInvalid}
+                      invalidText={invalidText}
+                      required
+                      placeholder={placeholder}
+                      onChange={this.handleSubmitParam}
+                    />
+                  </div>
+                );
+              })}
             </div>
           );
         })}
@@ -116,17 +137,23 @@ SubmitParamsContainer.defaultProps = {
 
 SubmitParamsContainer.propTypes = {
   handleSubmitParamUpdate: PropTypes.func.isRequired,
-  submitParamsFromApp: PropTypes.arrayOf(PropTypes.shape({
-    name: PropTypes.string.isRequired,
-    compositeName: PropTypes.string.isRequired,
-    defaultValue: PropTypes.string
-  })).isRequired,
-  submitParamsFromJobConfig: PropTypes.arrayOf(PropTypes.shape({
-    name: PropTypes.string.isRequired,
-    value: PropTypes.string.isRequired,
-  })),
-  initialSubmissionParameters: PropTypes.arrayOf(PropTypes.shape({
-    name: PropTypes.string.isRequired,
-    value: PropTypes.string.isRequired,
-  })).isRequired
+  submitParamsFromApp: PropTypes.arrayOf(
+    PropTypes.shape({
+      name: PropTypes.string.isRequired,
+      compositeName: PropTypes.string.isRequired,
+      defaultValue: PropTypes.string
+    })
+  ).isRequired,
+  submitParamsFromJobConfig: PropTypes.arrayOf(
+    PropTypes.shape({
+      name: PropTypes.string.isRequired,
+      value: PropTypes.string.isRequired
+    })
+  ),
+  initialSubmissionParameters: PropTypes.arrayOf(
+    PropTypes.shape({
+      name: PropTypes.string.isRequired,
+      value: PropTypes.string.isRequired
+    })
+  ).isRequired
 };

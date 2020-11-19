@@ -1,7 +1,10 @@
 import Dropdown from 'carbon-components-react/es/components/Dropdown';
 import DropdownSkeleton from 'carbon-components-react/es/components/Dropdown/Dropdown.Skeleton';
 import Link from 'carbon-components-react/es/components/Link';
-import { InlineNotification, NotificationActionButton } from 'carbon-components-react/es/components/Notification';
+import {
+  InlineNotification,
+  NotificationActionButton
+} from 'carbon-components-react/es/components/Notification';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import MessageHandler from '../../../../message.ts';
@@ -41,17 +44,26 @@ export default class ConnectionFormV5CpdStep2 extends Component {
       let newState = {};
       switch (command) {
         case 'set-streams-instances': {
-          const { params: { instance } } = this.props;
-          const { result: { connectionId, streamsInstances } } = args;
+          const {
+            params: { instance }
+          } = this.props;
+          const {
+            result: { connectionId, streamsInstances }
+          } = args;
           newState.loading = false;
           newState.connectionId = connectionId;
           newState.streamsInstances = streamsInstances;
           const instanceItems = this.getInstanceItems(streamsInstances);
           if (instanceItems) {
-            const defaultInstanceItem = instanceItems.length ? instanceItems[0] : null;
-            const selectedInstanceItem = instance && instance.instanceName
-              ? instanceItems.find((instanceItem) => instanceItem.id === instance.instanceName)
-              : defaultInstanceItem;
+            const defaultInstanceItem = instanceItems.length
+              ? instanceItems[0]
+              : null;
+            const selectedInstanceItem =
+              instance && instance.instanceName
+                ? instanceItems.find(
+                    (instanceItem) => instanceItem.id === instance.instanceName
+                  )
+                : defaultInstanceItem;
             newState.selectedInstance = selectedInstanceItem;
           }
           this.setState(newState);
@@ -70,11 +82,11 @@ export default class ConnectionFormV5CpdStep2 extends Component {
           break;
       }
     }
-  }
+  };
 
   onSelectionChange = (e) => {
     this.setState({ selectedInstance: e.selectedItem });
-  }
+  };
 
   getInstanceItems = (instances) => {
     const { streamsInstances: stateStreamsInstances } = this.state;
@@ -84,9 +96,10 @@ export default class ConnectionFormV5CpdStep2 extends Component {
       return null;
     }
     const instanceItems = streamsInstances.map((streamsInstance) => {
-      const instanceName = cpdVersion.id === 'v3.0'
-        ? streamsInstance.display_name
-        : streamsInstance.ServiceInstanceDisplayName;
+      const instanceName =
+        cpdVersion.id === '3.0.0'
+          ? streamsInstance.display_name
+          : streamsInstance.ServiceInstanceDisplayName;
       return {
         id: instanceName,
         text: instanceName,
@@ -94,12 +107,16 @@ export default class ConnectionFormV5CpdStep2 extends Component {
       };
     });
     return instanceItems;
-  }
+  };
 
   getButtonContainer = () => {
     const { selectedInstance, connectionId } = this.state;
     const {
-      instanceType, closePanel, setInstanceDropdownDisabled, setStep, params: { instance }
+      instanceType,
+      closePanel,
+      setInstanceDropdownDisabled,
+      setStep,
+      params: { instance }
     } = this.props;
     return (
       <ButtonContainer
@@ -148,21 +165,27 @@ export default class ConnectionFormV5CpdStep2 extends Component {
         }}
       />
     );
-  }
+  };
 
   render() {
     const {
-      streamsInstances, selectedInstance, loading, isAuthenticating, authError
+      streamsInstances,
+      selectedInstance,
+      loading,
+      isAuthenticating,
+      authError
     } = this.state;
     const {
-      renderLoadingOverlay, renderErrorNotification, cpdUrl, sanitizeUrl, params: { instance }
+      renderLoadingOverlay,
+      renderErrorNotification,
+      cpdUrl,
+      sanitizeUrl,
+      params: { instance }
     } = this.props;
 
     let instancesElement;
     if (!streamsInstances) {
-      instancesElement = (
-        <DropdownSkeleton />
-      );
+      instancesElement = <DropdownSkeleton />;
     } else if (!streamsInstances.length) {
       const provisionAction = (
         <Link
@@ -194,7 +217,7 @@ export default class ConnectionFormV5CpdStep2 extends Component {
           disabled={!!instance}
           selectedItem={selectedInstance}
           items={this.getInstanceItems()}
-          itemToString={item => (item ? item.text : '')}
+          itemToString={(item) => (item ? item.text : '')}
           onChange={this.onSelectionChange}
         />
       );
@@ -203,10 +226,10 @@ export default class ConnectionFormV5CpdStep2 extends Component {
     return (
       <>
         {renderLoadingOverlay(loading, isAuthenticating)}
-        <div className="connection-form__form-item">
-          {instancesElement}
-        </div>
-        {renderErrorNotification(authError, 'IBM Streams', () => { this.setState({ authError: null }); })}
+        <div className="connection-form__form-item">{instancesElement}</div>
+        {renderErrorNotification(authError, 'IBM Streams', () => {
+          this.setState({ authError: null });
+        })}
         {this.getButtonContainer()}
       </>
     );

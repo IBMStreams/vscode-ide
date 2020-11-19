@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2020-11-19
+
+### Added
+
+- Support for IBM Cloud Pak for Data 3.5
+- Support for single sign-on (SSO) via an API key for IBM Cloud Pak for Data deployments
+- Support for building building toolkits
+- Support for C++ and Java primitive operator development
+- Support for excluding files or folders from builds
+
 ## [1.0.3] - 2020-09-28
 
 ### Added
@@ -90,6 +100,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Set IBM Streaming Analytics Service Credentials (`ibm-streams.streamingAnalytics.setServiceCredentials`)
   - Set IBM Streams Target Version (`ibm-streams.setTargetVersion`)
 
+[1.1.0]: https://github.com/IBMStreams/vscode-ide/compare/v1.0.3...v1.1.0
 [1.0.3]: https://github.com/IBMStreams/vscode-ide/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/IBMStreams/vscode-ide/compare/v1.0.0...v1.0.2
 [1.0.1]: https://github.com/IBMStreams/vscode-ide/tree/v1.0.0

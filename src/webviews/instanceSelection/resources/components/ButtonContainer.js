@@ -4,11 +4,7 @@ import Button from 'carbon-components-react/es/components/Button';
 import PropTypes from 'prop-types';
 import React from 'react';
 
-const ButtonContainer = ({
-  primaryBtn,
-  secondaryBtn,
-  tertiaryBtn
-}) => {
+const ButtonContainer = ({ primaryBtn, secondaryBtn, tertiaryBtn }) => {
   const primary = (
     <Button
       type="submit"
@@ -69,7 +65,7 @@ ButtonContainer.propTypes = {
     label: PropTypes.string.isRequired,
     showIcon: PropTypes.bool,
     isValid: PropTypes.bool,
-    onClick: PropTypes.func.isRequired,
+    onClick: PropTypes.func.isRequired
   }),
   tertiaryBtn: PropTypes.shape({
     label: PropTypes.string.isRequired,

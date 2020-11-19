@@ -1,4 +1,4 @@
-const isValid = jobConfig => {
+const isValid = (jobConfig) => {
   if (jobConfig && Array.isArray(jobConfig.jobConfigOverlays)) {
     if (jobConfig.jobConfigOverlays.length > 0) {
       return true;
@@ -7,7 +7,7 @@ const isValid = jobConfig => {
   return false;
 };
 
-const getOverlay = jobConfig => {
+const getOverlay = (jobConfig) => {
   return isValid(jobConfig) ? jobConfig.jobConfigOverlays[0] : null;
 };
 
@@ -16,23 +16,23 @@ const getJobConfigSectionElement = (jobConfig, element) => {
   return overlay && overlay.jobConfig ? overlay.jobConfig[element] : '';
 };
 
-const getJobName = jobConfig => {
+const getJobName = (jobConfig) => {
   return getJobConfigSectionElement(jobConfig, 'jobName');
 };
 
-const getJobGroup = jobConfig => {
+const getJobGroup = (jobConfig) => {
   return getJobConfigSectionElement(jobConfig, 'jobGroup');
 };
 
-const getDataDirectory = jobConfig => {
+const getDataDirectory = (jobConfig) => {
   return getJobConfigSectionElement(jobConfig, 'dataDirectory');
 };
 
-const getTracing = jobConfig => {
+const getTracing = (jobConfig) => {
   return getJobConfigSectionElement(jobConfig, 'tracing');
 };
 
-const getSubmissionTimeParameters = jobConfig => {
+const getSubmissionTimeParameters = (jobConfig) => {
   return getJobConfigSectionElement(jobConfig, 'submissionParameters');
 };
 

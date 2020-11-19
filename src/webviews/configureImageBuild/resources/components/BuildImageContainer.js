@@ -13,16 +13,27 @@ import ThemeHandler from '../../../theme.ts';
 const themeHandler = new ThemeHandler();
 const messageHandler = new MessageHandler();
 
-const BuildImageContainer = ({ params: { name, preselectedBaseImage, targetInstance } }) => {
-  const [selectedConfigFileType, setSelectedConfigFileType] = useState(ConfigFileType.NEW);
-  const [selectedExistingConfigFile, setSelectedExistingConfigFile] = useState(null);
-  const [shouldOverrideExistingAppBundles, setShouldOverrideExistingAppBundles] = useState(true);
+const BuildImageContainer = ({ params: { preselectedBaseImage } }) => {
+  const [selectedConfigFileType, setSelectedConfigFileType] = useState(
+    ConfigFileType.NEW
+  );
+  const [selectedExistingConfigFile, setSelectedExistingConfigFile] = useState(
+    null
+  );
+  const [
+    shouldOverrideExistingAppBundles,
+    setShouldOverrideExistingAppBundles
+  ] = useState(true);
   const [isLoadingBaseImages, setIsLoadingBaseImages] = useState(false);
   const [baseImages, setBaseImages] = useState(null);
   const [selectedBaseImage, setSelectedBaseImage] = useState(null);
   const [imageName, setImageName] = useState('');
+  const [imageNameError, setImageNameError] = useState(false);
   const [imageTag, setImageTag] = useState('');
-  const [selectedNewConfigType, setSelectedNewConfigType] = useState(NewConfigType.SIMPLE);
+  const [imageTagError, setImageTagError] = useState(false);
+  const [selectedNewConfigType, setSelectedNewConfigType] = useState(
+    NewConfigType.SIMPLE
+  );
   const [selectedNewConfigFile, setSelectedNewConfigFile] = useState(null);
   const value = {
     selectedConfigFileType,
@@ -32,7 +43,9 @@ const BuildImageContainer = ({ params: { name, preselectedBaseImage, targetInsta
     baseImages,
     selectedBaseImage,
     imageName,
+    imageNameError,
     imageTag,
+    imageTagError,
     selectedNewConfigType,
     selectedNewConfigFile,
     setSelectedConfigFileType,
@@ -42,7 +55,9 @@ const BuildImageContainer = ({ params: { name, preselectedBaseImage, targetInsta
     setBaseImages,
     setSelectedBaseImage,
     setImageName,
+    setImageNameError,
     setImageTag,
+    setImageTagError,
     setSelectedNewConfigType,
     setSelectedNewConfigFile
   };
@@ -62,11 +77,14 @@ const BuildImageContainer = ({ params: { name, preselectedBaseImage, targetInsta
         </div>
         <div className="bx--row build-image-container__config-container">
           <div className="bx--col">
-            {
-              selectedConfigFileType === ConfigFileType.EXISTING
-                ? <ExistingConfigContainer messageHandler={messageHandler} />
-                : <NewConfigContainer messageHandler={messageHandler} preselectedBaseImage={preselectedBaseImage} />
-            }
+            {selectedConfigFileType === ConfigFileType.EXISTING ? (
+              <ExistingConfigContainer messageHandler={messageHandler} />
+            ) : (
+              <NewConfigContainer
+                messageHandler={messageHandler}
+                preselectedBaseImage={preselectedBaseImage}
+              />
+            )}
           </div>
         </div>
         <div className="bx--row">
@@ -76,18 +94,14 @@ const BuildImageContainer = ({ params: { name, preselectedBaseImage, targetInsta
         </div>
       </div>
     </BuildImageContext.Provider>
-  )
+  );
 };
 
 BuildImageContainer.propTypes = {
   params: PropTypes.shape({
-    name: PropTypes.string.isRequired,
     preselectedBaseImage: PropTypes.shape({
       id: PropTypes.string
-    }),
-    targetInstance: PropTypes.shape({
-      instanceName: PropTypes.string
-    }).isRequired
+    })
   }).isRequired
 };
 

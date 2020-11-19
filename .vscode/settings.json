@@ -2,16 +2,13 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": true
   },
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "editor.tabSize": 2,
   "eslint.enable": true,
   "eslint.packageManager": "yarn",
-  "eslint.validate": [
-    "javascript",
-    "javascriptreact",
-    "typescript",
-    "typescriptreact"
-  ],
   "files.trimTrailingWhitespace": true,
-  "npm.packageManager": "yarn",
+  "prettier.packageManager": "yarn",
   "search.exclude": {
     "**/dist": true,
     "**/out": true

@@ -5,9 +5,10 @@ import JobInfoModal from './JobInfoModal';
 import SubmitJobContainer from './SubmitJobContainer';
 
 /**
- * Note: `submitJobParams` is defined when setting the webview HTML content
+ * Note: `params` is defined when setting the webview HTML content
  */
 const App = () => {
+  const { details, name, targetInstance } = params;
   const [isJobInfoModalOpen, setIsJobInfoModalOpen] = useState(false);
 
   return (
@@ -15,21 +16,21 @@ const App = () => {
       <JobInfoModal
         isOpen={isJobInfoModalOpen}
         close={() => setIsJobInfoModalOpen(false)}
-        instanceName={submitJobParams.targetInstance.instanceName}
-        jobDetails={submitJobParams.details || null}
+        instanceName={targetInstance.instanceName}
+        jobDetails={details || null}
       />
       <div className="bx--grid bx--grid--no-gutter">
         <div className="bx--row app-container__header-container">
           <div className="bx--col">
             <HeaderContainer
-              bundleName={submitJobParams.name}
+              bundleName={name}
               setIsJobInfoModalOpen={setIsJobInfoModalOpen}
             />
           </div>
         </div>
         <div className="bx--row app-container__main-container">
           <div className="bx--col">
-            <SubmitJobContainer params={submitJobParams} />
+            <SubmitJobContainer params={params} />
           </div>
         </div>
       </div>

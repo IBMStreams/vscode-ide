@@ -1,7 +1,12 @@
+_site
 .DS_Store
 .vscode-test
 dist
 ibm-streams-*.vsix
 node_modules
 out
+package-lock.json
+stats.json
 toolkitsCache
+yarn-debug.log*
+yarn-error.log*

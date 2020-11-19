@@ -1,41 +1,39 @@
 {
-	"scopeName": "source.splLog",
-	"name": "StreamsSplLog",
-	"fileTypes": [
-	  "log"
-	],
-	"patterns": [
-		{
-			"begin": "(\\[[0-9].*\\]\\[(ERROR)\\])",
-			"beginCaptures": {
-				"1": {
-					"name": "meta.log.error.header.splLog"
-				}
-			},
-			"end": "(?=\\[[0-9].*\\])",
-			"patterns": [
-				{
-					"begin": "(?<=\\[ERROR\\])",
-					"end": "(?=\\[[0-9].*\\])",
-					"contentName": "meta.log.error.body.splLog"
-				}
-			]
-		},
-		{
-			"match": "\\[[0-9].*\\]\\[(DEBUG)\\]",
-			"name": "meta.log.debug.splLog"
-		},
-		{
-			"match": "\\[[0-9].*\\]\\[(INFO)\\]",
-			"name": "meta.log.info.splLog"
-		},
-		{
-			"match": "\\[[0-9].*\\]\\[(SUCCESS)\\]",
-			"name": "meta.log.success.splLog"
-		},
-		{
-			"match": "\\[[0-9].*\\]\\[(WARN)\\]",
-			"name": "meta.log.warn.splLog"
-		}
-	]
+  "scopeName": "source.splLog",
+  "name": "StreamsSplLog",
+  "fileTypes": ["log"],
+  "patterns": [
+    {
+      "begin": "(\\[[0-9].*\\]\\[(ERROR)\\])",
+      "beginCaptures": {
+        "1": {
+          "name": "meta.log.error.header.splLog"
+        }
+      },
+      "end": "(?=\\[[0-9].*\\])",
+      "patterns": [
+        {
+          "begin": "(?<=\\[ERROR\\])",
+          "end": "(?=\\[[0-9].*\\])",
+          "contentName": "meta.log.error.body.splLog"
+        }
+      ]
+    },
+    {
+      "match": "\\[[0-9].*\\]\\[(DEBUG)\\]",
+      "name": "meta.log.debug.splLog"
+    },
+    {
+      "match": "\\[[0-9].*\\]\\[(INFO)\\]",
+      "name": "meta.log.info.splLog"
+    },
+    {
+      "match": "\\[[0-9].*\\]\\[(SUCCESS)\\]",
+      "name": "meta.log.success.splLog"
+    },
+    {
+      "match": "\\[[0-9].*\\]\\[(WARN)\\]",
+      "name": "meta.log.warn.splLog"
+    }
+  ]
 }

@@ -67,7 +67,8 @@ $feature-flags: (
 @import '~carbon-components/scss/globals/grid/grid';
 @import '~carbon-components/scss/globals/scss/theme';
 $carbon--theme--custom: map-merge(
-  $carbon--theme--white, (
+  $carbon--theme--white,
+  (
     // Override core color tokens
     ui-background: var(--color-uiBackground),
     interactive-01: var(--color-interactive01),

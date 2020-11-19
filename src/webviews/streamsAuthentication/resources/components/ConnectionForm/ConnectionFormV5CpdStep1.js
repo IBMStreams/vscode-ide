@@ -2,6 +2,9 @@ import UserAdmin16 from '@carbon/icons-react/es/user--admin/16';
 import Button from 'carbon-components-react/es/components/Button';
 import Checkbox from 'carbon-components-react/es/components/Checkbox';
 import Dropdown from 'carbon-components-react/es/components/Dropdown';
+import FormLabel from 'carbon-components-react/es/components/FormLabel';
+import RadioButton from 'carbon-components-react/es/components/RadioButton';
+import RadioButtonGroup from 'carbon-components-react/es/components/RadioButtonGroup';
 import TextInput from 'carbon-components-react/es/components/TextInput';
 import Tooltip from 'carbon-components-react/es/components/Tooltip';
 import PropTypes from 'prop-types';
@@ -51,26 +54,43 @@ export default class ConnectionFormV5CpdStep1 extends Component {
           break;
       }
     }
-  }
+  };
 
   onTextChange = (e) => {
     const { setValue } = this.props;
     const { id, value } = e.target;
     setValue(id, value);
-  }
+  };
 
   onCheckboxChange = (checked, id) => {
     const { setValue } = this.props;
     setValue(id, checked);
-  }
+  };
 
   onSelectionChange = (e) => {
     const { setValue, properties } = this.props;
     setValue(properties.CPD_VERSION, e.selectedItem);
-  }
+  };
 
-  getVersionItems = (instances) => {
-    const { params: { cpdVersions } } = this.props;
+  onRadioButtonChange = (value) => {
+    const { setValue } = this.props;
+    setValue('authType', value);
+    if (value === 'apiKey') {
+      setValue('password', '');
+      setValue('rememberPassword', false);
+      setValue('rememberApiKey', true);
+    }
+    if (value === 'password') {
+      setValue('apiKey', '');
+      setValue('rememberApiKey', false);
+      setValue('rememberPassword', true);
+    }
+  };
+
+  getVersionItems = () => {
+    const {
+      params: { cpdVersions }
+    } = this.props;
     const versionItems = [];
     Object.keys(cpdVersions).forEach((key) => {
       versionItems.push({
@@ -79,15 +99,15 @@ export default class ConnectionFormV5CpdStep1 extends Component {
       });
     });
     return versionItems;
-  }
+  };
 
   validate = () => {
-    const { cpdUrl, username, password } = this.props;
+    const { cpdUrl, username, password, apiKey } = this.props;
     const { cpdVersion } = this.props;
     // True if errors, false otherwise
     const errors = {
       username: username.length === 0,
-      password: password.length === 0,
+      passwordOrKey: password.length === 0 && apiKey.length === 0,
       cpdVersion: !cpdVersion
     };
 
@@ -100,20 +120,31 @@ export default class ConnectionFormV5CpdStep1 extends Component {
     }
 
     return errors;
-  }
+  };
 
   isFormValid = () => {
     const errors = this.validate();
     const isValid = !Object.keys(errors).some((e) => errors[e]);
     return isValid;
-  }
+  };
 
   getButtonContainer = () => {
     const {
-      cpdUrl, username, password, useCpdMasterNodeHost, rememberPassword, sanitizeUrl
+      cpdUrl,
+      username,
+      password,
+      apiKey,
+      authType,
+      useCpdMasterNodeHost,
+      rememberPassword,
+      rememberApiKey,
+      sanitizeUrl
     } = this.props;
     const {
-      instanceType, closePanel, cpdVersion, params: { instance }
+      instanceType,
+      closePanel,
+      cpdVersion,
+      params: { instance }
     } = this.props;
     const isValid = this.isFormValid();
     return (
@@ -133,7 +164,10 @@ export default class ConnectionFormV5CpdStep1 extends Component {
                 useCpdMasterNodeHost,
                 username,
                 password,
+                apiKey,
+                authType,
                 rememberPassword,
+                rememberApiKey,
                 instance
               }
             });
@@ -142,11 +176,13 @@ export default class ConnectionFormV5CpdStep1 extends Component {
         secondaryBtn={{
           label: 'Cancel',
           isValid: true,
-          onClick: () => { closePanel(); }
+          onClick: () => {
+            closePanel();
+          }
         }}
       />
     );
-  }
+  };
 
   render() {
     const {
@@ -167,9 +203,12 @@ export default class ConnectionFormV5CpdStep1 extends Component {
       password,
       useCpdMasterNodeHost,
       rememberPassword,
+      rememberApiKey,
       sanitizeUrl,
       properties,
-      params: { instance }
+      apiKey,
+      params: { instance },
+      authType
     } = this.props;
 
     const errors = this.validate();
@@ -181,7 +220,11 @@ export default class ConnectionFormV5CpdStep1 extends Component {
         tabIndex={0}
         className="streams-auth-container__help-tooltip"
       >
-        The version number can be found in the Cloud Pak for Data web client in the <strong>About</strong> section.
+        The version of Cloud Pak for Data.
+        <br />
+        <br />
+        The version number can be found in the Cloud Pak for Data web client in
+        the <strong>About</strong> section.
       </Tooltip>
     );
     const cpdUrlLabel = (
@@ -192,9 +235,16 @@ export default class ConnectionFormV5CpdStep1 extends Component {
           tabIndex={0}
           className="streams-auth-container__help-tooltip"
         >
-          The URL for the Cloud Pak for Data web client. For example, if your web client URL
-          is <span className="streams-auth-container__code">https://123.45.67.89:12345/zen</span>,
-          then enter <span className="streams-auth-container__code">https://123.45.67.89:12345</span>.
+          The URL for the Cloud Pak for Data web client. For example, if your
+          web client URL is{' '}
+          <span className="streams-auth-container__code">
+            https://123.45.67.89:12345/zen
+          </span>
+          , then enter{' '}
+          <span className="streams-auth-container__code">
+            https://123.45.67.89:12345
+          </span>
+          .
         </Tooltip>
         <Button
           className="connection-form__test-connection-button"
@@ -214,7 +264,10 @@ export default class ConnectionFormV5CpdStep1 extends Component {
                 useCpdMasterNodeHost,
                 username,
                 password,
-                rememberPassword
+                apiKey,
+                authType,
+                rememberPassword,
+                rememberApiKey
               }
             });
             this.setState({
@@ -230,10 +283,53 @@ export default class ConnectionFormV5CpdStep1 extends Component {
         />
       </>
     );
+    const authMethodLabel = (
+      <Tooltip
+        triggerText="Authentication method"
+        iconDescription="Authentication method"
+        tabIndex={0}
+        className="streams-auth-container__help-tooltip"
+      >
+        The method used to authenticate to the Streams service instance. You may
+        either use basic authentication via a password, or single sign-on (SSO)
+        via an API key.
+      </Tooltip>
+    );
+
+    const apiKeyLabel = (
+      <Tooltip
+        triggerText="IBM Cloud Pak for Data API key"
+        iconDescription="Authentication method"
+        tabIndex={0}
+        className="streams-auth-container__help-tooltip"
+      >
+        You may generate a new API key in the Cloud Pak for Data web client.
+        Navigate to the <strong>Profile and settings</strong> section and click
+        on the <strong>Generate API key</strong> button.
+        <br />
+        <br />
+        Note: This is your unique key and it is non-recoverable. If you lose
+        this API key, you will have to reset it.
+      </Tooltip>
+    );
+
     let passwordDisabled = false;
-    if (instance && instance.authentication.rememberPassword && instance.authentication.password) {
+    if (
+      instance &&
+      instance.authentication.rememberPassword &&
+      instance.authentication.password
+    ) {
       passwordDisabled = true;
     }
+    let apiKeyDisabled = false;
+    if (
+      instance &&
+      instance.authentication.rememberApiKey &&
+      instance.authentication.apiKey
+    ) {
+      apiKeyDisabled = true;
+    }
+
     return (
       <>
         {renderLoadingOverlay(loading, isAuthenticating)}
@@ -246,11 +342,13 @@ export default class ConnectionFormV5CpdStep1 extends Component {
             disabled={!!instance}
             selectedItem={cpdVersion}
             items={this.getVersionItems()}
-            itemToString={item => (item ? item.text : '')}
+            itemToString={(item) => (item ? item.text : '')}
             onChange={this.onSelectionChange}
           />
         </div>
-        {renderTestConnectionNotification(connectionSuccessful, () => { this.setState({ connectionSuccessful: null }); })}
+        {renderTestConnectionNotification(connectionSuccessful, () => {
+          this.setState({ connectionSuccessful: null });
+        })}
         <div className="connection-form__form-item">
           <TextInput
             type="text"
@@ -276,16 +374,60 @@ export default class ConnectionFormV5CpdStep1 extends Component {
           />
         </div>
         <div className="connection-form__form-item">
-          <TextInput.PasswordInput
-            id={properties.CPD_PASSWORD}
-            labelText="IBM Cloud Pak for Data password"
-            placeholder="Enter your password"
-            value={password}
-            disabled={passwordDisabled}
-            onChange={this.onTextChange}
-            ref={input => !!instance && input && input.focus && input.focus()}
-          />
+          <FormLabel className={instance ? 'bx--label--disabled' : null}>
+            {authMethodLabel}
+          </FormLabel>
+          <RadioButtonGroup
+            defaultSelected={authType}
+            name="radio-button-group-auth-method"
+            orientation="horizontal"
+            disabled={!!instance}
+            onChange={this.onRadioButtonChange}
+          >
+            <RadioButton
+              value="password"
+              id="radio-password"
+              labelText="Password"
+              disabled={!!instance}
+            />
+            <RadioButton
+              value="apiKey"
+              id="radio-apiKey"
+              labelText="API key"
+              disabled={!!instance}
+            />
+          </RadioButtonGroup>
         </div>
+        {authType === 'apiKey' && (
+          <div className="connection-form__form-item">
+            <TextInput
+              id="apiKey"
+              labelText={apiKeyLabel}
+              placeholder="Enter your API key"
+              value={apiKey}
+              disabled={passwordDisabled || apiKeyDisabled}
+              onChange={this.onTextChange}
+              ref={(input) =>
+                !!instance && input && input.focus && input.focus()
+              }
+            />
+          </div>
+        )}
+        {authType === 'password' && (
+          <div className="connection-form__form-item">
+            <TextInput.PasswordInput
+              id={properties.CPD_PASSWORD}
+              labelText="IBM Cloud Pak for Data password"
+              placeholder="Enter your password"
+              value={password}
+              disabled={passwordDisabled || apiKeyDisabled}
+              onChange={this.onTextChange}
+              ref={(input) =>
+                !!instance && input && input.focus && input.focus()
+              }
+            />
+          </div>
+        )}
         <div className="connection-form__form-item--compact">
           <Checkbox
             id={properties.USE_CPD_MASTER_NODE_HOST}
@@ -295,16 +437,31 @@ export default class ConnectionFormV5CpdStep1 extends Component {
             onChange={this.onCheckboxChange}
           />
         </div>
-        <div className="connection-form__form-item">
-          <Checkbox
-            id={properties.REMEMBER_PASSWORD}
-            checked={rememberPassword}
-            labelText="Remember password"
-            disabled={passwordDisabled}
-            onChange={this.onCheckboxChange}
-          />
-        </div>
-        {renderErrorNotification(authError, 'IBM Cloud Pak for Data', () => { this.setState({ authError: null }); })}
+        {authType === 'password' && (
+          <div className="connection-form__form-item">
+            <Checkbox
+              id={properties.REMEMBER_PASSWORD}
+              checked={rememberPassword}
+              labelText="Remember password"
+              disabled={passwordDisabled}
+              onChange={this.onCheckboxChange}
+            />
+          </div>
+        )}
+        {authType === 'apiKey' && (
+          <div className="connection-form__form-item">
+            <Checkbox
+              id={properties.REMEMBER_APIKEY}
+              checked={rememberApiKey}
+              labelText="Remember API key"
+              disabled={apiKeyDisabled}
+              onChange={this.onCheckboxChange}
+            />
+          </div>
+        )}
+        {renderErrorNotification(authError, 'IBM Cloud Pak for Data', () => {
+          this.setState({ authError: null });
+        })}
         {this.getButtonContainer()}
       </>
     );
@@ -328,8 +485,11 @@ ConnectionFormV5CpdStep1.propTypes = {
   }),
   username: PropTypes.string.isRequired,
   password: PropTypes.string.isRequired,
+  apiKey: PropTypes.string.isRequired,
+  authType: PropTypes.string.isRequired,
   useCpdMasterNodeHost: PropTypes.bool.isRequired,
   rememberPassword: PropTypes.bool.isRequired,
+  rememberApiKey: PropTypes.bool.isRequired,
   setValue: PropTypes.func.isRequired,
   sanitizeUrl: PropTypes.func.isRequired,
   properties: PropTypes.shape({
@@ -338,7 +498,8 @@ ConnectionFormV5CpdStep1.propTypes = {
     CPD_USERNAME: PropTypes.string,
     CPD_PASSWORD: PropTypes.string,
     USE_CPD_MASTER_NODE_HOST: PropTypes.string,
-    REMEMBER_PASSWORD: PropTypes.string
+    REMEMBER_PASSWORD: PropTypes.string,
+    REMEMBER_APIKEY: PropTypes.string
   }).isRequired,
   params: PropTypes.shape({
     instanceTypes: PropTypes.objectOf(PropTypes.string),

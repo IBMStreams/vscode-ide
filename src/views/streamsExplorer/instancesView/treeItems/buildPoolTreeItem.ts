@@ -6,19 +6,29 @@ import { LabelTreeItem, TreeItemType } from '.';
  * Tree item that represents a build pool
  */
 export default class BuildPoolTreeItem extends TreeItem {
-    public type = TreeItemType.BuildPool;
+  public type = TreeItemType.BuildPool;
 
-    public contextValue = `${this.type}TreeItem`;
-    public iconPath = {
-        light: path.join(this._extensionPath, 'images', 'icons', 'light', 'network--1.svg'),
-        dark: path.join(this._extensionPath, 'images', 'icons', 'dark', 'network--1.svg')
+  constructor(
+    private _extensionPath: string,
+    public buildPool: any,
+    public children: LabelTreeItem[]
+  ) {
+    super(
+      buildPool.name,
+      children
+        ? TreeItemCollapsibleState.Collapsed
+        : TreeItemCollapsibleState.None
+    );
+
+    // Set context value
+    this.contextValue = `${this.type}TreeItem`;
+
+    // Set icon path
+    const iconsFolderPath = [this._extensionPath, 'images', 'icons'];
+    const iconFileName = 'network--1.svg';
+    this.iconPath = {
+      light: path.join(...iconsFolderPath, 'light', iconFileName),
+      dark: path.join(...iconsFolderPath, 'dark', iconFileName)
     };
-
-    constructor(
-        private _extensionPath: string,
-        public buildPool: any,
-        public children: (LabelTreeItem)[]
-    ) {
-        super(buildPool.name, children ? TreeItemCollapsibleState.Expanded : TreeItemCollapsibleState.None);
-    }
+  }
 }

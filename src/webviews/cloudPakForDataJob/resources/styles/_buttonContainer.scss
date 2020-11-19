@@ -1,0 +1,13 @@
+.button-container {
+  flex-flow: row-reverse wrap;
+  justify-content: flex-end;
+  padding-top: 0.5rem;
+
+  @include carbon--breakpoint-down(500px) {
+    flex-flow: column wrap;
+  }
+
+  .button-container__button {
+    flex: 1;
+  }
+}

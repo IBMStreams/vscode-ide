@@ -2,28 +2,28 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="Content-Security-Policy" content="default-src {{webviewCspSource}} http: https:; img-src {{webviewCspSource}} data: https:; style-src blob: 'unsafe-inline'; script-src 'nonce-{{nonce}}' 'unsafe-eval'; font-src data: https://unpkg.com https://fonts.gstatic.com;">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Submit Job</title>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src {{webviewCspSource}} http: https:; img-src {{webviewCspSource}} data: https:; style-src {{webviewCspSource}} blob: 'unsafe-inline'; script-src {{webviewCspSource}} 'nonce-{{nonce}}' 'unsafe-eval'; font-src {{webviewCspSource}} data: https://unpkg.com https://fonts.gstatic.com;">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Submit Job</title>
 </head>
 
 <body>
-    <div id="root">
-        <div style="height: 100vh; display: flex; align-items: center; justify-content: center;">
-            <div style="width: 10.5rem; height: 10.5rem;">
-                <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" viewBox="-75 -75 150 150">
-                    <g>
-                        <circle fill="none" stroke="#0f62fe" stroke-width="8" stroke-linecap="butt" stroke-dasharray="150.757,25.1262" cx="0" cy="0" r="37.5">
-                            <animateTransform attributeName="transform" attributeType="XML" type="rotate" from="0 0 0" to="360 0 0" dur="690ms" repeatCount="indefinite" />
-                        </circle>
-                    </g>
-                </svg>
-            </div>
-        </div>
+  <div id="root">
+    <div style="height: 100vh; display: flex; align-items: center; justify-content: center;">
+      <div style="width: 10.5rem; height: 10.5rem;">
+        <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" viewBox="-75 -75 150 150">
+          <g>
+            <circle fill="none" stroke="#0f62fe" stroke-width="8" stroke-linecap="butt" stroke-dasharray="150.757,25.1262" cx="0" cy="0" r="37.5">
+              <animateTransform attributeName="transform" attributeType="XML" type="rotate" from="0 0 0" to="360 0 0" dur="690ms" repeatCount="indefinite" />
+            </circle>
+          </g>
+        </svg>
+      </div>
     </div>
-    <script nonce="{{nonce}}">{{init}}</script>
-    <script nonce="{{nonce}}" src="{{mainScriptUri}}"></script>
+  </div>
+  <script nonce="{{nonce}}">{{init}}</script>
+  <script nonce="{{nonce}}" src="{{mainScriptUri}}"></script>
 </body>
 
 </html>

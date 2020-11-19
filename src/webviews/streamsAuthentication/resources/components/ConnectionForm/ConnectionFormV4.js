@@ -1,6 +1,9 @@
 import UserAdmin16 from '@carbon/icons-react/es/user--admin/16';
 import Button from 'carbon-components-react/es/components/Button';
-import { InlineNotification, NotificationActionButton } from 'carbon-components-react/es/components/Notification';
+import {
+  InlineNotification,
+  NotificationActionButton
+} from 'carbon-components-react/es/components/Notification';
 import TextArea from 'carbon-components-react/es/components/TextArea';
 import Tooltip from 'carbon-components-react/es/components/Tooltip';
 import PropTypes from 'prop-types';
@@ -12,12 +15,18 @@ export default class ConnectionFormV4 extends Component {
   constructor(props) {
     super(props);
 
-    const { params: { instance } } = this.props;
+    const {
+      params: { instance }
+    } = this.props;
 
-    const authentication = instance && instance.authentication ? instance.authentication : null;
+    const authentication =
+      instance && instance.authentication ? instance.authentication : null;
 
     this.state = {
-      credentials: (authentication && authentication.credentials) ? JSON.stringify(authentication.credentials, null, 2) : '',
+      credentials:
+        authentication && authentication.credentials
+          ? JSON.stringify(authentication.credentials, null, 2)
+          : '',
       loading: false,
       isTestingConnection: false,
       connectionSuccessful: null,
@@ -56,11 +65,11 @@ export default class ConnectionFormV4 extends Component {
           break;
       }
     }
-  }
+  };
 
   onTextChange = (e) => {
     this.setState({ [e.target.id]: e.target.value });
-  }
+  };
 
   validate = () => {
     const { credentials } = this.state;
@@ -78,17 +87,21 @@ export default class ConnectionFormV4 extends Component {
     }
 
     return errors;
-  }
+  };
 
   isFormValid = () => {
     const errors = this.validate();
     const isValid = !Object.keys(errors).some((e) => errors[e]);
     return isValid;
-  }
+  };
 
   getButtonContainer = () => {
     const { credentials } = this.state;
-    const { instanceType, closePanel, params: { instance } } = this.props;
+    const {
+      instanceType,
+      closePanel,
+      params: { instance }
+    } = this.props;
     const isValid = this.isFormValid();
     return (
       <ButtonContainer
@@ -110,11 +123,13 @@ export default class ConnectionFormV4 extends Component {
         secondaryBtn={{
           label: 'Cancel',
           isValid: true,
-          onClick: () => { closePanel(); }
+          onClick: () => {
+            closePanel();
+          }
         }}
       />
     );
-  }
+  };
 
   renderErrorNotification = (authError, type, callbackFn) => {
     const { credentials } = this.state;
@@ -122,8 +137,14 @@ export default class ConnectionFormV4 extends Component {
       instanceType,
       renderErrorNotification: renderErrorNotificationProp
     } = this.props;
-    if (authError && authError.data && authError.data.type === 'STREAMING_ANALYTICS_SERVICE_NOT_STARTED') {
-      const { data: { instance } } = authError;
+    if (
+      authError &&
+      authError.data &&
+      authError.data.type === 'STREAMING_ANALYTICS_SERVICE_NOT_STARTED'
+    ) {
+      const {
+        data: { instance }
+      } = authError;
       const startServiceAction = (
         <NotificationActionButton
           onClick={async () => {
@@ -164,14 +185,23 @@ export default class ConnectionFormV4 extends Component {
     }
 
     return renderErrorNotificationProp(authError, type, callbackFn);
-  }
+  };
 
   render() {
     const {
-      credentials, loading, isTestingConnection, connectionSuccessful, isAuthenticating, isStartingService, authError
+      credentials,
+      loading,
+      isTestingConnection,
+      connectionSuccessful,
+      isAuthenticating,
+      isStartingService,
+      authError
     } = this.state;
     const {
-      instanceType, renderLoadingOverlay, renderTestConnectionNotification, params: { instance }
+      instanceType,
+      renderLoadingOverlay,
+      renderTestConnectionNotification,
+      params: { instance }
     } = this.props;
 
     const errors = this.validate();
@@ -184,9 +214,10 @@ export default class ConnectionFormV4 extends Component {
           tabIndex={0}
           className="streams-auth-container__help-tooltip"
         >
-          IBM Streaming Analytics is a cloud version of IBM Streams that is available from IBM Cloud.
-          Afer you create an instance of the Streaming Analytics service, you may access the service
-          credentials (in JSON format) from the service details page.
+          IBM Streaming Analytics is a cloud version of IBM Streams that is
+          available from IBM Cloud. Afer you create an instance of the Streaming
+          Analytics service, you may access the service credentials (in JSON
+          format) from the service details page.
         </Tooltip>
         <Button
           className="connection-form__test-connection-button"
@@ -219,13 +250,19 @@ export default class ConnectionFormV4 extends Component {
     );
     return (
       <>
-        {renderLoadingOverlay(loading, isAuthenticating, isStartingService ? 'Starting the service...' : 'Loading...')}
-        {renderTestConnectionNotification(connectionSuccessful, () => { this.setState({ connectionSuccessful: null }); })}
+        {renderLoadingOverlay(
+          loading,
+          isAuthenticating,
+          isStartingService ? 'Starting the service...' : 'Loading...'
+        )}
+        {renderTestConnectionNotification(connectionSuccessful, () => {
+          this.setState({ connectionSuccessful: null });
+        })}
         <div className="connection-form__form-item">
           <TextArea
             id="credentials"
             labelText={credentialsLabel}
-            placeholder="{ &quot;apikey&quot;: ..., &quot;v2_rest_url&quot;: ... }"
+            placeholder='{ "apikey": ..., "v2_rest_url": ... }'
             value={credentials}
             disabled={!!instance}
             invalid={!!errors.credentials && credentials.length > 0}
@@ -235,7 +272,13 @@ export default class ConnectionFormV4 extends Component {
             rows={16}
           />
         </div>
-        {this.renderErrorNotification(authError, 'IBM Streaming Analytics', () => { this.setState({ authError: null }); })}
+        {this.renderErrorNotification(
+          authError,
+          'IBM Streaming Analytics',
+          () => {
+            this.setState({ authError: null });
+          }
+        )}
         {this.getButtonContainer()}
       </>
     );
