@@ -14,6 +14,9 @@ Follow this guide to get up and running quickly!
     - Bring up the [Extensions](https://code.visualstudio.com/docs/editor/extension-gallery) view by clicking on the <img src="https://github.com/microsoft/vscode-icons/blob/master/icons/light/extensions.svg?raw=true" alt="Extensions icon" title="Extensions" class="editor-button"> icon on the side of VS Code.
     - Search for **IBM Streams** and click on the **Install** button.
     - Reload VS Code if you are prompted to.
+    <figure>
+      <img src="{{ "/assets/images/quick-start-guide/install-extension.png" | relative_url }}" alt="Installing the extension" title="Installing the extension">
+    </figure>
 1.  Set the `JAVA_HOME` environment variable to a Java JRE or JDK/SDK version 8 or higher.
 1.  [Add an IBM Streams instance]({{ "/docs/streams-explorer#adding-an-instance" | relative_url }}).
     <div class="notice--video">
@@ -21,10 +24,6 @@ Follow this guide to get up and running quickly!
       <video class="tutorial-video" src="{{ site.videos.quick_start_guide.instance_add_first }}" controls></video>
     </div>
 1.  [Add a toolkits folder]({{ "/docs/using-toolkits/#adding-a-local-toolkit" | relative_url }}) for toolkit dependencies.
-
-<figure>
-  <img src="{{ "/assets/images/quick-start-guide/install-extension.png" | relative_url }}" alt="Installing the extension" title="Installing the extension">
-</figure>
 
 ## VS Code overview
 
