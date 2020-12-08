@@ -236,6 +236,17 @@ ol ol ol {
     }
   }
 
+  // Style troubleshooting table
+  .troubleshooting-table {
+    th:first-of-type {
+      width: 50%;
+    }
+
+    td:last-of-type {
+      vertical-align: top;
+    }
+  }
+
   // Style videos
   .notice--video {
     @include notice($text-color);
