@@ -1719,7 +1719,7 @@
     "@ibmstreams/common": "0.9.5",
     "@ibmstreams/graph": "1.0.1",
     "@ibmstreams/spl-lsp": "1.1.0",
-    "axios": "^0.19.0",
+    "axios": "^0.21.1",
     "carbon-components": "10.21.0",
     "carbon-components-react": "7.21.0",
     "lodash": "^4.17.19",
