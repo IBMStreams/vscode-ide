@@ -36,11 +36,8 @@ export default class AddSplApplicationCommand implements BaseCommand {
       propertiesFilePath = window.activeTextEditor.document.fileName;
     }
 
-    Logger.info(
-      null,
-      `Received request to add a SPL application to a SPL application set.\nSPL application set: ${propertiesFilePath}`,
-      false,
-      true
+    Registry.getDefaultMessageHandler().logInfo(
+      `Received request to add a SPL application to a SPL application set.\nSPL application set: ${propertiesFilePath}`
     );
 
     return this.promptForSplApplication(propertiesFilePath);
@@ -92,8 +89,7 @@ export default class AddSplApplicationCommand implements BaseCommand {
             );
           });
           if (appExists) {
-            return Logger.warn(
-              null,
+            return Registry.getDefaultMessageHandler().logWarn(
               `The selected SPL application is already included in the SPL application set.\nSPL application set: ${propertiesFilePath}\nSPL application: ${appFilePath}`
             );
           }
@@ -116,19 +112,19 @@ export default class AddSplApplicationCommand implements BaseCommand {
           );
           await window.showTextDocument(propertiesTextDoc);
 
-          Logger.info(
-            null,
+          Registry.getDefaultMessageHandler().logInfo(
             `Added the SPL application to the SPL application set.\nSPL application set: ${propertiesFilePath}\nSPL application: ${appFilePath}`
           );
         }
       }
     } catch (err) {
-      Registry.getDefaultMessageHandler().handleError(
+      Registry.getDefaultMessageHandler().logError(
         `Failed to add a SPL application to the SPL application set.`,
         {
           detail: `SPL application set: ${propertiesFilePath}\n${
             err.stack || err.message
           }`,
+          showNotification: true,
           notificationButtons: [
             {
               label: 'See Documentation',
@@ -155,9 +151,10 @@ export default class AddSplApplicationCommand implements BaseCommand {
     const fileName = path.basename(filePath);
     // Check if the selected file is a valid file type
     if (fileExt !== '.spl' && fileExt !== '.splmm' && fileName !== 'Makefile') {
-      Registry.getDefaultMessageHandler().handleError(
+      Registry.getDefaultMessageHandler().logError(
         `The selected file is not a valid SPL application: ${fileName}. Only *.spl, *.splmm, and Makefile files are supported.`,
         {
+          showNotification: true,
           notificationButtons: [
             {
               label: 'See Documentation',

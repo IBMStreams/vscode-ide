@@ -10,9 +10,10 @@ import {
 } from 'vscode';
 
 export enum WebviewType {
+  CloudPakForDataAppService = 'cloudPakForDataAppService',
+  CloudPakForDataJob = 'cloudPakForDataJob',
   ConfigureImageBuild = 'configureImageBuild',
   ConfigureJobSubmission = 'configureJobSubmission',
-  CloudPakForDataJob = 'cloudPakForDataJob',
   CreatePrimitiveOperator = 'createPrimitiveOperator',
   CreateSplApplication = 'createSplApplication',
   CreateSplApplicationSet = 'createSplApplicationSet',

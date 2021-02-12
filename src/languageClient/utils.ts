@@ -1,3 +1,4 @@
+import { Registry } from '@ibmstreams/common';
 import * as net from 'net';
 import { ConfigurationTarget, window } from 'vscode';
 import { Configuration, Logger, Settings } from '../utils';
@@ -80,11 +81,9 @@ export const checkUserPort = async (port: number): Promise<number> => {
     }
     return port;
   } catch (err) {
-    Logger.error(
-      null,
+    Registry.getDefaultMessageHandler().logError(
       `An error occurred while checking if port ${port} is available. ${err.message}`,
-      false,
-      true
+      { showNotification: true }
     );
     // Attempt to use the port
     return port;

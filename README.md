@@ -26,7 +26,7 @@ This extension provides support for [IBM Streams](https://www.ibm.com/cloud/stre
 - [**IBM Streams standalone deployment**](https://www.ibm.com/support/knowledgecenter/en/SSCRJU_5.2.0/com.ibm.streams.welcome.doc/doc/kc-homepage.html) (on-premises): Delivers a programming language and IDE for applications, a runtime system and analytic toolkits to speed development.
 - [**IBM Streaming Analytics on IBM Cloud**](https://cloud.ibm.com/docs/StreamingAnalytics?topic=StreamingAnalytics-gettingstarted): Offers most of the features of IBM Streams on an agile, cloud-based platform.
 
-[Visual Studio Code 1.38.0](https://code.visualstudio.com/updates/v1_38) or later is required.
+[Visual Studio Code 1.41.0](https://code.visualstudio.com/updates/v1_41) or later is required.
 
 More information and documentation can be found [here](https://ibmstreams.github.io/vscode-ide).
 

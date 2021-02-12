@@ -1,0 +1,57 @@
+.overflow-tooltip {
+  position: relative;
+  top: -7px;
+
+  &:focus {
+    outline: none !important;
+  }
+
+  &::before {
+    transform: translate(-50%, 225%) !important;
+  }
+}
+
+.overflow-tooltip__text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  .overflow-tooltip__text--optional {
+    font-style: italic;
+  }
+}
+
+.overflow-tooltip__container .bx--assistive-text {
+  max-width: 20rem !important;
+
+  pre {
+    @include carbon--type-style('code-01');
+    max-height: 20rem;
+    overflow: hidden;
+  }
+
+  .overflow-tooltip__text--optional {
+    font-style: italic;
+  }
+}
+
+.overflow-tooltip__container
+  .bx--tooltip__trigger.bx--tooltip__trigger--definition {
+  @include carbon--type-style('body-short-01');
+  border-bottom-style: none;
+  width: 100%;
+}
+
+.bx--table-header-label
+  .overflow-tooltip__container
+  .bx--tooltip__trigger.bx--tooltip__trigger--definition {
+  font-weight: 600;
+}
+
+.bx--data-table .bx--table-header-label {
+  overflow: visible;
+}
+
+.overflow-tooltip__container.bx--tooltip--definition {
+  width: 100%;
+}

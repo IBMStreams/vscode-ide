@@ -1,6 +1,7 @@
 import {
   IBM_CLOUD_DASHBOARD_URL,
   InstanceSelector,
+  Registry,
   store,
   StreamsInstanceType
 } from '@ibmstreams/common';
@@ -69,12 +70,17 @@ export default class OpenLinkCommand implements BaseCommand {
         defaultInstance.connectionId
       );
       this._openUrl(consoleUrl, () =>
-        Logger.info(null, `Opened IBM ${name} Console: ${consoleUrl}`)
+        Registry.getDefaultMessageHandler().logInfo(
+          `Opened IBM ${name} Console: ${consoleUrl}`
+        )
       );
     } catch (error) {
-      Logger.error(null, `Error opening IBM ${name} Console.`, true);
+      Registry.getDefaultMessageHandler().logError(
+        `Error opening IBM ${name} Console.`,
+        { showNotification: true }
+      );
       if (error.stack) {
-        Logger.error(null, error.stack);
+        Registry.getDefaultMessageHandler().logError(error.stack);
       }
     }
   }
@@ -102,19 +108,17 @@ export default class OpenLinkCommand implements BaseCommand {
         );
         const cpdDashboardUrl = `${cpdUrl}/zen/#/homepage`;
         this._openUrl(cpdDashboardUrl, () =>
-          Logger.info(
-            null,
+          Registry.getDefaultMessageHandler().logInfo(
             `Opened IBM Cloud Pak for Data Dashboard: ${cpdDashboardUrl}`
           )
         );
       } catch (error) {
-        Logger.error(
-          null,
+        Registry.getDefaultMessageHandler().logError(
           'Error opening IBM Cloud Pak for Data Dashboard.',
-          true
+          { showNotification: true }
         );
         if (error.stack) {
-          Logger.error(null, error.stack);
+          Registry.getDefaultMessageHandler().logError(error.stack);
         }
       }
     }
@@ -153,15 +157,17 @@ export default class OpenLinkCommand implements BaseCommand {
     ) {
       try {
         this._openUrl(IBM_CLOUD_DASHBOARD_URL, () =>
-          Logger.info(
-            null,
+          Registry.getDefaultMessageHandler().logInfo(
             `Opened IBM Cloud Dashboard: ${IBM_CLOUD_DASHBOARD_URL}`
           )
         );
       } catch (error) {
-        Logger.error(null, 'Error opening IBM Cloud Dashboard.', true);
+        Registry.getDefaultMessageHandler().logError(
+          'Error opening IBM Cloud Dashboard.',
+          { showNotification: true }
+        );
         if (error.stack) {
-          Logger.error(null, error.stack);
+          Registry.getDefaultMessageHandler().logError(error.stack);
         }
       }
     }

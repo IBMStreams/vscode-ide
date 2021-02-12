@@ -86,9 +86,9 @@ export class Streams {
                   )
                 )
                 .catch((error: any) => {
-                  Registry.getDefaultMessageHandler().handleError(
+                  Registry.getDefaultMessageHandler().logError(
                     'An error occurred while adding Streams instances to the Redux state.',
-                    { showNotification: false, detail: error }
+                    { detail: error }
                   );
                 });
             })

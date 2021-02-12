@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2021-02-12
+
+### Added
+
+- Application Services view in the Streams Explorer
+- Active Runs view in the Streams Explorer
+- Additional levels for the **Log Level** setting (`error`, `warn`, `info`, `trace`)
+
+### Fixed
+
+- Main composite detection when building SPL applications ([#135](https://github.com/IBMStreams/vscode-ide/issues/135))
+- Missing **Open IBM Streaming Analytics Console** button for IBM Streaming Analytics instances in the Streams Explorer
+- Duplicate files in application build archives
+- Issues with JAR files in application bundles
+
 ## [1.1.0] - 2020-11-19
 
 ### Added
@@ -100,6 +115,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Set IBM Streaming Analytics Service Credentials (`ibm-streams.streamingAnalytics.setServiceCredentials`)
   - Set IBM Streams Target Version (`ibm-streams.setTargetVersion`)
 
+[1.1.1]: https://github.com/IBMStreams/vscode-ide/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/IBMStreams/vscode-ide/compare/v1.0.3...v1.1.0
 [1.0.3]: https://github.com/IBMStreams/vscode-ide/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/IBMStreams/vscode-ide/compare/v1.0.0...v1.0.2

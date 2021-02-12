@@ -33,6 +33,9 @@ export default class StreamsJobGraphContainer extends Component {
     this.callStreamsRestAPI = this.callStreamsRestAPI.bind(this);
     this.setDynamicViews = this.setDynamicViews.bind(this);
     this.getDynamicViews = this.getDynamicViews.bind(this);
+    this.openCpdUrl = this.openCpdUrl.bind(this);
+    this.sendData = this.sendData.bind(this);
+    this.receiveData = this.receiveData.bind(this);
     this.saveFile = this.saveFile.bind(this);
     this.getHeader = this.getHeader.bind(this);
   }
@@ -117,6 +120,27 @@ export default class StreamsJobGraphContainer extends Component {
     return messageHandler.postMessage({
       command: 'set-dynamic-views',
       args: { key: storedViewId, value: JSON.stringify([...views]) }
+    });
+  }
+
+  openCpdUrl(params) {
+    return messageHandler.postMessage({
+      command: 'open-cpd-url',
+      args: params
+    });
+  }
+
+  sendData(params) {
+    return messageHandler.postMessage({
+      command: 'send-data',
+      args: params
+    });
+  }
+
+  receiveData(params) {
+    return messageHandler.postMessage({
+      command: 'receive-data',
+      args: params
     });
   }
 
@@ -205,6 +229,9 @@ export default class StreamsJobGraphContainer extends Component {
         callStreamsRestAPI={this.callStreamsRestAPI}
         getDynamicViews={this.getDynamicViews}
         setDynamicViews={this.setDynamicViews}
+        openCpdUrl={this.openCpdUrl}
+        sendData={this.sendData}
+        receiveData={this.receiveData}
         saveFile={this.saveFile}
         defaultEmptyCanvasContent={this.getDefaultEmptyCanvasContent()}
         jobActionCanvasMessage={this.getJobActionCanvasMessage()}

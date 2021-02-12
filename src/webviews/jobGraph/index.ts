@@ -1,4 +1,8 @@
-import { addStreamsRequestAuth, store } from '@ibmstreams/common';
+import {
+  addStreamsRequestAuth,
+  InstanceSelector,
+  store
+} from '@ibmstreams/common';
 import axios from 'axios';
 import * as fs from 'fs';
 import * as https from 'https';
@@ -6,12 +10,15 @@ import * as os from 'os';
 import * as path from 'path';
 import {
   commands,
+  env,
   ExtensionContext,
   Uri,
   ViewColumn,
   WebviewPanel,
   window
 } from 'vscode';
+import { EndpointPathAction } from '..';
+import { Commands } from '../../commands';
 import { StreamsInstance } from '../../streams';
 import { BuiltInCommands, Configuration } from '../../utils';
 import { BaseWebviewPanel, RequestMessage, WebviewType } from '../base';
@@ -24,7 +31,10 @@ enum MessageCommand {
   CallStreamsRestApi = 'call-streams-rest-api',
   SaveFile = 'save-file',
   GetDynamicViews = 'get-dynamic-views',
-  SetDynamicViews = 'set-dynamic-views'
+  SetDynamicViews = 'set-dynamic-views',
+  OpenCpdUrl = 'open-cpd-url',
+  SendData = 'send-data',
+  ReceiveData = 'receive-data'
 }
 
 interface IStreamsRestAPIRequestOptions<T> {
@@ -140,6 +150,12 @@ export default class JobGraphPanel extends BaseWebviewPanel {
         return this.handleGetDynamicViewsMessage(message);
       case MessageCommand.SetDynamicViews:
         return this.handleSetDynamicViewsMessage(message);
+      case MessageCommand.OpenCpdUrl:
+        return this.openCpdUrl(message);
+      case MessageCommand.SendData:
+        return this.sendData(message);
+      case MessageCommand.ReceiveData:
+        return this.receiveData(message);
       default:
         break;
     }
@@ -324,6 +340,99 @@ export default class JobGraphPanel extends BaseWebviewPanel {
       await Configuration.setState(key, value);
       if (this.currentPanel) {
         super.replyMessage(message, null);
+      }
+    }
+  }
+
+  /**
+   * Open a Cloud Pak for Data URL
+   * @param message the JSON message sent from the webview
+   */
+  private async openCpdUrl(message: RequestMessage<any>): Promise<any> {
+    const { args } = message;
+    if (args) {
+      const { messageId, ...params } = args;
+      if (messageId === 'appServiceDocUrl') {
+        const { jobId } = params;
+        const { instance } = this.properties;
+        const appService = InstanceSelector.selectCloudPakForDataAppService(
+          store.getState(),
+          instance.connectionId,
+          jobId
+        );
+        if (appService && appService.apiViewer) {
+          return env.openExternal(Uri.parse(appService.apiViewer));
+        }
+      }
+    }
+  }
+
+  /**
+   * Send data to a Streams application service
+   * @param message the JSON message sent from the webview
+   */
+  private async sendData(message: RequestMessage<any>): Promise<any> {
+    const { args } = message;
+    if (args) {
+      const { jobId, jobName, opName } = args;
+      const { instance } = this.properties;
+      const appService = InstanceSelector.selectCloudPakForDataAppService(
+        store.getState(),
+        instance.connectionId,
+        jobId
+      );
+      if (appService) {
+        const { paths } = appService.api;
+        const pathNames = Object.keys(paths);
+        const matchingPathName = pathNames.find((pathName: string) =>
+          pathName.includes(opName)
+        );
+        if (matchingPathName) {
+          commands.executeCommand(
+            Commands.ENVIRONMENT.SHOW_CPD_APP_SERVICE_PANEL,
+            instance.connectionId,
+            jobName,
+            appService.apiViewer,
+            appService.api,
+            matchingPathName,
+            EndpointPathAction.Send
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Receive data from a Streams application service
+   * @param message the JSON message sent from the webview
+   */
+  private async receiveData(message: RequestMessage<any>): Promise<any> {
+    const { args } = message;
+    if (args) {
+      const { jobId, jobName, opName } = args;
+      const { instance } = this.properties;
+      const appService = InstanceSelector.selectCloudPakForDataAppService(
+        store.getState(),
+        instance.connectionId,
+        jobId
+      );
+      if (appService) {
+        const { paths } = appService.api;
+        const pathNames = Object.keys(paths);
+        const matchingPathName = pathNames.find((pathName: string) =>
+          pathName.includes(opName)
+        );
+        if (matchingPathName) {
+          commands.executeCommand(
+            Commands.ENVIRONMENT.SHOW_CPD_APP_SERVICE_PANEL,
+            instance.connectionId,
+            jobName,
+            appService.apiViewer,
+            appService.api,
+            matchingPathName,
+            EndpointPathAction.Receive
+          );
+        }
       }
     }
   }

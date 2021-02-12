@@ -158,6 +158,26 @@ export class DetailsProvider implements TreeDataProvider<DetailTreeItem> {
                     children: children && children.length ? children : null
                   };
                 }
+                if (matchingProperty.childProperties) {
+                  const children = Object.keys(value).map((key) => {
+                    const matchingChildProperty = matchingProperty.childProperties.find(
+                      (childProperty: any) => childProperty.name === key
+                    );
+                    if (matchingChildProperty) {
+                      return {
+                        label: matchingChildProperty.label,
+                        value: this.getStringValue(value[key]),
+                        isUrl: matchingChildProperty.isUrl
+                      };
+                    }
+                    return null;
+                  });
+                  return {
+                    label: matchingProperty.label,
+                    value: null,
+                    children: children && children.length ? children : null
+                  };
+                }
                 return {
                   label: matchingProperty.label,
                   value: matchingProperty.formatFn

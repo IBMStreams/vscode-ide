@@ -1,4 +1,4 @@
-import { PrimitiveOperatorType } from '@ibmstreams/common';
+import { PrimitiveOperatorType, Registry } from '@ibmstreams/common';
 import * as fs from 'fs';
 import * as path from 'path';
 import {
@@ -51,11 +51,8 @@ export default class CreateJavaPrimitiveOperator implements BaseCommand {
     context: ExtensionContext,
     folderPath: string
   ): Promise<void> {
-    Logger.info(
-      null,
-      'Received request to create a Java primitive operator.',
-      false,
-      true
+    Registry.getDefaultMessageHandler().logInfo(
+      'Received request to create a Java primitive operator.'
     );
 
     // Show webview panel to get operator properties from the user
@@ -146,19 +143,20 @@ export default class CreateJavaPrimitiveOperator implements BaseCommand {
     // Create Makefile file
     const makefileFilePath = path.join(projectFolderPath, 'Makefile');
     const projectFolderName = path.basename(projectFolderPath);
+    const sourceFilePath = `impl/java/src/${namespace
+      .split('.')
+      .join('/')}/*.java`;
     const makefileContents =
       'CLASS_PATH=$(STREAMS_INSTALL)/lib/com.ibm.streams.operator.jar:$(STREAMS_INSTALL)/lib/com.ibm.streams.operator.samples.jar\n' +
       'DEST_DIR=impl/java/bin\n' +
-      `SOURCE_FILE=impl/java/src/${namespace
-        .split('.')
-        .join('/')}/${name}.java\n` +
+      `SOURCE_FILES=${sourceFilePath}\n` +
       `TOOLKIT_NAME=${projectFolderName}\n\n` +
       'all: compile-java build-toolkit\n\n' +
       'compile-java:\n' +
-      '\tjavac -cp $(CLASS_PATH) -d $(DEST_DIR) $(SOURCE_FILE)\n\n' +
+      '\tjavac -cp $(CLASS_PATH) -d $(DEST_DIR) $(SOURCE_FILES)\n\n' +
       'build-toolkit:\n' +
       '\t$(STREAMS_INSTALL)/bin/spl-make-toolkit -i . -n $(TOOLKIT_NAME)';
-    this._createFile(makefileFilePath, makefileContents);
+    this._createMakefile(makefileFilePath, makefileContents, sourceFilePath);
 
     // Add the project folder to the workspace if it or folder above it is not already a workspace folder
     let currentFolderPath = projectFolderPath;
@@ -193,8 +191,7 @@ export default class CreateJavaPrimitiveOperator implements BaseCommand {
     await window.showTextDocument(makefileTextDoc);
     await window.showTextDocument(javaTextDoc, { preview: false });
 
-    Logger.info(
-      null,
+    Registry.getDefaultMessageHandler().logInfo(
       `Created the Java primitive operator in ${projectFolderPath} with namespace ${namespace} and name ${name}.`
     );
   }
@@ -217,6 +214,45 @@ export default class CreateJavaPrimitiveOperator implements BaseCommand {
   private _createFile(path: string, content: string): void {
     if (!fs.existsSync(path)) {
       fs.writeFileSync(path, content);
+    }
+  }
+
+  /**
+   * Create a Makefile file
+   * @param path the path to the file
+   * @param content the file content
+   * @param sourceFilePath the source file path
+   */
+  private _createMakefile(
+    path: string,
+    content: string,
+    sourceFilePath: string
+  ): void {
+    if (!fs.existsSync(path)) {
+      fs.writeFileSync(path, content);
+    } else {
+      // Update Java source file paths in the Makefile if primitive operator(s) were created previously
+      let existingMakefileContent = fs.readFileSync(path, 'utf8');
+      const lineMatches = existingMakefileContent.match(
+        /^(SOURCE_FILES?=.*)$/m
+      );
+      const fileMatches = existingMakefileContent.match(
+        /^SOURCE_FILES?=(.*)$/m
+      );
+      if (
+        lineMatches &&
+        fileMatches &&
+        fileMatches.length > 1 &&
+        !fileMatches[1].split(' ').includes(sourceFilePath)
+      ) {
+        const lineStartIndex = lineMatches.index;
+        const lineEndIndex = lineStartIndex + lineMatches[0].length;
+        existingMakefileContent =
+          existingMakefileContent.substring(0, lineStartIndex) +
+          `${lineMatches[0]} ${sourceFilePath}` +
+          existingMakefileContent.substring(lineEndIndex);
+        fs.writeFileSync(path, existingMakefileContent);
+      }
     }
   }
 }

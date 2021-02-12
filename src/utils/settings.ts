@@ -1,3 +1,5 @@
+import { LogLevel } from '@ibmstreams/common';
+
 /**
  * Interval in minutes at which an IBM Streams instance is automatically refreshed
  */
@@ -35,17 +37,9 @@ export const ENV_TOOLKIT_PATHS_DEFAULT = '/path/to/toolkits/directory';
 export const LOG_LEVEL = 'ibm-streams.logLevel';
 
 /**
- * Values for the `logLevel` setting
- */
-export const LOG_LEVEL_VALUE = {
-  OFF: 'off',
-  DEBUG: 'debug'
-};
-
-/**
  * Default value for the `logLevel` setting
  */
-export const LOG_LEVEL_DEFAULT = LOG_LEVEL_VALUE.OFF;
+export const LOG_LEVEL_DEFAULT = LogLevel.Info;
 
 /**
  * Controls how the SPL language server runs

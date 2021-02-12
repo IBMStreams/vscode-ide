@@ -11,7 +11,8 @@ export default class BuildPoolTreeItem extends TreeItem {
   constructor(
     private _extensionPath: string,
     public buildPool: any,
-    public children: LabelTreeItem[]
+    public children: LabelTreeItem[],
+    public instance: any
   ) {
     super(
       buildPool.name,

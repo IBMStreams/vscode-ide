@@ -2,7 +2,7 @@ import {
   CloudPakForDataJobType,
   CpdJob as CpdJobCommon,
   getCloudPakForDataJob,
-  refreshCloudPakForDataSpacesAndProjects,
+  refreshCloudPakForDataInfo,
   InstanceSelector,
   Registry,
   store
@@ -61,9 +61,7 @@ const getCpdJobType = (space: any): CloudPakForDataJobType =>
 const refreshStreamsInstance = async (connectionId: string): Promise<void> => {
   return new Promise((resolve) => {
     setTimeout(async () => {
-      await store.dispatch(
-        refreshCloudPakForDataSpacesAndProjects(connectionId)
-      );
+      await store.dispatch(refreshCloudPakForDataInfo(connectionId));
       getStreamsExplorer().refresh();
       resolve();
     }, 1000);
@@ -98,10 +96,12 @@ const refreshJob = async (
  * Submit a Cloud Pak for Data Streams job
  * @param instance the target Streams instance
  * @param bundleFilePath the path to the application bundle file
+ * @param messageHandlerId the message handler identifier
  */
 const submitJob = async (
   instance: any,
-  bundleFilePath?: string
+  bundleFilePath?: string,
+  messageHandlerId?: string
 ): Promise<any> => {
   const { connectionId } = instance;
 
@@ -140,7 +140,8 @@ const submitJob = async (
         jobDefinitionName,
         jobDefinitionDescription,
         appBundleFilePath,
-        jobConfigOverlay
+        jobConfigOverlay,
+        messageHandlerId
       )
     );
     const cpdJobId = cpdJob.metadata.asset_id;
@@ -159,7 +160,8 @@ const submitJob = async (
         jobRunName,
         jobRunDescription,
         null,
-        null
+        null,
+        messageHandlerId
       )
     );
 
@@ -341,7 +343,8 @@ const startJobRun = async (
         jobRunName,
         jobRunDescription,
         appBundleFilePath,
-        jobConfigOverlay
+        jobConfigOverlay,
+        null
       )
     );
 
@@ -368,10 +371,9 @@ const handleError = (err: any): void => {
   if (reason) {
     errorMsg += errorMsg === '' ? reason : `\n${reason}`;
   }
-  Registry.getDefaultMessageHandler().handleError(errorMsg, {
+  Registry.getDefaultMessageHandler().logError(errorMsg, {
     detail: err.response || err.message || err,
-    stack: err.response || err.stack,
-    showNotification: false
+    stack: err.response || err.stack
   });
 };
 

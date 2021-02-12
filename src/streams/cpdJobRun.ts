@@ -3,7 +3,9 @@ import {
   CpdJob as CpdJobCommon,
   CpdJobRun as CpdJobRunCommon,
   getCloudPakForDataJob,
+  getStreamsApplicationServiceInstances,
   InstanceSelector,
+  refreshCloudPakForDataInfo,
   Registry,
   store
 } from '@ibmstreams/common';
@@ -71,7 +73,7 @@ const handleDownloadLog = async (
         fs.unlinkSync(logFilePath);
       }
       fs.writeFileSync(logFilePath, jobRunLogData);
-      Registry.getDefaultMessageHandler().handleSuccess(
+      Registry.getDefaultMessageHandler().logInfo(
         `The ${jobRunLogType.toLowerCase()} for the job run ${jobRunName} for the job definition ${jobName} in the Streams instance ${instanceName} was successfully downloaded.`,
         {
           detail: logFilePath,
@@ -181,6 +183,16 @@ const cancelJobRun = async (
         );
       });
     }
+
+    await store.dispatch(
+      getStreamsApplicationServiceInstances(connectionId, null)
+    );
+    await refreshJob(
+      connectionId,
+      getCpdJobType(spaceId),
+      spaceId || projectId,
+      jobId
+    );
   };
   return VSCode.showConfirmationDialog(label, callbackFn);
 };
@@ -480,7 +492,7 @@ const downloadJobRunLog = async (
       logData
     );
   } catch (err) {
-    Registry.getDefaultMessageHandler().handleError(
+    Registry.getDefaultMessageHandler().logError(
       `Failed to download the ${jobRunLogType.toLowerCase()} for the job run ${jobRunName} for the job definition ${jobName} in the Streams instance ${instanceName}.`,
       CpdJobCommon.getFailureNotificationOptions()
     );
@@ -502,10 +514,9 @@ const handleError = (err: any): void => {
   if (reason) {
     errorMsg += errorMsg === '' ? reason : `\n${reason}`;
   }
-  Registry.getDefaultMessageHandler().handleError(errorMsg, {
+  Registry.getDefaultMessageHandler().logError(errorMsg, {
     detail: err.response || err.message || err,
-    stack: err.response || err.stack,
-    showNotification: false
+    stack: err.response || err.stack
   });
 };
 

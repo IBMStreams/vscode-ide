@@ -497,11 +497,11 @@
       }
     },
     {
-      "name": "SPL Debug Log Message",
-      "scope": ["meta.log.debug.splLog"],
+      "name": "SPL Warn Log Message",
+      "scope": ["meta.log.warn.splLog"],
       "settings": {
         "fontStyle": "bold",
-        "foreground": "#FF832B"
+        "foreground": "#F1C21B"
       }
     },
     {
@@ -513,19 +513,19 @@
       }
     },
     {
-      "name": "SPL Success Log Message",
-      "scope": ["meta.log.success.splLog"],
+      "name": "SPL Trace Log Message Header",
+      "scope": ["meta.log.trace.header.splLog"],
       "settings": {
         "fontStyle": "bold",
-        "foreground": "#24A148"
+        "foreground": "#FF832B"
       }
     },
     {
-      "name": "SPL Warn Log Message",
-      "scope": ["meta.log.warn.splLog"],
+      "name": "SPL Trace Log Message Body",
+      "scope": ["meta.log.trace.body.splLog"],
       "settings": {
-        "fontStyle": "bold",
-        "foreground": "#F1C21B"
+        "fontStyle": "",
+        "foreground": "#6F6F6F"
       }
     }
   ]

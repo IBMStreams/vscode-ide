@@ -1,6 +1,7 @@
 import {
   CloudPakForDataJobType,
   InstanceSelector,
+  Registry,
   store,
   StreamsInstanceType
 } from '@ibmstreams/common';
@@ -281,9 +282,18 @@ export default class InstancesProvider
         } else {
           const infoTreeItem = new InfoTreeItem(
             this._extensionPath,
-            'There are no jobs available.'
+            'There are no jobs available.',
+            null,
+            null,
+            reduxInstance
           );
-          return new LabelTreeItem('Jobs', null, null, [infoTreeItem]);
+          return new LabelTreeItem(
+            'Jobs',
+            null,
+            null,
+            [infoTreeItem],
+            reduxInstance
+          );
         }
 
         // Generate child job group items
@@ -299,20 +309,24 @@ export default class InstancesProvider
               return new JobGroupTreeItem(
                 this._extensionPath,
                 name,
-                jobsInGroup
+                jobsInGroup,
+                reduxInstance
               );
             }
           );
         }
 
-        return new LabelTreeItem('Jobs', null, null, jobGroupTreeItems);
+        return new LabelTreeItem(
+          'Jobs',
+          null,
+          null,
+          jobGroupTreeItems,
+          reduxInstance
+        );
       }
     } catch (err) {
-      Logger.debug(
-        null,
-        `An error occurred while generating the jobs tree item for the instance with connection ID: ${reduxInstance.connectionId}.`,
-        false,
-        false
+      Registry.getDefaultMessageHandler().logError(
+        `An error occurred while generating the jobs tree item for the instance with connection ID: ${reduxInstance.connectionId}.`
       );
       return null;
     }
@@ -395,7 +409,8 @@ export default class InstancesProvider
                       jobRunName: cpdJobRunName
                     },
                     TreeItemType.CpdJobRunLogsLabel,
-                    cpdJobRunLogTreeItems
+                    cpdJobRunLogTreeItems,
+                    reduxInstance
                   );
                 }
                 return new CpdJobRunTreeItem(
@@ -475,14 +490,16 @@ export default class InstancesProvider
                     'Base images',
                     null,
                     null,
-                    imageBuildChildren
+                    imageBuildChildren,
+                    reduxInstance
                   )
                 : null;
             }
             return new BuildPoolTreeItem(
               this._extensionPath,
               buildPool,
-              baseImagesLabelTreeItem ? [baseImagesLabelTreeItem] : null
+              baseImagesLabelTreeItem ? [baseImagesLabelTreeItem] : null,
+              reduxInstance
             );
           });
           buildServiceChildren = [
@@ -490,14 +507,18 @@ export default class InstancesProvider
               'Build pools',
               null,
               null,
-              buildPoolLabelTreeItems
+              buildPoolLabelTreeItems,
+              reduxInstance
             )
           ];
         } else {
           buildServiceChildren = [
             new InfoTreeItem(
               this._extensionPath,
-              'There are no build pools available.'
+              'There are no build pools available.',
+              null,
+              null,
+              reduxInstance
             )
           ];
         }
@@ -511,16 +532,14 @@ export default class InstancesProvider
           'Build service',
           buildServiceProperties,
           TreeItemType.BuildService,
-          buildServiceChildren
+          buildServiceChildren,
+          reduxInstance
         );
       }
       return buildServiceLabelTreeItem;
     } catch (err) {
-      Logger.debug(
-        null,
-        `An error occurred while generating the build service tree item for the instance with connection ID: ${connectionId}.`,
-        false,
-        false
+      Registry.getDefaultMessageHandler().logError(
+        `An error occurred while generating the build service tree item for the instance with connection ID: ${connectionId}.`
       );
       return null;
     }

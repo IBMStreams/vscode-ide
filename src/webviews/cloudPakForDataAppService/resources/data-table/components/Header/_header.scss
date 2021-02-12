@@ -1,0 +1,53 @@
+.header-container {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: $layout-02;
+
+  .header-container__service-name {
+    @include carbon--type-style('productive-heading-04');
+    word-break: break-all;
+  }
+
+  .header-container__api-endpoint-path-container {
+    align-items: center;
+    display: flex;
+    margin-top: $layout-01;
+
+    .header-container__api-endpoint-path {
+      @include carbon--type-style('code-02');
+      word-break: break-all;
+    }
+  }
+
+  .header-container__button-container {
+    margin-left: $layout-03;
+    min-width: calc(24.5 * #{$layout-01});
+
+    @include carbon--breakpoint-down(800px) {
+      flex-direction: column;
+      min-width: calc(12.25 * #{$layout-01});
+    }
+  }
+
+  .header-container__button {
+    margin-left: $layout-01 !important;
+  }
+}
+
+.header-container__export-button-overflow-menu {
+  width: calc(12.25 * #{$layout-01}) !important;
+  height: 100% !important;
+}
+
+.header-container__export-button-menu {
+  width: calc(12.25 * #{$layout-01}) !important;
+
+  &::after {
+    display: none !important;
+  }
+
+  .bx--overflow-menu-options__btn {
+    max-width: calc(12.25 * #{$layout-01});
+  }
+}

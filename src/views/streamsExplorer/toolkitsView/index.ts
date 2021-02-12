@@ -1,3 +1,4 @@
+import { Registry } from '@ibmstreams/common';
 import * as fs from 'fs';
 import * as path from 'path';
 import { commands, Uri, window } from 'vscode';
@@ -5,7 +6,6 @@ import { Commands } from '../../../commands';
 import {
   BuiltInCommands,
   Configuration,
-  Logger,
   Settings,
   Views
 } from '../../../utils';
@@ -61,9 +61,9 @@ export default class ToolkitsView {
             .map((toolkitPath) => toolkitPath.trim())
             .filter((toolkitPath) => toolkitPath !== '');
           if (toolkitPaths.includes(selectedFolderPath)) {
-            Logger.info(
-              null,
-              `The selected folder is already included in the toolkit paths: ${selectedFolderPath}.`
+            Registry.getDefaultMessageHandler().logInfo(
+              `The selected folder is already included in the toolkit paths: ${selectedFolderPath}.`,
+              { showNotification: true }
             );
             return;
           }
@@ -100,7 +100,10 @@ export default class ToolkitsView {
         toolkitPathsSetting === Settings.ENV_TOOLKIT_PATHS_DEFAULT ||
         toolkitPathsSetting.trim() === ''
       ) {
-        Logger.info(null, 'There are no toolkit paths to remove.');
+        Registry.getDefaultMessageHandler().logInfo(
+          'There are no toolkit paths to remove.',
+          { showNotification: true }
+        );
         return;
       }
 

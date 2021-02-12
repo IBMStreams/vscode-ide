@@ -1,0 +1,10 @@
+<svg id="icon" xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" viewBox="0 0 16 16">
+  <title>GET</title>
+  <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+    <g transform="translate(1.000000, 4.000000)">
+      <polygon id="Path" points="10 1.5 11.5 1.5 11.5 7.5 12.5 7.5 12.5 1.5 14 1.5 14 0.5 10 0.5" fill="#C5C5C5"></polygon>
+      <polygon id="Path" points="9 1.49 9 0.5 5 0.5 5 7.49 9 7.49 9 6.49 6 6.49 6 4.49 8.5 4.49 8.5 3.49 6 3.49 6 1.49" fill="#C5C5C5"></polygon>
+      <path d="M4,7.5 L1,7.5 C0.44771525,7.5 0,7.05228475 0,6.5 L0,1.5 C0,0.94771525 0.44771525,0.5 1,0.5 L4,0.5 L4,1.5 L1,1.5 L1,6.5 L3,6.5 L3,4.5 L2,4.5 L2,3.5 L4,3.5 L4,7.5 Z" fill="#C5C5C5"></path>
+    </g>
+  </g>
+</svg>

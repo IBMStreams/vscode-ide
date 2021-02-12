@@ -143,7 +143,7 @@ export default class ConnectionFormV4 extends Component {
       authError.data.type === 'STREAMING_ANALYTICS_SERVICE_NOT_STARTED'
     ) {
       const {
-        data: { instance }
+        data: { connectionId }
       } = authError;
       const startServiceAction = (
         <NotificationActionButton
@@ -154,14 +154,14 @@ export default class ConnectionFormV4 extends Component {
               args: {
                 instanceType,
                 credentials: JSON.parse(credentials),
-                instance
+                connectionId
               }
             });
             if (result.errorMsg) {
               this.setState({ authError: { message: result.errorMsg } });
               this.messageHandler.postMessage({
                 command: 'remove-instance',
-                args: { connectionId: instance.connectionId }
+                args: { connectionId }
               });
             }
             this.setState({ loading: false, isStartingService: false });

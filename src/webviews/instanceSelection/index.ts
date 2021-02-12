@@ -280,7 +280,8 @@ export default class InstanceSelectionPanel extends BaseWebviewPanel {
     const { args } = message;
     if (args) {
       const { inst } = args;
-      StreamsBuild.runSubmit(inst, this.filePaths);
+      const { messageHandlerIds } = this.args;
+      StreamsBuild.runSubmit(inst, this.filePaths, messageHandlerIds);
       super.close(this.currentPanel);
     }
   }
@@ -306,7 +307,8 @@ export default class InstanceSelectionPanel extends BaseWebviewPanel {
     const { args } = message;
     if (args) {
       const { inst } = args;
-      StreamsBuild.runBuildImage(inst, this.filePaths, null);
+      const { messageHandlerIds } = this.args;
+      StreamsBuild.runBuildImage(inst, this.filePaths, null, messageHandlerIds);
       super.close(this.currentPanel);
     }
   }
@@ -319,7 +321,8 @@ export default class InstanceSelectionPanel extends BaseWebviewPanel {
     const { args } = message;
     if (args) {
       const { inst } = args;
-      StreamsBuild.runBuildToolkit(inst, this.filePaths[0]);
+      const { messageHandlerId } = this.args;
+      StreamsBuild.runBuildToolkit(inst, this.filePaths[0], messageHandlerId);
       super.close(this.currentPanel);
     }
   }
@@ -332,11 +335,12 @@ export default class InstanceSelectionPanel extends BaseWebviewPanel {
     const { args } = message;
     if (args) {
       const { inst } = args;
-      const { operatorType } = this.args;
+      const { messageHandlerId, operatorType } = this.args;
       StreamsBuild.runBuildPrimitiveOperator(
         inst,
         operatorType,
-        this.filePaths[0]
+        this.filePaths[0],
+        messageHandlerId
       );
       super.close(this.currentPanel);
     }
@@ -356,7 +360,8 @@ export default class InstanceSelectionPanel extends BaseWebviewPanel {
         this.filePaths[0],
         operatorFolderPath,
         genericOperator,
-        resolve
+        resolve,
+        this.args.messageHandlerId
       );
       super.close(this.currentPanel);
     }
