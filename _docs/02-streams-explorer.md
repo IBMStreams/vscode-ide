@@ -8,6 +8,8 @@ toc_sticky: true
 The **Streams Explorer** view allows you to:
 
 - Easily manage your [Streams instances](#instances)
+- View [Streams application services](#application-services)
+- View [active job runs](#active-runs) for a Streams instance
 - View [details](#details) for Streams instances and jobs
 - See a list of [Streams toolkits](#toolkits)
 - Access [helpful resources](#helpful-resources)
@@ -77,6 +79,16 @@ You can set an instance as the default instance by clicking on the <img src="{{ 
   <p><strong>Watch and learn</strong>: This video demonstrates how to set the default instance.</p>
   <video class="tutorial-video" src="{{ site.videos.streams_explorer.instance_set_default }}" controls></video>
 </div>
+
+## Application services
+
+This section allows you to view Streams application services for a node that is selected in the **Instances** section. Note that this only applies to Cloud Pak for Data Streams instances that are version 5.5.0.0 or greater. For example, when an instance node is selected, the **Application services** section is updated to display the application services for the instance.
+
+For additional information, restrictions, and sample applications, see [Resources for Streams developers](https://ibm.biz/streams-job-service) in the IBM Community.
+
+## Active runs
+
+This section allows you to view active job runs for a node that is selected in the **Instances** section. Note that this only applies to Cloud Pak for Data Streams instances that are version 5.5.0.0 or greater. For example, when an instance node is selected, the **Active runs** section is updated to display the active job runs for the instance.
 
 ## Details
 

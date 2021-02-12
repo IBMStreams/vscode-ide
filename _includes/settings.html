@@ -8,29 +8,17 @@
   </thead>
   <tbody>
     <tr>
-      <td>
-        Environment: Refresh Interval
-        <br>
-        <code>ibm-streams.environment.refreshInterval</code>
-      </td>
+      <td>Environment: Refresh Interval</td>
       <td><em>(number)</em> Interval in minutes at which an IBM Streams instance is automatically refreshed.</td>
       <td><code>5</code></td>
     </tr>
     <tr>
-      <td>
-        Environment: Timeout for Requests
-        <br>
-        <code>ibm-streams.environment.timeoutForRequests</code>
-      </td>
+      <td>Environment: Timeout for Requests</td>
       <td><em>(number)</em> Timeout in seconds before a request times out.</td>
       <td><code>60</code></td>
     </tr>
     <tr>
-      <td>
-        Environment: Toolkit Paths
-        <br>
-        <code>ibm-streams.environment.toolkitPaths</code>
-      </td>
+      <td>Environment: Toolkit Paths</td>
       <td>
         <em>(string)</em> Specifies paths to directories, comma or semicolon separated, containing additional IBM
         Streams toolkits.
@@ -38,28 +26,22 @@
       <td><code>/path/to/toolkits/directory</code></td>
     </tr>
     <tr>
-      <td>
-        Log Level
-        <br>
-        <code>ibm-streams.logLevel</code>
-      </td>
+      <td>Log Level</td>
       <td>
         <em>(string)</em> Log level for the extension.
         <div>
           <ul>
-            <li><code>off</code>: no logging</li>
-            <li><code>debug</code>: debug logging</li>
+            <li><code>error</code></li>
+            <li><code>warn</code></li>
+            <li><code>info</code></li>
+            <li><code>trace</code></li>
           </ul>
         </div>
       </td>
-      <td><code>off</code></td>
+      <td><code>info</code></td>
     </tr>
     <tr>
-      <td>
-        Server: Mode
-        <br>
-        <code>ibm-streams.server.mode</code>
-      </td>
+      <td>Server: Mode</td>
       <td>
         <em>(string)</em> Controls how the SPL language server runs. Running the server in <code>embedded</code> mode is
         recommended unless you are experiencing issues with SPL language features.
@@ -77,11 +59,7 @@
       <td><code>embedded</code></td>
     </tr>
     <tr>
-      <td>
-        Server: Port
-        <br>
-        <code>ibm-streams.server.port</code>
-      </td>
+      <td>Server: Port</td>
       <td>
         <em>(number)</em> The port where the SPL language server runs when <strong>Server: Mode</strong> is
         <code>socket</code>.
@@ -89,11 +67,7 @@
       <td><code>5007</code></td>
     </tr>
     <tr>
-      <td>
-        Trace: Server
-        <br>
-        <code>ibm-streams.trace.server</code>
-      </td>
+      <td>Trace: Server</td>
       <td>
         <em>(string)</em> Traces the communication between VS Code and the SPL language server.
         <div>
