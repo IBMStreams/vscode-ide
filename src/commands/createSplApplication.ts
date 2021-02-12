@@ -48,11 +48,8 @@ export default class CreateSplApplicationCommand implements BaseCommand {
    */
   private async createApplication(folderPath: string): Promise<void> {
     try {
-      Logger.info(
-        null,
-        'Received request to create a SPL application.',
-        false,
-        true
+      Registry.getDefaultMessageHandler().logInfo(
+        'Received request to create a SPL application.'
       );
 
       // Show webview panel to get properties from the user
@@ -102,16 +99,16 @@ export default class CreateSplApplicationCommand implements BaseCommand {
         );
         await window.showTextDocument(mainCompositeTextDoc);
 
-        Logger.info(
-          null,
+        Registry.getDefaultMessageHandler().logInfo(
           `Created the SPL application ${namespace}::${mainCompositeName} in the application folder: ${applicationFolderPath}.`
         );
       }
     } catch (err) {
-      Registry.getDefaultMessageHandler().handleError(
+      Registry.getDefaultMessageHandler().logError(
         `Failed to created a SPL application.`,
         {
-          detail: err.stack || err.message
+          detail: err.stack || err.message,
+          showNotification: true
         }
       );
     }

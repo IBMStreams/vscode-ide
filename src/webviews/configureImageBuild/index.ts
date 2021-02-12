@@ -326,11 +326,12 @@ export default class ConfigureImageBuildPanel extends BaseWebviewPanel {
               this.properties.targetInstance.connectionId
             );
             const message = `Failed to build an image for the application ${bundleName} using the Streams instance ${instanceName}.`;
-            messageHandler.handleError(message, {
+            messageHandler.logError(message, {
               detail:
                 err && err.message
                   ? `Not valid JSON.\n${err.message.trim()}`
-                  : 'Not valid JSON.'
+                  : 'Not valid JSON.',
+              showNotification: true
             });
           }
         }
@@ -355,7 +356,7 @@ export default class ConfigureImageBuildPanel extends BaseWebviewPanel {
         const message = configFilePath
           ? `Using the image build configuration file: ${configFilePath}.`
           : `Using the image build configuration properties:\n- Base image: ${baseImage.id}\n- Image name: ${imageName}\n- Image tag: ${imageTag}`;
-        messageHandler.handleInfo(message, { showNotification: false });
+        messageHandler.logInfo(message);
       }
 
       this.properties.buildCallbackFn(tmpConfigFilePath || configFilePath);

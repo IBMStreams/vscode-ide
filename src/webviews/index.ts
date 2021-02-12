@@ -2,6 +2,10 @@ import { PrimitiveOperatorType } from '@ibmstreams/common';
 import { commands, ExtensionContext } from 'vscode';
 import { Commands } from '../commands';
 import {
+  CloudPakForDataAppServicePanel,
+  EndpointPathAction
+} from './cloudPakForDataAppService';
+import {
   CloudPakForDataJobPanel,
   JobAction,
   JobArgs
@@ -9,18 +13,19 @@ import {
 import CreatePrimitiveOperatorPanel from './createPrimitiveOperator';
 import CreateSplApplicationPanel from './createSplApplication';
 import CreateSplApplicationSetPanel from './createSplApplicationSet';
-import StreamsAuthenticationPanel from './streamsAuthentication';
 import InstanceSelectionPanel from './instanceSelection';
+import StreamsAuthenticationPanel from './streamsAuthentication';
 
+export * from './cloudPakForDataAppService';
+export * from './cloudPakForDataJob';
 export { default as ConfigureImageBuildPanel } from './configureImageBuild';
 export { default as ConfigureJobSubmissionPanel } from './configureJobSubmission';
-export * from './cloudPakForDataJob';
 export { default as CreatePrimitiveOperatorPanel } from './createPrimitiveOperator';
 export { default as CreateSplApplicationPanel } from './createSplApplication';
 export { default as CreateSplApplicationSetPanel } from './createSplApplicationSet';
+export { default as InstanceSelectionPanel } from './instanceSelection';
 export { default as JobGraphPanel } from './jobGraph';
 export { default as StreamsAuthenticationPanel } from './streamsAuthentication';
-export { default as InstanceSelectionPanel } from './instanceSelection';
 
 /**
  * Initialize utilities
@@ -56,6 +61,30 @@ export function initialize(context: ExtensionContext): void {
           filePaths,
           postBuildAction,
           args
+        );
+      }
+    )
+  );
+
+  context.subscriptions.push(
+    commands.registerCommand(
+      Commands.ENVIRONMENT.SHOW_CPD_APP_SERVICE_PANEL,
+      (
+        connectionId: string,
+        jobName: string,
+        serviceApiUrl: string,
+        serviceApi: any,
+        serviceEndpointPath: string,
+        serviceEndpointPathAction: EndpointPathAction
+      ) => {
+        CloudPakForDataAppServicePanel.createOrShow(
+          context,
+          connectionId,
+          jobName,
+          serviceApiUrl,
+          serviceApi,
+          serviceEndpointPath,
+          serviceEndpointPathAction
         );
       }
     )

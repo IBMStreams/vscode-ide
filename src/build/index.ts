@@ -7,14 +7,13 @@ import {
   CpdJob as CpdJobCommon,
   Editor,
   EditorAction,
-  EditorCommand,
   EditorSelector,
   generateRandomId,
   Instance,
   InstanceSelector,
   PostBuildAction,
   PrimitiveOperatorType,
-  refreshCloudPakForDataSpacesAndProjects,
+  refreshCloudPakForDataInfo,
   Registry,
   SourceArchiveUtils,
   store,
@@ -25,26 +24,24 @@ import {
   ToolkitUtils
 } from '@ibmstreams/common';
 import * as fs from 'fs';
-import * as os from 'os';
 import * as glob from 'glob';
 import _map from 'lodash/map';
 import _omit from 'lodash/omit';
+import _pick from 'lodash/pick';
 import _some from 'lodash/some';
+import * as os from 'os';
 import * as path from 'path';
 import {
   commands,
   ConfigurationChangeEvent,
-  env,
   ExtensionContext,
   Uri,
   window,
   workspace,
   WorkspaceFolder
 } from 'vscode';
-import { DidChangeConfigurationNotification } from 'vscode-languageserver-protocol';
 import * as packageJson from '../../package.json';
 import { Commands } from '../commands';
-import SplLanguageClient from '../languageClient';
 import { CpdJob, Streams, StreamsInstance } from '../streams';
 import {
   ActionType,
@@ -52,13 +49,10 @@ import {
   Configuration,
   DOC_BASE_URL,
   EXTENSION_ID,
-  isLoggingEnabled,
-  Keychain,
   LANGUAGE_SPL,
   Logger,
   Settings,
-  TOOLKITS_CACHE_DIR,
-  VSCode
+  TOOLKITS_CACHE_DIR
 } from '../utils';
 import { getStreamsExplorer } from '../views';
 import LintHandler from './LintHandler';
@@ -72,15 +66,13 @@ export default class StreamsBuild {
   public static _streamingAnalyticsCredentials: string;
   private static _toolkitPaths: string;
   private static _defaultMessageHandler: MessageHandler;
-  private static _openUrlHandler: (url: string, callback?: () => void) => void;
-  private static _sendLspNotificationHandler: (param: object) => void;
-
   /**
    * Perform initial configuration
    * @param context the extension context
    */
   public static async configure(context: ExtensionContext): Promise<void> {
     this._context = context;
+    this._defaultMessageHandler = Registry.getDefaultMessageHandler();
 
     if (!fs.existsSync(TOOLKITS_CACHE_DIR)) {
       fs.mkdirSync(TOOLKITS_CACHE_DIR);
@@ -98,7 +90,6 @@ export default class StreamsBuild {
     const timeout = Configuration.getSetting(Settings.ENV_TIMEOUT_FOR_REQUESTS);
     StreamsRest.setRequestTimeout(timeout);
 
-    this.initUtilRegistry();
     this.monitorConfigSettingChanges();
     await this.initReduxState();
     this.monitorOpenSplFile();
@@ -112,9 +103,8 @@ export default class StreamsBuild {
     selectedPath: string
   ): Promise<void> {
     const messageHandler = Registry.getDefaultMessageHandler();
-    messageHandler.handleInfo(
-      'Received request to add a toolkit to the build service.',
-      { showNotification: false }
+    messageHandler.logInfo(
+      'Received request to add a toolkit to the build service.'
     );
 
     // Check for default instance
@@ -138,7 +128,7 @@ export default class StreamsBuild {
       ];
       const message =
         'There are no Streams instances available. Add an instance to continue with adding a toolkit.';
-      messageHandler.handleInfo(message, { notificationButtons });
+      messageHandler.logInfo(message, { notificationButtons });
     } else if (!Streams.getDefaultInstanceEnv()) {
       window
         .showWarningMessage(
@@ -187,9 +177,7 @@ export default class StreamsBuild {
         if (os.platform() === 'win32' && toolkitFolderPath.charAt(0) === '/') {
           toolkitFolderPath = toolkitFolderPath.substring(1);
         }
-        messageHandler.handleInfo(`Selected: ${toolkitFolderPath}`, {
-          showNotification: false
-        });
+        messageHandler.logInfo(`Selected: ${toolkitFolderPath}`);
         const defaultInstance = Streams.checkDefaultInstance();
         if (!defaultInstance) {
           return;
@@ -257,9 +245,8 @@ export default class StreamsBuild {
    */
   public static async removeToolkitsFromBuildService(): Promise<void> {
     const messageHandler = Registry.getDefaultMessageHandler();
-    messageHandler.handleInfo(
-      'Received request to remove toolkit(s) from the Streams build service.',
-      { showNotification: false }
+    messageHandler.logInfo(
+      'Received request to remove toolkit(s) from the Streams build service.'
     );
 
     // Check for default instance
@@ -283,7 +270,7 @@ export default class StreamsBuild {
       ];
       const message =
         'There are no Streams instances available. Add an instance to continue with removing a toolkit.';
-      messageHandler.handleInfo(message, { notificationButtons });
+      messageHandler.logInfo(message, { notificationButtons });
     } else if (!Streams.getDefaultInstanceEnv()) {
       window
         .showWarningMessage(
@@ -400,7 +387,7 @@ export default class StreamsBuild {
                 }
               );
           } else {
-            this._defaultMessageHandler.handleInfo(
+            this._defaultMessageHandler.logInfo(
               `There are no build service toolkits available to remove from the Streams instance ${instanceName}.`
             );
           }
@@ -442,8 +429,9 @@ export default class StreamsBuild {
         multipleInstancesCallbackFn
       );
     } else {
-      this._defaultMessageHandler.handleError(
-        'The build failed. Unable to retrieve the application file path.'
+      this._defaultMessageHandler.logError(
+        'The build failed. Unable to retrieve the application file path.',
+        { showNotification: true }
       );
     }
   }
@@ -459,11 +447,12 @@ export default class StreamsBuild {
     filePaths: string[],
     action: PostBuildAction
   ): Promise<void> {
-    const { appRoot, compositeToBuild, messageHandler } = await this.initBuild(
-      'buildApp',
-      filePaths[0],
-      action
-    );
+    const {
+      appRoot,
+      compositeToBuild,
+      messageHandlerId,
+      messageHandler
+    } = await this.initBuild('buildApp', filePaths[0], action);
     action =
       action === PostBuildAction.Submit &&
       Streams.doesInstanceHaveCpdSpacesSupport(targetInstance)
@@ -472,6 +461,7 @@ export default class StreamsBuild {
     const buildApp = (): void => {
       if (targetInstance) {
         const startBuildAction = Build.startBuild({
+          messageHandlerId,
           appRoot,
           fqn: compositeToBuild,
           makefilePath: null,
@@ -488,12 +478,11 @@ export default class StreamsBuild {
           );
           StreamsInstance.authenticate(targetInstance, false, queuedActionId);
         } else {
-          messageHandler.handleInfo(
+          messageHandler.logInfo(
             `Selected Streams instance: ${InstanceSelector.selectInstanceName(
               store.getState(),
               targetInstance.connectionId
-            )}.`,
-            { showNotification: false }
+            )}.`
           );
           store
             .dispatch(startBuildAction)
@@ -504,7 +493,9 @@ export default class StreamsBuild {
               }
               if (action === PostBuildAction.SubmitCpd) {
                 if (buildResults && buildResults.length) {
-                  StreamsBuild.runSubmit(targetInstance, buildResults);
+                  StreamsBuild.runSubmit(targetInstance, buildResults, [
+                    messageHandlerId
+                  ]);
                 }
                 return;
               }
@@ -599,8 +590,9 @@ export default class StreamsBuild {
         multipleInstancesCallbackFn
       );
     } else {
-      this._defaultMessageHandler.handleError(
-        'The build failed. Unable to retrieve the Makefile file path.'
+      this._defaultMessageHandler.logError(
+        'The build failed. Unable to retrieve the Makefile file path.',
+        { showNotification: true }
       );
     }
   }
@@ -616,11 +608,11 @@ export default class StreamsBuild {
     filePaths: string[],
     action: PostBuildAction
   ): Promise<void> {
-    const { appRoot, messageHandler } = await StreamsBuild.initBuild(
-      'buildMake',
-      filePaths[0],
-      action
-    );
+    const {
+      appRoot,
+      messageHandlerId,
+      messageHandler
+    } = await StreamsBuild.initBuild('buildMake', filePaths[0], action);
     action =
       action === PostBuildAction.Submit &&
       Streams.doesInstanceHaveCpdSpacesSupport(targetInstance)
@@ -629,6 +621,7 @@ export default class StreamsBuild {
     const buildMake = (): void => {
       if (targetInstance) {
         const startBuildAction = Build.startBuild({
+          messageHandlerId,
           appRoot,
           fqn: null,
           makefilePath: filePaths[0],
@@ -645,12 +638,11 @@ export default class StreamsBuild {
           );
           StreamsInstance.authenticate(targetInstance, false, queuedActionId);
         } else {
-          messageHandler.handleInfo(
+          messageHandler.logInfo(
             `Selected Streams instance: ${InstanceSelector.selectInstanceName(
               store.getState(),
               targetInstance.connectionId
-            )}.`,
-            { showNotification: false }
+            )}.`
           );
           store
             .dispatch(startBuildAction)
@@ -661,7 +653,9 @@ export default class StreamsBuild {
               }
               if (action === PostBuildAction.SubmitCpd) {
                 if (buildResults && buildResults.length) {
-                  StreamsBuild.runSubmit(targetInstance, buildResults);
+                  StreamsBuild.runSubmit(targetInstance, buildResults, [
+                    messageHandlerId
+                  ]);
                 }
                 return;
               }
@@ -734,9 +728,9 @@ export default class StreamsBuild {
   public static async submit(filePaths: string[]): Promise<void> {
     if (filePaths) {
       Streams.checkDefaultInstance();
-      const bundleFilePaths = this.initSubmit(filePaths);
+      const { messageHandlerIds, bundleFilePaths } = this.initSubmit(filePaths);
       if (!bundleFilePaths.length) {
-        this._defaultMessageHandler.handleInfo(
+        this._defaultMessageHandler.logInfo(
           'There are no Streams application bundles to submit.'
         );
         return;
@@ -744,14 +738,16 @@ export default class StreamsBuild {
       const zeroOrOneInstancesCallbackFn = this.getZeroOrOneInstancesCallbackFn(
         ActionType.Submit,
         (instance: any) => {
-          this.runSubmit(instance, bundleFilePaths);
+          this.runSubmit(instance, bundleFilePaths, messageHandlerIds);
         },
         () => {
           this.submit(filePaths);
         }
       );
       const multipleInstancesCallbackFn = (): void => {
-        this.showInstancePanel(ActionType.Submit, bundleFilePaths, null);
+        this.showInstancePanel(ActionType.Submit, bundleFilePaths, null, {
+          messageHandlerIds
+        });
       };
       this.handleAction(
         ActionType.Submit,
@@ -760,8 +756,9 @@ export default class StreamsBuild {
         multipleInstancesCallbackFn
       );
     } else {
-      this._defaultMessageHandler.handleError(
-        'The submission(s) failed. Unable to retrieve the application bundle file paths.'
+      this._defaultMessageHandler.logError(
+        'The submission(s) failed. Unable to retrieve the application bundle file paths.',
+        { showNotification: true }
       );
     }
   }
@@ -770,10 +767,12 @@ export default class StreamsBuild {
    * Handle submission of application bundles
    * @param targetInstance the target Streams instance
    * @param filePaths the selected file paths
+   * @param messageHandlerIds the message handler identifiers
    */
   public static runSubmit(
     targetInstance: any,
-    bundleFilePaths: string[]
+    bundleFilePaths: string[],
+    messageHandlerIds: string[]
   ): void {
     const submit = async (): Promise<void> => {
       if (targetInstance) {
@@ -787,15 +786,16 @@ export default class StreamsBuild {
           );
           StreamsInstance.authenticate(targetInstance, false, queuedActionId);
         } else {
-          bundleFilePaths.forEach((bundleFilePath) => {
-            const messageHandler = Registry.getMessageHandler(bundleFilePath);
+          bundleFilePaths.forEach((bundleFilePath, index) => {
+            const messageHandler = messageHandlerIds
+              ? Registry.getMessageHandler(messageHandlerIds[index])
+              : Registry.getMessageHandler(bundleFilePath);
             if (messageHandler) {
-              messageHandler.handleInfo(
+              messageHandler.logInfo(
                 `Selected Streams instance: ${InstanceSelector.selectInstanceName(
                   store.getState(),
                   targetInstance.connectionId
-                )}.`,
-                { showNotification: false }
+                )}.`
               );
             }
           });
@@ -803,9 +803,13 @@ export default class StreamsBuild {
           if (Streams.doesInstanceHaveCpdSpacesSupport(targetInstance)) {
             try {
               await Promise.all(
-                bundleFilePaths.map(async (bundleFilePath) => {
+                bundleFilePaths.map(async (bundleFilePath, index) => {
                   // Submit a Cloud Pak for Data Streams job
-                  await CpdJob.submitJob(targetInstance, bundleFilePath);
+                  await CpdJob.submitJob(
+                    targetInstance,
+                    bundleFilePath,
+                    messageHandlerIds ? messageHandlerIds[index] : null
+                  );
                 })
               );
             } catch (err) {
@@ -814,7 +818,8 @@ export default class StreamsBuild {
           } else {
             const startSubmitJobAction = SubmitJob.startSubmitJobFromApplicationBundles(
               bundleFilePaths,
-              targetInstance
+              targetInstance,
+              messageHandlerIds
             );
             store
               .dispatch(startSubmitJobAction)
@@ -873,12 +878,8 @@ export default class StreamsBuild {
       Streams.checkDefaultInstance();
 
       const statusMessage = 'Received request to upload an application bundle.';
-      this._defaultMessageHandler.handleInfo(statusMessage, {
-        showNotification: false
-      });
-      this._defaultMessageHandler.handleInfo(`Selected: ${bundleFilePath}`, {
-        showNotification: false
-      });
+      this._defaultMessageHandler.logInfo(statusMessage);
+      this._defaultMessageHandler.logInfo(`Selected: ${bundleFilePath}`);
 
       const zeroOrOneInstancesCallbackFn = this.getZeroOrOneInstancesCallbackFn(
         ActionType.UploadBundleCpd,
@@ -903,8 +904,9 @@ export default class StreamsBuild {
         multipleInstancesCallbackFn
       );
     } else {
-      this._defaultMessageHandler.handleError(
-        'The upload failed. Unable to retrieve the application bundle file path.'
+      this._defaultMessageHandler.logError(
+        'The upload failed. Unable to retrieve the application bundle file path.',
+        { showNotification: true }
       );
     }
   }
@@ -938,9 +940,8 @@ export default class StreamsBuild {
             store.getState(),
             targetInstance.connectionId
           );
-          this._defaultMessageHandler.handleInfo(
-            `Selected Streams instance: ${instanceName}.`,
-            { showNotification: false }
+          this._defaultMessageHandler.logInfo(
+            `Selected Streams instance: ${instanceName}.`
           );
 
           // Prompt user to select a job
@@ -972,7 +973,7 @@ export default class StreamsBuild {
           });
 
           if (!cpdJobItems.length) {
-            return this._defaultMessageHandler.handleInfo(
+            return this._defaultMessageHandler.logInfo(
               `There are no jobs available for application bundle uploads in the Streams instance ${instanceName}.`,
               {
                 notificationButtons: [
@@ -1017,12 +1018,10 @@ export default class StreamsBuild {
               await new Promise((resolve) => {
                 setTimeout(async () => {
                   await store.dispatch(
-                    refreshCloudPakForDataSpacesAndProjects(
-                      targetInstance.connectionId
-                    )
+                    refreshCloudPakForDataInfo(targetInstance.connectionId)
                   );
                   getStreamsExplorer().refresh();
-                  resolve();
+                  resolve(null);
                 }, 1000);
               });
             } catch (err) {
@@ -1041,9 +1040,11 @@ export default class StreamsBuild {
    */
   public static async buildImage(filePaths: string[]): Promise<void> {
     if (filePaths) {
-      const bundleFilePaths = this.initBuildImage(filePaths);
+      const { messageHandlerIds, bundleFilePaths } = this.initBuildImage(
+        filePaths
+      );
       if (!bundleFilePaths.length) {
-        this._defaultMessageHandler.handleInfo(
+        this._defaultMessageHandler.logInfo(
           'There are no Streams application bundles to build.'
         );
         return;
@@ -1051,14 +1052,21 @@ export default class StreamsBuild {
       const zeroOrOneInstancesCallbackFn = this.getZeroOrOneInstancesCallbackFn(
         ActionType.BuildImage,
         (instance: any) => {
-          this.runBuildImage(instance, bundleFilePaths, null);
+          this.runBuildImage(
+            instance,
+            bundleFilePaths,
+            null,
+            messageHandlerIds
+          );
         },
         () => {
           this.buildImage(filePaths);
         }
       );
       const multipleInstancesCallbackFn = (): void => {
-        this.showInstancePanel(ActionType.BuildImage, bundleFilePaths, null);
+        this.showInstancePanel(ActionType.BuildImage, bundleFilePaths, null, {
+          messageHandlerIds
+        });
       };
       this.handleAction(
         ActionType.BuildImage,
@@ -1067,8 +1075,9 @@ export default class StreamsBuild {
         multipleInstancesCallbackFn
       );
     } else {
-      this._defaultMessageHandler.handleError(
-        'The build(s) failed. Unable to retrieve the application bundle file paths.'
+      this._defaultMessageHandler.logError(
+        'The build(s) failed. Unable to retrieve the application bundle file paths.',
+        { showNotification: true }
       );
     }
   }
@@ -1078,15 +1087,18 @@ export default class StreamsBuild {
    * @param targetInstance the target Streams instance
    * @param filePaths the selected file paths
    * @param baseImage the base image
+   * @param messageHandlerIds the message handler identifiers
    */
   public static runBuildImage(
     targetInstance: any,
     bundleFilePaths: string[],
-    baseImage = null
+    baseImage = null,
+    messageHandlerIds: string[]
   ): void {
     const buildImage = (): void => {
       if (targetInstance) {
         const startBuildImageAction = BuildImage.startBuildImageFromApplicationBundles(
+          messageHandlerIds,
           bundleFilePaths,
           null,
           baseImage,
@@ -1105,12 +1117,11 @@ export default class StreamsBuild {
           bundleFilePaths.forEach((bundleFilePath) => {
             const messageHandler = Registry.getMessageHandler(bundleFilePath);
             if (messageHandler) {
-              messageHandler.handleInfo(
+              messageHandler.logInfo(
                 `Selected Streams instance: ${InstanceSelector.selectInstanceName(
                   store.getState(),
                   targetInstance.connectionId
-                )}.`,
-                { showNotification: false }
+                )}.`
               );
             }
           });
@@ -1186,19 +1197,22 @@ export default class StreamsBuild {
   public static async buildToolkit(folderOrFilePath: string): Promise<void> {
     await this.checkIfDirty();
     if (folderOrFilePath) {
-      const { toolkitFolderPath, messageHandler } = this.initBuildToolkit(
-        folderOrFilePath
-      );
+      const {
+        toolkitFolderPath,
+        messageHandlerId,
+        messageHandler
+      } = this.initBuildToolkit(folderOrFilePath);
       if (!toolkitFolderPath || !messageHandler) {
-        this._defaultMessageHandler.handleError(
-          'The toolkit build failed. Unable to retrieve the toolkit folder path.'
+        this._defaultMessageHandler.logError(
+          'The toolkit build failed. Unable to retrieve the toolkit folder path.',
+          { showNotification: true }
         );
         return;
       }
       const zeroOrOneInstancesCallbackFn = this.getZeroOrOneInstancesCallbackFn(
         ActionType.BuildToolkit,
         (instance: any) => {
-          this.runBuildToolkit(instance, toolkitFolderPath);
+          this.runBuildToolkit(instance, toolkitFolderPath, messageHandlerId);
         },
         () => {
           this.buildToolkit(folderOrFilePath);
@@ -1208,7 +1222,8 @@ export default class StreamsBuild {
         this.showInstancePanel(
           ActionType.BuildToolkit,
           [toolkitFolderPath],
-          null
+          null,
+          { messageHandlerId }
         );
       };
       this.handleAction(
@@ -1218,8 +1233,9 @@ export default class StreamsBuild {
         multipleInstancesCallbackFn
       );
     } else {
-      this._defaultMessageHandler.handleError(
-        'The toolkit build failed. Unable to retrieve the folder or file path.'
+      this._defaultMessageHandler.logError(
+        'The toolkit build failed. Unable to retrieve the folder or file path.',
+        { showNotification: true }
       );
     }
   }
@@ -1228,14 +1244,17 @@ export default class StreamsBuild {
    * Handle building a toolkit
    * @param targetInstance the target Streams instance
    * @param toolkitFolderPath the toolkit folder path
+   * @param messageHandlerId the message handler identifier
    */
   public static runBuildToolkit(
     targetInstance: any,
-    toolkitFolderPath: string
+    toolkitFolderPath: string,
+    messageHandlerId: string
   ): void {
     const buildToolkit = (): void => {
       if (targetInstance) {
         const startBuildToolkitAction = BuildToolkit.startBuildToolkit({
+          messageHandlerId,
           folderPath: toolkitFolderPath,
           type: BuildType.Toolkit,
           targetInstance
@@ -1251,12 +1270,11 @@ export default class StreamsBuild {
           StreamsInstance.authenticate(targetInstance, false, queuedActionId);
         } else {
           const messageHandler = Registry.getMessageHandler(toolkitFolderPath);
-          messageHandler.handleInfo(
+          messageHandler.logInfo(
             `Selected Streams instance: ${InstanceSelector.selectInstanceName(
               store.getState(),
               targetInstance.connectionId
-            )}.`,
-            { showNotification: false }
+            )}.`
           );
           store.dispatch(startBuildToolkitAction).catch((err) => {
             let errorMsg: string;
@@ -1290,9 +1308,7 @@ export default class StreamsBuild {
             }
             this.handleError(err, messageHandler, errorMsg, buttons);
             if (learnMoreUrl) {
-              messageHandler.handleError(`Learn more: ${learnMoreUrl}.`, {
-                showNotification: false
-              });
+              messageHandler.logError(`Learn more: ${learnMoreUrl}.`);
             }
           });
         }
@@ -1314,19 +1330,21 @@ export default class StreamsBuild {
     if (folderOrFilePath) {
       const {
         primitiveOperatorFolderPath,
+        messageHandlerId,
         messageHandler,
         error
       } = this.initBuildPrimitiveOperator(operatorType, folderOrFilePath);
       if (error) {
-        this._defaultMessageHandler.handleError(
+        this._defaultMessageHandler.logError(
           `The ${operatorType} primitive operator build failed. ${error.errorMsg}`,
-          { notificationButtons: error.buttons }
+          { showNotification: true, notificationButtons: error.buttons }
         );
         return;
       }
       if (!primitiveOperatorFolderPath || !messageHandler) {
-        this._defaultMessageHandler.handleError(
-          `The ${operatorType} primitive operator build failed. Unable to retrieve the ${operatorType} primitive operator folder path.`
+        this._defaultMessageHandler.logError(
+          `The ${operatorType} primitive operator build failed. Unable to retrieve the ${operatorType} primitive operator folder path.`,
+          { showNotification: true }
         );
         return;
       }
@@ -1336,7 +1354,8 @@ export default class StreamsBuild {
           this.runBuildPrimitiveOperator(
             instance,
             operatorType,
-            primitiveOperatorFolderPath
+            primitiveOperatorFolderPath,
+            messageHandlerId
           );
         },
         () => {
@@ -1346,9 +1365,9 @@ export default class StreamsBuild {
       const multipleInstancesCallbackFn = (): void => {
         this.showInstancePanel(
           ActionType.BuildPrimitiveOperator,
-          [primitiveOperatorFolderPath],
+          [primitiveOperatorFolderPath, messageHandlerId],
           null,
-          { operatorType }
+          { messageHandlerId, operatorType }
         );
       };
       this.handleAction(
@@ -1358,8 +1377,9 @@ export default class StreamsBuild {
         multipleInstancesCallbackFn
       );
     } else {
-      this._defaultMessageHandler.handleError(
-        `The ${operatorType} primitive operator build failed. Unable to retrieve the folder or file path.`
+      this._defaultMessageHandler.logError(
+        `The ${operatorType} primitive operator build failed. Unable to retrieve the folder or file path.`,
+        { showNotification: true }
       );
     }
   }
@@ -1369,16 +1389,19 @@ export default class StreamsBuild {
    * @param targetInstance the target Streams instance
    * @param operatorType the primitive operator type
    * @param primitiveOperatorFolderPath the primitive operator folder path
+   * @param messageHandlerId the message handler identifier
    */
   public static runBuildPrimitiveOperator(
     targetInstance: any,
     operatorType: PrimitiveOperatorType,
-    primitiveOperatorFolderPath: string
+    primitiveOperatorFolderPath: string,
+    messageHandlerId: string
   ): void {
     const buildPrimitiveOperator = (): void => {
       if (targetInstance) {
         const startBuildPrimitiveOperatorAction = BuildToolkit.startBuildToolkit(
           {
+            messageHandlerId,
             folderPath: primitiveOperatorFolderPath,
             type: BuildType.PrimitiveOperator,
             buildPrimitiveOperatorArgs: { operatorType },
@@ -1398,12 +1421,11 @@ export default class StreamsBuild {
           const messageHandler = Registry.getMessageHandler(
             primitiveOperatorFolderPath
           );
-          messageHandler.handleInfo(
+          messageHandler.logInfo(
             `Selected Streams instance: ${InstanceSelector.selectInstanceName(
               store.getState(),
               targetInstance.connectionId
-            )}.`,
-            { showNotification: false }
+            )}.`
           );
           store.dispatch(startBuildPrimitiveOperatorAction).catch((err) => {
             let errorMsg: string;
@@ -1450,11 +1472,12 @@ export default class StreamsBuild {
         projectFolderPath,
         genericOperator
       );
-      messageHandler = result.messageHandler;
+      ({ messageHandler } = result);
+      const { messageHandlerId } = result;
       if (result.error) {
-        messageHandler.handleError(
+        messageHandler.logError(
           `The C++ primitive operator creation failed. ${result.error.errorMsg}`,
-          { notificationButtons: result.error.buttons }
+          { showNotification: true, notificationButtons: result.error.buttons }
         );
         return;
       }
@@ -1466,7 +1489,8 @@ export default class StreamsBuild {
             projectFolderPath,
             operatorFolderPath,
             genericOperator,
-            resolve
+            resolve,
+            messageHandlerId
           );
         },
         () => {
@@ -1483,7 +1507,7 @@ export default class StreamsBuild {
           ActionType.MakeCppPrimitiveOperator,
           [projectFolderPath],
           null,
-          { operatorFolderPath, genericOperator, resolve }
+          { messageHandlerId, operatorFolderPath, genericOperator, resolve }
         );
       };
       this.handleAction(
@@ -1493,8 +1517,9 @@ export default class StreamsBuild {
         multipleInstancesCallbackFn
       );
     } else {
-      messageHandler.handleError(
-        'The C++ primitive operator creation failed. Unable to retrieve the folder or file path.'
+      messageHandler.logError(
+        'The C++ primitive operator creation failed. Unable to retrieve the folder or file path.',
+        { showNotification: true }
       );
     }
   }
@@ -1506,18 +1531,21 @@ export default class StreamsBuild {
    * @param operatorFolderPath the path to the operator folder
    * @param genericOperator whether or not should be a generic operator
    * @param resolve the promise resolve function
+   * @param messageHandlerId the message handler identifier
    */
   public static runMakeCppPrimitiveOperator(
     targetInstance: any,
     projectFolderPath: string,
     operatorFolderPath: string,
     genericOperator: boolean,
-    resolve: Function
+    resolve: Function,
+    messageHandlerId: string
   ): void {
     const makeCppPrimitiveOperator = (): void => {
       if (targetInstance) {
         const startMakeCppPrimitiveOperatorAction = BuildToolkit.startMakeCppPrimitiveOperator(
           {
+            messageHandlerId,
             folderPath: projectFolderPath,
             type: BuildType.MakeCppPrimitiveOperator,
             makeCppPrimitiveOperatorArgs: {
@@ -1538,12 +1566,11 @@ export default class StreamsBuild {
           StreamsInstance.authenticate(targetInstance, false, queuedActionId);
         } else {
           const messageHandler = Registry.getMessageHandler(projectFolderPath);
-          messageHandler.handleInfo(
+          messageHandler.logInfo(
             `Selected Streams instance: ${InstanceSelector.selectInstanceName(
               store.getState(),
               targetInstance.connectionId
-            )}.`,
-            { showNotification: false }
+            )}.`
           );
           store
             .dispatch(startMakeCppPrimitiveOperatorAction)
@@ -1632,9 +1659,8 @@ export default class StreamsBuild {
     window.showInformationMessage(
       'The available IBM Streams toolkits are displayed in the IBM Streams output channel.'
     );
-    this._defaultMessageHandler.handleInfo('Streams toolkits:', {
-      detail: `${cachedToolkitsStr}${localToolkitsStr}`,
-      showNotification: false
+    this._defaultMessageHandler.logInfo('Streams toolkits:', {
+      detail: `${cachedToolkitsStr}${localToolkitsStr}`
     });
   }
 
@@ -1672,12 +1698,13 @@ export default class StreamsBuild {
                 !fs.existsSync(dir)
             );
             if (directoriesInvalid) {
-              this._defaultMessageHandler.handleError(
+              this._defaultMessageHandler.logError(
                 'One or more toolkit paths do not exist or are not valid. Verify the paths.',
                 {
                   detail: `Verify that the paths exist:\n${directories.join(
                     '\n'
                   )}`,
+                  showNotification: true,
                   notificationButtons: [
                     {
                       label: 'Open Settings',
@@ -1693,10 +1720,11 @@ export default class StreamsBuild {
             toolkitPathsSetting !== Settings.ENV_TOOLKIT_PATHS_DEFAULT &&
             !fs.existsSync(toolkitPathsSetting)
           ) {
-            this._defaultMessageHandler.handleError(
+            this._defaultMessageHandler.logError(
               `The specified toolkit path ${toolkitPathsSetting} does not exist or is not valid. Verify the path.`,
               {
                 detail: `Verify that the path exists: ${toolkitPathsSetting}`,
+                showNotification: true,
                 notificationButtons: [
                   {
                     label: 'Open Settings',
@@ -1802,65 +1830,6 @@ export default class StreamsBuild {
   }
 
   /**
-   * Initialize util registry
-   */
-  private static initUtilRegistry(): void {
-    if (!Registry.getDefaultMessageHandler()) {
-      this._defaultMessageHandler = new MessageHandler(null);
-      Registry.setDefaultMessageHandler(this._defaultMessageHandler);
-    }
-
-    Registry.setSystemKeychain(Keychain);
-
-    this._openUrlHandler = (
-      url: string,
-      callback?: () => void
-    ): Thenable<void> =>
-      env.openExternal(Uri.parse(url)).then(() => callback && callback());
-    Registry.setOpenUrlHandler(this._openUrlHandler);
-
-    this._sendLspNotificationHandler = (param: object): void =>
-      SplLanguageClient.getClient().sendNotification(
-        DidChangeConfigurationNotification.type.method,
-        param
-      );
-    Registry.setSendLspNotificationHandler(this._sendLspNotificationHandler);
-
-    const copyToClipboardHandler = (text: string): Thenable<void> =>
-      VSCode.copyToClipboard(text);
-    Registry.setCopyToClipboardHandler(copyToClipboardHandler);
-
-    const executeCommandHandler = (
-      name: EditorCommand,
-      args: any[]
-    ): Thenable<any> => {
-      let commandName = null;
-      if (name === EditorCommand.REFRESH_TOOLKITS) {
-        commandName =
-          Commands.VIEW.STREAMS_EXPLORER.STREAMS_TOOLKITS.REFRESH_TOOLKITS;
-      } else if (name === EditorCommand.SET_TOOLKIT_PATHS_SETTING) {
-        commandName = Commands.ENVIRONMENT.TOOLKIT_PATHS_SET;
-      }
-      return commandName
-        ? commands.executeCommand(commandName, ...args)
-        : Promise.reject();
-    };
-    Registry.setExecuteCommandHandler(executeCommandHandler);
-
-    const showJobGraphHandler = (properties: object): Thenable<void> =>
-      commands.executeCommand(Commands.ENVIRONMENT.SHOW_JOB_GRAPH, properties);
-    Registry.setShowJobGraphHandler(showJobGraphHandler);
-
-    const showJobSubmitDialogHandler = (opts: object): Thenable<void> =>
-      commands.executeCommand(Commands.BUILD.CONFIGURE_JOB_SUBMISSION, opts);
-    Registry.setShowJobSubmitHandler(showJobSubmitDialogHandler);
-
-    const showImageBuildHandler = (opts: object): Thenable<void> =>
-      commands.executeCommand(Commands.BUILD.CONFIGURE_IMAGE_BUILD, opts);
-    Registry.setShowImageBuildHandler(showImageBuildHandler);
-  }
-
-  /**
    * Initialize Redux state
    */
   private static async initReduxState(): Promise<void> {
@@ -1897,13 +1866,20 @@ export default class StreamsBuild {
 
     // Add stored instances
     const storedInstances = Streams.getInstances();
-    if (isLoggingEnabled()) {
-      // eslint-disable-next-line no-console
-      console.log(
-        'Stored Streams instances in extension state',
-        storedInstances
-      );
-    }
+    this._defaultMessageHandler.logTrace(
+      `Stored Streams instances in extension state: ${JSON.stringify(
+        storedInstances.map((storedInstance) =>
+          _pick(storedInstance, [
+            'authentication',
+            'connectionId',
+            'cpdVersion',
+            'instanceName',
+            'instanceType',
+            'isDefault'
+          ])
+        )
+      )}`
+    );
     // Default instance not set, so set to the first one by default
     if (!Streams.getDefaultInstance() && storedInstances.length) {
       storedInstances[0].isDefault = true;
@@ -1917,9 +1893,9 @@ export default class StreamsBuild {
           Instance.addStreamsInstanceWithoutAuthentication(storedInstance)
         )
         .catch((error) => {
-          this._defaultMessageHandler.handleError(
+          this._defaultMessageHandler.logError(
             'An error occurred while adding Streams instances to the Redux state.',
-            { showNotification: false, detail: error }
+            { detail: error }
           );
         });
     });
@@ -2205,7 +2181,7 @@ export default class StreamsBuild {
       } else {
         message = `There are no Streams instances available. Add an instance to continue with the ${actionLabel}.`;
       }
-      this._defaultMessageHandler.handleInfo(message, { notificationButtons });
+      this._defaultMessageHandler.logInfo(message, { notificationButtons });
     } else if (storedInstances.length === 1) {
       zeroOrOneInstancesCallbackFn();
     } else {
@@ -2264,22 +2240,7 @@ export default class StreamsBuild {
       Registry.addLintHandler(appRoot, lintHandler);
     }
 
-    let compositeToBuild: string;
-    let messageHandlerId: string;
-    if (type === 'buildApp') {
-      const {
-        namespace,
-        mainComposites
-      }: any = StreamsUtils.getFqnMainComposites(filePath);
-      compositeToBuild = await this.getCompositeToBuild(
-        namespace,
-        mainComposites
-      );
-      messageHandlerId = `${appRoot}:${compositeToBuild}`;
-    } else {
-      messageHandlerId = filePath;
-    }
-
+    const messageHandlerId = filePath;
     let messageHandler = Registry.getMessageHandler(messageHandlerId);
     if (!messageHandler) {
       messageHandler = new MessageHandler({ appRoot, filePath });
@@ -2299,28 +2260,40 @@ export default class StreamsBuild {
         action === PostBuildAction.Submit ? ' and submit.' : '.'
       }`;
     }
-    messageHandler.handleInfo(statusMessage, { showNotification: false });
-    messageHandler.handleInfo(`Selected: ${filePath}`, {
-      showNotification: false
-    });
+    messageHandler.logInfo(statusMessage);
+    messageHandler.logInfo(`Selected: ${filePath}`);
+
+    let compositeToBuild: string;
+    if (type === 'buildApp') {
+      const {
+        namespace,
+        mainComposites
+      }: any = StreamsUtils.getFqnMainComposites(filePath, messageHandlerId);
+      compositeToBuild = await this.getCompositeToBuild(
+        namespace,
+        mainComposites
+      );
+    }
 
     if (type === 'buildApp') {
-      return { appRoot, compositeToBuild, messageHandler };
+      return { appRoot, compositeToBuild, messageHandlerId, messageHandler };
     }
-    return { appRoot, messageHandler };
+    return { appRoot, messageHandlerId, messageHandler };
   }
 
   /**
    * Initialize a Streams job submission
    * @param filePaths the paths to the application bundle(s)
    */
-  private static initSubmit(filePaths: string[]): string[] {
+  private static initSubmit(filePaths: string[]): any {
     const bundleFilePaths = filePaths.filter((filePath: string) =>
       filePath.toLowerCase().endsWith('.sab')
     );
 
+    const messageHandlerIds = [];
     bundleFilePaths.forEach((bundleFilePath) => {
       const messageHandlerId = bundleFilePath;
+      messageHandlerIds.push(messageHandlerId);
       let messageHandler = Registry.getMessageHandler(messageHandlerId);
       if (!messageHandler) {
         messageHandler = new MessageHandler({ bundleFilePath });
@@ -2331,26 +2304,26 @@ export default class StreamsBuild {
       Logger.registerOutputChannel(bundleFilePath, displayPath);
 
       const statusMessage = 'Received request to submit an application bundle.';
-      messageHandler.handleInfo(statusMessage, { showNotification: false });
-      messageHandler.handleInfo(`Selected: ${bundleFilePath}`, {
-        showNotification: false
-      });
+      messageHandler.logInfo(statusMessage);
+      messageHandler.logInfo(`Selected: ${bundleFilePath}`);
     });
 
-    return bundleFilePaths;
+    return { messageHandlerIds, bundleFilePaths };
   }
 
   /**
    * Initialize a Streams edge application image build
    * @param filePaths the paths to the application bundle(s)
    */
-  private static initBuildImage(filePaths: string[]): string[] {
+  public static initBuildImage(filePaths: string[]): any {
     const bundleFilePaths = filePaths.filter((filePath: string) =>
       filePath.toLowerCase().endsWith('.sab')
     );
 
+    const messageHandlerIds = [];
     bundleFilePaths.forEach((bundleFilePath) => {
       const messageHandlerId = bundleFilePath;
+      messageHandlerIds.push(messageHandlerId);
       let messageHandler = Registry.getMessageHandler(messageHandlerId);
       if (!messageHandler) {
         messageHandler = new MessageHandler({ bundleFilePath });
@@ -2362,13 +2335,11 @@ export default class StreamsBuild {
 
       const statusMessage =
         'Received request to build an edge application image using an application bundle.';
-      messageHandler.handleInfo(statusMessage, { showNotification: false });
-      messageHandler.handleInfo(`Selected: ${bundleFilePath}`, {
-        showNotification: false
-      });
+      messageHandler.logInfo(statusMessage);
+      messageHandler.logInfo(`Selected: ${bundleFilePath}`);
     });
 
-    return bundleFilePaths;
+    return { messageHandlerIds, bundleFilePaths };
   }
 
   /**
@@ -2381,10 +2352,11 @@ export default class StreamsBuild {
         ? folderOrFilePath
         : path.dirname(folderOrFilePath);
 
-      let messageHandler = Registry.getMessageHandler(toolkitFolderPath);
+      const messageHandlerId = toolkitFolderPath;
+      let messageHandler = Registry.getMessageHandler(messageHandlerId);
       if (!messageHandler) {
         messageHandler = new MessageHandler({ toolkitFolderPath });
-        Registry.addMessageHandler(toolkitFolderPath, messageHandler);
+        Registry.addMessageHandler(messageHandlerId, messageHandler);
       }
 
       const displayPath = this.getDisplayPath(
@@ -2396,12 +2368,10 @@ export default class StreamsBuild {
       Logger.registerOutputChannel(toolkitFolderPath, displayPath);
 
       const statusMessage = 'Received request to build a toolkit.';
-      messageHandler.handleInfo(statusMessage, { showNotification: false });
-      messageHandler.handleInfo(`Toolkit folder: ${toolkitFolderPath}`, {
-        showNotification: false
-      });
+      messageHandler.logInfo(statusMessage);
+      messageHandler.logInfo(`Toolkit folder: ${toolkitFolderPath}`);
 
-      return { toolkitFolderPath, messageHandler };
+      return { toolkitFolderPath, messageHandlerId, messageHandler };
     } catch (err) {
       return null;
     }
@@ -2448,12 +2418,13 @@ export default class StreamsBuild {
         return errorObj;
       }
 
+      const messageHandlerId = primitiveOperatorFolderPath;
       let messageHandler = Registry.getMessageHandler(
         primitiveOperatorFolderPath
       );
       if (!messageHandler) {
         messageHandler = new MessageHandler({ primitiveOperatorFolderPath });
-        Registry.addMessageHandler(primitiveOperatorFolderPath, messageHandler);
+        Registry.addMessageHandler(messageHandlerId, messageHandler);
       }
 
       const displayPath = this.getDisplayPath(
@@ -2465,13 +2436,12 @@ export default class StreamsBuild {
       Logger.registerOutputChannel(primitiveOperatorFolderPath, displayPath);
 
       const statusMessage = `Received request to build a ${operatorType} primitive operator.`;
-      messageHandler.handleInfo(statusMessage, { showNotification: false });
-      messageHandler.handleInfo(
-        `${operatorType} primitive operator project folder: ${primitiveOperatorFolderPath}`,
-        { showNotification: false }
+      messageHandler.logInfo(statusMessage);
+      messageHandler.logInfo(
+        `${operatorType} primitive operator project folder: ${primitiveOperatorFolderPath}`
       );
 
-      return { primitiveOperatorFolderPath, messageHandler };
+      return { primitiveOperatorFolderPath, messageHandlerId, messageHandler };
     } catch (err) {
       return null;
     }
@@ -2487,12 +2457,13 @@ export default class StreamsBuild {
     genericOperator: boolean
   ): any {
     try {
+      const messageHandlerId = folderPath;
       let messageHandler = Registry.getMessageHandler(folderPath);
       if (!messageHandler) {
         messageHandler = new MessageHandler({
           primitiveOperatorFolderPath: folderPath
         });
-        Registry.addMessageHandler(folderPath, messageHandler);
+        Registry.addMessageHandler(messageHandlerId, messageHandler);
       }
 
       const displayPath = this.getDisplayPath(null, null, null, folderPath);
@@ -2500,13 +2471,12 @@ export default class StreamsBuild {
 
       const statusMessage =
         'Received request to create a C++ primitive operator.';
-      messageHandler.handleInfo(statusMessage, { showNotification: false });
-      messageHandler.handleInfo(
-        `C++ primitive operator project folder: ${folderPath}\nGeneric operator: ${genericOperator.toString()}`,
-        { showNotification: false }
+      messageHandler.logInfo(statusMessage);
+      messageHandler.logInfo(
+        `C++ primitive operator project folder: ${folderPath}\nGeneric operator: ${genericOperator.toString()}`
       );
 
-      return { messageHandler };
+      return { messageHandlerId, messageHandler };
     } catch (err) {
       return null;
     }
@@ -2776,9 +2746,9 @@ export default class StreamsBuild {
     );
     const cpdPackageUrl = `${cpdUrl}/edge/index.html#/edgeAnalytics/analyticsApplicationPackages/add`;
     const eamPackageUrl =
-      'https://www.ibm.com/support/producthub/icpdata/docs/content/SSQNUZ_current/svc-edge/usage-register-app.html';
+      'https://www.ibm.com/support/knowledgecenter/SSQNUZ_3.5.0/svc-edge/usage-register-by-eam.html';
     const packageDocUrl =
-      'https://www.ibm.com/support/producthub/icpdata/docs/content/SSQNUZ_current/svc-edge/usage-register-app.html#usage-register-app';
+      'https://www.ibm.com/support/knowledgecenter/SSQNUZ_3.5.0/svc-edge/usage-register-app.html';
     const nextSteps =
       'Before you can deploy this edge application, you must either package it as:\n\n' +
       '- An edge application package for IBM Cloud Pak for Data:\n' +
@@ -2786,9 +2756,8 @@ export default class StreamsBuild {
       '- A service for IBM Edge Application Manager:\n' +
       `  Create a service by following the instructions here: ${eamPackageUrl}.\n\n` +
       `For more information, refer to the documentation: ${packageDocUrl}.`;
-    messageHandler.handleInfo('Image details:', {
-      detail: `${stringDetails}\n\n${nextSteps}`,
-      showNotification: false
+    messageHandler.logInfo('Image details:', {
+      detail: `${stringDetails}\n\n${nextSteps}`
     });
   }
 
@@ -2815,7 +2784,8 @@ export default class StreamsBuild {
       },
       ...notificationButtons
     ];
-    messageHandler.handleError(errorMsg, {
+    messageHandler.logError(errorMsg, {
+      showNotification: true,
       ...(notificationButtons && {
         notificationButtons,
         isButtonSelectionRequired: false

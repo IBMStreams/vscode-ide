@@ -1,21 +1,27 @@
 import { ExtensionContext } from 'vscode';
+import AppServicesView from './appServicesView';
 import DetailsView from './detailsView';
 import HelpfulResourcesView from './helpfulResourcesView';
 import InstancesView from './instancesView';
 import ToolkitsView from './toolkitsView';
+import JobsView from './streamsJobsView';
 
 /**
  * Represents the Streams Explorer view container
  */
 export default class StreamsExplorer {
   private _instancesView: InstancesView;
+  private _appServicesView: AppServicesView;
   private _detailsView: DetailsView;
+  private _jobsView: JobsView;
   private _toolkitsView: ToolkitsView;
   private _helpfulResourcesView: HelpfulResourcesView;
 
   constructor(context: ExtensionContext) {
     this._instancesView = new InstancesView(context);
+    this._appServicesView = new AppServicesView(context);
     this._detailsView = new DetailsView(context);
+    this._jobsView = new JobsView(context);
     this._toolkitsView = new ToolkitsView();
     this._helpfulResourcesView = new HelpfulResourcesView();
   }
@@ -28,10 +34,24 @@ export default class StreamsExplorer {
   }
 
   /**
+   * Get the Application Services view
+   */
+  public getAppServicesView(): AppServicesView {
+    return this._appServicesView;
+  }
+
+  /**
    * Get the Details view
    */
   public getDetailsView(): DetailsView {
     return this._detailsView;
+  }
+
+  /**
+   * Get the Jobs view
+   */
+  public getJobsView(): JobsView {
+    return this._jobsView;
   }
 
   /**
@@ -53,7 +73,9 @@ export default class StreamsExplorer {
    */
   public refresh(): void {
     this.refreshInstancesView();
+    this.refreshAppServicesView();
     setTimeout(() => this.refreshDetailsView(), 1000);
+    setTimeout(() => this.refreshJobsView(), 1000);
     this.refreshToolkitsView();
   }
 
@@ -62,6 +84,22 @@ export default class StreamsExplorer {
    */
   public refreshInstancesView(): void {
     this._instancesView.refresh();
+  }
+
+  /**
+   * Refresh the Application Services view
+   */
+  public refreshAppServicesView(): void {
+    this._appServicesView.refresh();
+  }
+
+  /**
+   * Refresh the Instances view
+   */
+  public refreshJobsView(): void {
+    this._jobsView.showActiveRunsForSelection(
+      this._instancesView.getSelected()
+    );
   }
 
   /**

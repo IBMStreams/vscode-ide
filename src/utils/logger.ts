@@ -1,14 +1,7 @@
+import { LogLevel } from '@ibmstreams/common';
 import * as util from 'util';
 import { OutputChannel, window } from 'vscode';
 import { EXTENSION_NAME, LANGUAGE_SERVER } from '.';
-
-enum Level {
-  DEBUG,
-  ERROR,
-  INFO,
-  SUCCESS,
-  WARN
-}
 
 /**
  * Manages message logging to output channels
@@ -84,184 +77,25 @@ export default class Logger {
   }
 
   /**
-   * Handle messages at the debug level
-   * @param outputChannel the output channel
-   * @param message the message to log
-   * @param showNotification whether to show a notification to the user
-   * @param showOutputChannel whether to switch focus to the output channel
-   * @param hideLogTypePrefix whether to hide log type prefix in output channel message
-   */
-  public static debug(
-    outputChannel: OutputChannel,
-    message: string,
-    showNotification?: boolean,
-    showOutputChannel?: boolean,
-    hideLogTypePrefix?: boolean
-  ): void {
-    Logger.handleMessage(
-      outputChannel,
-      message,
-      Level.DEBUG,
-      showNotification,
-      showOutputChannel,
-      hideLogTypePrefix
-    );
-  }
-
-  /**
-   * Handle messages at the error level
-   * @param outputChannel the output channel
-   * @param message the message to log
-   * @param showNotification whether to show a notification to the user
-   * @param showOutputChannel whether to switch focus to the output channel
-   */
-  public static error(
-    outputChannel: OutputChannel,
-    message: string,
-    showNotification?: boolean,
-    showOutputChannel?: boolean
-  ): void {
-    Logger.handleMessage(
-      outputChannel,
-      message,
-      Level.ERROR,
-      showNotification,
-      showOutputChannel
-    );
-  }
-
-  /**
-   * Handle messages at the info level
-   * @param outputChannel the output channel
-   * @param message the message to log
-   * @param showNotification whether to show a notification to the user
-   * @param showOutputChannel whether to switch focus to the output channel
-   */
-  public static info(
-    outputChannel: OutputChannel,
-    message: string,
-    showNotification?: boolean,
-    showOutputChannel?: boolean
-  ): void {
-    Logger.handleMessage(
-      outputChannel,
-      message,
-      Level.INFO,
-      showNotification,
-      showOutputChannel
-    );
-  }
-
-  /**
-   * Handle messages at the success level
-   * @param outputChannel the output channel
-   * @param message the message to log
-   * @param showNotification whether to show a notification to the user
-   * @param showOutputChannel whether to switch focus to the output channel
-   */
-  public static success(
-    outputChannel: OutputChannel,
-    message: string,
-    showNotification?: boolean,
-    showOutputChannel?: boolean
-  ): void {
-    Logger.handleMessage(
-      outputChannel,
-      message,
-      Level.SUCCESS,
-      showNotification,
-      showOutputChannel
-    );
-  }
-
-  /**
-   * Handle messages at the warn level
-   * @param outputChannel the output channel
-   * @param message the message to log
-   * @param showNotification whether to show a notification to the user
-   * @param showOutputChannel whether to switch focus to the output channel
-   */
-  public static warn(
-    outputChannel: OutputChannel,
-    message: string,
-    showNotification?: boolean,
-    showOutputChannel?: boolean
-  ): void {
-    Logger.handleMessage(
-      outputChannel,
-      message,
-      Level.WARN,
-      showNotification,
-      showOutputChannel
-    );
-  }
-
-  /**
-   * Handle messages at all levels
-   * @param outputChannel the output channel
-   * @param message the message to log
+   * Log message
    * @param logLevel the log level
-   * @param showNotification whether to show a notification to the user
+   * @param outputChannel the output channel
+   * @param message the message to log
    * @param showOutputChannel whether to switch focus to the output channel
-   * @param throwError whether to throw an error
    * @param hideLogTypePrefix whether to hide log type prefix in output channel message
    */
-  private static handleMessage(
+  public static log(
+    logLevel: LogLevel,
     outputChannel: OutputChannel,
     message: string,
-    logLevel: number,
-    showNotification?: boolean,
     showOutputChannel?: boolean,
     hideLogTypePrefix?: boolean
   ): void {
     if (!message || message.trim() === '') {
       return;
     }
-
-    if (message && showNotification) {
-      switch (logLevel) {
-        case Level.DEBUG:
-        case Level.INFO:
-        case Level.SUCCESS:
-          window.showInformationMessage(message);
-          break;
-        case Level.ERROR:
-          window.showErrorMessage(message);
-          break;
-        case Level.WARN:
-          window.showWarningMessage(message);
-          break;
-        default:
-          break;
-      }
-    }
-
     const channel = outputChannel || Logger.mainOutputChannel;
-    Logger.logToOutputChannel(
-      channel,
-      message,
-      logLevel,
-      showOutputChannel,
-      hideLogTypePrefix
-    );
-  }
-
-  /**
-   * Log a message to the output channel
-   * @param outputChannel the output channel
-   * @param message the message to log
-   * @param logLevel the log level
-   * @param showOutputChannel whether to switch focus to the output channel
-   * @param hideLogTypePrefix whether to hide log type prefix in output channel message
-   */
-  private static logToOutputChannel(
-    outputChannel: OutputChannel,
-    message: string,
-    logLevel: number,
-    showOutputChannel?: boolean,
-    hideLogTypePrefix?: boolean
-  ): void {
-    if (!outputChannel) {
+    if (!channel) {
       return;
     }
 
@@ -275,7 +109,7 @@ export default class Logger {
         util.format(
           '[%s][%s]%s%s',
           this.getCurrentDateTime(),
-          Level[logLevel],
+          logLevel.toUpperCase(),
           message.startsWith('\n') ? '' : ' ',
           message
         )
@@ -294,12 +128,13 @@ export default class Logger {
     const hours = this.pad(date.getHours());
     const minutes = this.pad(date.getMinutes());
     const seconds = this.pad(date.getSeconds());
+    const milliseconds = this.pad(date.getMilliseconds());
     const timezoneOffset = -date.getTimezoneOffset();
     const diff = timezoneOffset >= 0 ? '+' : '-';
     const timezone = `${this.pad(timezoneOffset / 60)}:${this.pad(
       timezoneOffset % 60
     )}`;
-    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${diff}${timezone}`;
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${milliseconds}${diff}${timezone}`;
   }
 
   /**

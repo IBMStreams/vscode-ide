@@ -46,6 +46,8 @@ export enum ViewContainers {
  * Views
  */
 export enum Views {
+  StreamsAppServices = 'streamsAppServices',
+  StreamsJobs = 'streamsJobs',
   StreamsDetails = 'streamsDetails',
   StreamsHelpfulResources = 'streamsHelpfulResources',
   StreamsInstances = 'streamsInstances',

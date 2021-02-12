@@ -196,9 +196,9 @@ export default class CreateCppPrimitiveOperator implements BaseCommand {
 
       const messageHandler = Registry.getMessageHandler(projectFolderPath);
       if (messageHandler) {
-        messageHandler.handleInfo(
+        messageHandler.logInfo(
           `Created the C++ primitive operator in ${projectFolderPath} with namespace ${namespace} and name ${name}.`,
-          { showNotification: false }
+          { showNotification: true }
         );
       }
     }

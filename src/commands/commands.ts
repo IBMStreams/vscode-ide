@@ -145,6 +145,10 @@ export const ENVIRONMENT = {
    */
   SHOW_AUTHENTICATION_WEBVIEW_PANEL: 'ibm-streams.environment.showAuthPanel',
   /**
+   * Show Cloud Pak for Data Application Service Webview Panel (internal)
+   */
+  SHOW_CPD_APP_SERVICE_PANEL: 'ibm-streams.environment.showCpdAppServicePanel',
+  /**
    * Show Cloud Pak for Data Job Webview Panel (internal)
    */
   SHOW_CPD_JOB_PANEL: 'ibm-streams.environment.showCpdJobPanel',
@@ -350,12 +354,40 @@ export const VIEW = {
           'ibm-streams.view.streamsExplorer.streamsInstances.baseImage.copyId'
       }
     },
-    STREAMS_DETAILS: {
+    STREAMS_APP_SERVICES: {
       /**
-       * Show Details for Item (internal)
+       * Open REST API documentation
        */
-      SHOW_DETAILS_FOR_ITEM:
-        'ibm-streams.view.streamsExplorer.streamsDetails.showDetailsForItem',
+      OPEN_REST_API_DOC:
+        'ibm-streams.view.streamsExplorer.streamsAppServices.service.openRestApiDoc',
+      /**
+       * Send Data
+       */
+      SEND_DATA:
+        'ibm-streams.view.streamsExplorer.streamsAppServices.endpointPath.sendData',
+      /**
+       * Receive Data
+       */
+      RECEIVE_DATA:
+        'ibm-streams.view.streamsExplorer.streamsAppServices.endpointPath.receiveData'
+    },
+    STREAMS_JOBS: {
+      /**
+       * Open Cloud Pak for Data Deployment Space Details
+       */
+      OPEN_CPD_DETAILS:
+        'ibm-streams.view.streamsExplorer.streamsJobs.openCpdDetails',
+      /**
+       * Create Log Snapshot
+       */
+      CREATE_LOG_SNAPSHOT:
+        'ibm-streams.view.streamsExplorer.streamsJobs.createLogSnapshot',
+      /**
+       * Cancel Job Run
+       */
+      CANCEL: 'ibm-streams.view.streamsExplorer.streamsJobs.cancel'
+    },
+    STREAMS_DETAILS: {
       /**
        * Copy to Clipboard
        */

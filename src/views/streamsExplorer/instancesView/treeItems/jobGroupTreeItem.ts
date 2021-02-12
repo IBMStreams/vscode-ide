@@ -11,7 +11,8 @@ export default class JobGroupTreeItem extends TreeItem {
   constructor(
     private _extensionPath: string,
     name: string,
-    public children: (InfoTreeItem | JobTreeItem)[]
+    public children: (InfoTreeItem | JobTreeItem)[],
+    public instance: any
   ) {
     super(
       name,

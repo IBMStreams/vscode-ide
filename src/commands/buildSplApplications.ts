@@ -45,15 +45,12 @@ export default class BuildSplApplicationsCommand implements BaseCommand {
       propertiesFilePath = window.activeTextEditor.document.fileName;
     }
 
-    Logger.info(
-      null,
+    Registry.getDefaultMessageHandler().logInfo(
       `Received request to build${
         this.commandName === Commands.GENERAL.BUILD_SUBMIT_SPL_APPLICATIONS
           ? ' and submit'
           : ''
-      } SPL applications in a SPL application set.\nSPL application set: ${propertiesFilePath}`,
-      false,
-      true
+      } SPL applications in a SPL application set.\nSPL application set: ${propertiesFilePath}`
     );
 
     return this.buildSplApplications(propertiesFilePath);
@@ -96,8 +93,7 @@ export default class BuildSplApplicationsCommand implements BaseCommand {
           );
           VSCode.addFoldersToWorkspace(appRoots);
 
-          Logger.info(
-            null,
+          Registry.getDefaultMessageHandler().logInfo(
             `Building${
               this.commandName ===
               Commands.GENERAL.BUILD_SUBMIT_SPL_APPLICATIONS
@@ -125,7 +121,7 @@ export default class BuildSplApplicationsCommand implements BaseCommand {
       }
       return this.handleNoApplications();
     } catch (err) {
-      Registry.getDefaultMessageHandler().handleError(
+      Registry.getDefaultMessageHandler().logError(
         `Failed to build${
           this.commandName === Commands.GENERAL.BUILD_SUBMIT_SPL_APPLICATIONS
             ? ' and submit'
@@ -135,6 +131,7 @@ export default class BuildSplApplicationsCommand implements BaseCommand {
           detail: `SPL application set: ${propertiesFilePath}\n${
             err.stack || err.message
           }`,
+          showNotification: true,
           notificationButtons: [
             {
               label: 'See Documentation',
@@ -245,7 +242,7 @@ export default class BuildSplApplicationsCommand implements BaseCommand {
     if (buttons) {
       notificationButtons.push(...buttons);
     }
-    return Registry.getDefaultMessageHandler().handleWarn(message, {
+    return Registry.getDefaultMessageHandler().logWarn(message, {
       showNotification,
       ...(notificationButtons.length && { notificationButtons })
     });

@@ -222,6 +222,17 @@ const jobProperties = [
   { name: 'productLog', label: 'Product log', isUrl: true },
   { name: 'productVersion', label: 'Product version' },
   { name: 'resources', label: 'Resources', isUrl: true },
+  {
+    name: 'service',
+    label: 'Service',
+    childProperties: [
+      { name: 'apiJson', label: 'JSON API', isUrl: true },
+      { name: 'apiViewer', label: 'API viewer', isUrl: true },
+      { name: 'apiYaml', label: 'YAML API', isUrl: true },
+      { name: 'id', label: 'ID' },
+      { name: 'name', label: 'Name' }
+    ]
+  },
   { name: 'snapshot', label: 'Snapshot', isUrl: true },
   { name: 'startedBy', label: 'Started by' },
   { name: 'status', label: 'Status' },
@@ -476,12 +487,6 @@ export default class DetailsView {
 
     const detailCommands = Commands.VIEW.STREAMS_EXPLORER.STREAMS_DETAILS;
     commands.registerCommand(
-      detailCommands.SHOW_DETAILS_FOR_ITEM,
-      (type: string, element: any, selectedTreeItem: StreamsTreeItem) => {
-        this._showDetails(type, element, selectedTreeItem);
-      }
-    );
-    commands.registerCommand(
       detailCommands.COPY_TO_CLIPBOARD,
       (element: DetailTreeItem) => {
         this._copyToClipboard(element);
@@ -495,10 +500,8 @@ export default class DetailsView {
    */
   public showDetailsForSelection(selection: any[]): void {
     if (selection) {
-      const command =
-        Commands.VIEW.STREAMS_EXPLORER.STREAMS_DETAILS.SHOW_DETAILS_FOR_ITEM;
       if (!selection.length) {
-        commands.executeCommand(command, null, null);
+        this._showDetails(null, null, null);
       } else {
         let element = null;
         const [selectedElement] = selection;
@@ -538,7 +541,7 @@ export default class DetailsView {
             type = null;
             break;
         }
-        commands.executeCommand(command, type, element, selectedElement);
+        this._showDetails(type, element, selectedElement);
       }
     }
   }
@@ -549,7 +552,7 @@ export default class DetailsView {
    * @param element the element
    * @param selectedTreeItem the selected tree item
    */
-  private _showDetails(
+  public _showDetails(
     type: string,
     element: any,
     selectedTreeItem: StreamsTreeItem

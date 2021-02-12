@@ -1,3 +1,4 @@
+import { Registry } from '@ibmstreams/common';
 import * as path from 'path';
 import {
   TreeItem,
@@ -20,7 +21,7 @@ export default class BaseImageTreeItem extends TreeItem {
   constructor(
     private _extensionPath: string,
     public baseImage: any,
-    private _instance: any
+    public instance: any
   ) {
     super(baseImage.name, TreeItemCollapsibleState.None);
 
@@ -54,23 +55,31 @@ export default class BaseImageTreeItem extends TreeItem {
           canSelectMany: true,
           defaultUri: defaultFolderUri,
           filters: { 'Streams Application Bundle': ['sab'] },
-          openLabel: 'Build image(s)'
+          openLabel: 'Build image(s) from application bundle(s)'
         });
         if (selectedUris && selectedUris.length) {
           const selectedFilePaths = selectedUris.map((uri: Uri) => uri.fsPath);
+          const {
+            messageHandlerIds,
+            bundleFilePaths
+          } = StreamsBuild.initBuildImage(selectedFilePaths);
           StreamsBuild.runBuildImage(
-            this._instance,
-            selectedFilePaths,
-            this.baseImage
+            this.instance,
+            bundleFilePaths,
+            this.baseImage,
+            messageHandlerIds
           );
         }
         return;
       }
       throw new Error();
     } catch (error) {
-      Logger.error(null, 'Error building the image.', true);
+      Registry.getDefaultMessageHandler().logError(
+        'Error building the image.',
+        { showNotification: true }
+      );
       if (error.stack) {
-        Logger.error(null, error.stack);
+        Registry.getDefaultMessageHandler().logError(error.stack);
       }
     }
   }
@@ -86,9 +95,12 @@ export default class BaseImageTreeItem extends TreeItem {
       }
       throw new Error();
     } catch (error) {
-      Logger.error(null, 'Error copying the ID for the base image.', true);
+      Registry.getDefaultMessageHandler().logError(
+        'Error copying the ID for the base image.',
+        { showNotification: true }
+      );
       if (error.stack) {
-        Logger.error(null, error.stack);
+        Registry.getDefaultMessageHandler().logError(error.stack);
       }
     }
   }

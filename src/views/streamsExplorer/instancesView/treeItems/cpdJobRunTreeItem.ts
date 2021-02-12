@@ -136,10 +136,9 @@ export default class CpdJobRunTreeItem extends TreeItem {
     } catch (err) {
       const errorMsg =
         'Error opening the IBM Cloud Pak for Data job run details page.';
-      Registry.getDefaultMessageHandler().handleError(errorMsg, {
+      Registry.getDefaultMessageHandler().logError(errorMsg, {
         detail: err.response || err.message || err,
-        stack: err.response || err.stack,
-        showNotification: false
+        stack: err.response || err.stack
       });
     }
   }

@@ -51,11 +51,8 @@ export default class CreateSplApplicationSetCommand implements BaseCommand {
     folderPath: string
   ): Promise<void> {
     try {
-      Logger.info(
-        null,
-        'Received request to create a SPL application set.',
-        false,
-        true
+      Registry.getDefaultMessageHandler().logInfo(
+        'Received request to create a SPL application set.'
       );
 
       // Show webview panel to get properties from the user
@@ -96,15 +93,14 @@ export default class CreateSplApplicationSetCommand implements BaseCommand {
         );
         await window.showTextDocument(propertiesTextDoc);
 
-        Logger.info(
-          null,
+        Registry.getDefaultMessageHandler().logInfo(
           `Created the SPL application set: ${propertiesFilePath}.`
         );
       }
     } catch (err) {
-      Registry.getDefaultMessageHandler().handleError(
+      Registry.getDefaultMessageHandler().logError(
         `Failed to created a SPL application set.`,
-        { detail: err.stack || err.message }
+        { detail: err.stack || err.message, showNotification: true }
       );
     }
   }

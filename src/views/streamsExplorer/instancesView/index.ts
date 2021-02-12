@@ -11,7 +11,7 @@ import {
 import { getStreamsExplorer } from '../..';
 import { Commands } from '../../../commands';
 import { CpdJobRun, Streams, StreamsInstance } from '../../../streams';
-import { Views } from '../../../utils';
+import { Authentication, Views } from '../../../utils';
 import InstancesProvider from './provider';
 import {
   BaseImageTreeItem,
@@ -81,8 +81,6 @@ export default class InstancesView {
     // Update details view if the new instance is selected
     const selectedElements = this.getSelected();
     if (selectedElements) {
-      const command =
-        Commands.VIEW.STREAMS_EXPLORER.STREAMS_DETAILS.SHOW_DETAILS_FOR_ITEM;
       if (selectedElements && selectedElements.length) {
         const [selectedElement] = selectedElements;
         const { type } = selectedElement;
@@ -91,7 +89,23 @@ export default class InstancesView {
             instance: selectedInstance
           } = selectedElement as InstanceTreeItem;
           if (selectedInstance.connectionId === newInstance.connectionId) {
-            commands.executeCommand(command, type, newInstance);
+            getStreamsExplorer()
+              .getDetailsView()
+              ._showDetails(type, newInstance, selectedElement);
+          }
+        }
+      }
+      if (selectedElements && selectedElements.length) {
+        const [selectedElement] = selectedElements;
+        const { type } = selectedElement;
+        if (type === 'instance') {
+          const {
+            instance: selectedInstance
+          } = selectedElement as InstanceTreeItem;
+          if (selectedInstance.connectionId === newInstance.connectionId) {
+            getStreamsExplorer()
+              .getJobsView()
+              ._showActiveRuns(type, newInstance);
           }
         }
       }
@@ -184,6 +198,30 @@ export default class InstancesView {
           getStreamsExplorer()
             .getDetailsView()
             .showDetailsForSelection(e.selection);
+
+          // When user selects a node, then display its active runs in the Active Runs view
+          getStreamsExplorer()
+            .getJobsView()
+            .showActiveRunsForSelection(e.selection);
+
+          // When user selects an instance node or a nested child node, then display the application services in the Application Services view
+          const [selectedElement] = e.selection;
+          const appServicesView = getStreamsExplorer().getAppServicesView();
+          appServicesView.getProvider().setMessage();
+          if (selectedElement?.instance) {
+            const { instance } = selectedElement as InstanceTreeItem;
+            if (
+              Authentication.isAuthenticated(instance) &&
+              InstanceSelector.selectCloudPakForDataStreamsApplicationServices(
+                store.getState(),
+                instance.connectionId
+              )
+            ) {
+              appServicesView.showServicesForInstance(instance);
+              return;
+            }
+          }
+          appServicesView.clearServices();
         }
       )
     );

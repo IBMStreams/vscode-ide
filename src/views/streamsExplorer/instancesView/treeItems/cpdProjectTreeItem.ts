@@ -69,10 +69,9 @@ export default class CpdProjectTreeItem extends TreeItem {
     } catch (err) {
       const errorMsg =
         'Error opening the IBM Cloud Pak for Data project details page.';
-      Registry.getDefaultMessageHandler().handleError(errorMsg, {
+      Registry.getDefaultMessageHandler().logError(errorMsg, {
         detail: err.response || err.message || err,
-        stack: err.response || err.stack,
-        showNotification: false
+        stack: err.response || err.stack
       });
     }
   }

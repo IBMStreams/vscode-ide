@@ -1,3 +1,4 @@
+import { Registry } from '@ibmstreams/common';
 import { window } from 'vscode';
 import { Commands, BaseCommand } from '.';
 import { EXTENSION_NAME, LANGUAGE_SERVER, Logger } from '../utils';
@@ -12,7 +13,9 @@ export default class RemoveOutputChannelsCommand implements BaseCommand {
    * Execute the command
    */
   public execute(): any {
-    Logger.info(null, 'Received request to remove build output channels');
+    Registry.getDefaultMessageHandler().logInfo(
+      'Received request to remove build output channels.'
+    );
     const channels = Logger.outputChannels;
     const channelObjs = Object.keys(channels).map((key) => channels[key]);
     const channelNames = channelObjs
@@ -23,7 +26,10 @@ export default class RemoveOutputChannelsCommand implements BaseCommand {
       )
       .map((channel) => channel.displayName);
     if (!channelNames.length) {
-      Logger.info(null, 'There are no channels to remove.', true, true);
+      Registry.getDefaultMessageHandler().logInfo(
+        'There are no channels to remove.',
+        { showNotification: true }
+      );
       return null;
     }
 
@@ -47,8 +53,7 @@ export default class RemoveOutputChannelsCommand implements BaseCommand {
               delete channels[channelName];
             }
           });
-          Logger.info(
-            null,
+          Registry.getDefaultMessageHandler().logInfo(
             `Removed build output channels: ${JSON.stringify(selected)}`
           );
         }

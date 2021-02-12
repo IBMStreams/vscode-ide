@@ -1,4 +1,4 @@
-import { PostBuildAction } from '@ibmstreams/common';
+import { PostBuildAction, Registry } from '@ibmstreams/common';
 import { commands, ExtensionContext } from 'vscode';
 import {
   AddSplApplicationCommand,
@@ -123,12 +123,12 @@ export function initialize(context: ExtensionContext): void {
         const executionResult = command.execute(context, args);
         if (executionResult && executionResult.catch) {
           executionResult.catch((error) => {
-            Logger.error(
-              null,
-              `An error occurred while executing command: ${command.commandName}`
+            Registry.getDefaultMessageHandler().logError(
+              `An error occurred while executing command: ${command.commandName}`,
+              { showNotification: true }
             );
             if (error && error.stack) {
-              Logger.error(null, error.stack);
+              Registry.getDefaultMessageHandler().logError(error.stack);
             }
           });
         }

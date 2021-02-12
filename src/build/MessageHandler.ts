@@ -1,10 +1,11 @@
+import { generateRandomId, LogLevel } from '@ibmstreams/common';
 import _find from 'lodash/find';
 import _map from 'lodash/map';
 import _pick from 'lodash/pick';
 import { commands, OutputChannel, window } from 'vscode';
 import StreamsBuild from '.';
 import { Streams, StreamsInstance } from '../streams';
-import { Logger } from '../utils';
+import { Configuration, Logger, Settings } from '../utils';
 
 interface MessageHandlerProps {
   appRoot?: string;
@@ -14,9 +15,10 @@ interface MessageHandlerProps {
   primitiveOperatorFolderPath?: string;
 }
 
-interface Message {
+interface MessageProps {
   detail?: string | string[] | any;
   stack?: string | string[] | any;
+  showOutputChannel?: boolean;
   showNotification?: boolean;
   notificationButtons?: NotificationButton[];
   isButtonSelectionRequired?: boolean;
@@ -31,136 +33,96 @@ interface NotificationButton {
  * Handles build and submission messages
  */
 export default class MessageHandler {
-  private _props: MessageHandlerProps;
+  private id: string;
 
   /**
    * @param info information that identifies the build target
    */
-  constructor(props: MessageHandlerProps) {
-    this._props = props;
+  constructor(private props: MessageHandlerProps) {
+    this.id = generateRandomId('messageHandler');
   }
 
   /**
-   * Handle an info message
-   * @param message the message to display
-   * @param object information about the message
+   * Log a message at the error level
+   * @param message the message to log
+   * @param messageProps the message properties
    */
-  public handleInfo(
+  public logError(
     message: string,
-    {
-      detail = null,
-      showNotification = true,
-      notificationButtons = [],
-      isButtonSelectionRequired = true
-    }: Message = {}
-  ): Thenable<void> {
-    // Log to output channel
-    this._logToOutputChannel(Logger.info, message, detail);
+    messageProps: MessageProps = {}
+  ): Promise<void> {
+    const logLevel = Configuration.getSetting(Settings.LOG_LEVEL);
+    const validLogLevels = [
+      LogLevel.Error,
+      LogLevel.Warn,
+      LogLevel.Info,
+      LogLevel.Trace
+    ];
+    if (validLogLevels.includes(logLevel)) {
+      const { detail, stack, showOutputChannel } = messageProps;
 
-    // Handle notification
-    if (message && showNotification) {
-      return this._displayNotification(
-        window.showInformationMessage,
-        message,
-        notificationButtons,
-        isButtonSelectionRequired
-      );
-    }
+      const detailMessage = Streams.getErrorMessage(detail);
+      let stackMessage: string;
+      // CDIS is the unique component prefix that identifies IBM Streams log messages
+      // If an error message contains such a log message, do not show the stack trace
+      if (message.includes('CDIS')) {
+        stackMessage = null;
+      } else if (stack && stack.config && stack.status) {
+        const stackObj: any = _pick(stack.config, ['method', 'url']);
+        stackObj.status = stack.status;
+        stackMessage = JSON.stringify(stackObj, null, 2);
+      } else {
+        stackMessage = Logger.getLoggableMessage(stack);
+      }
 
-    return Promise.resolve();
-  }
+      const detailMessageIncludesMessage =
+        detailMessage &&
+        detailMessage !== '' &&
+        detailMessage.includes(message);
+      const stackMessageIncludesMessage =
+        stackMessage && stackMessage !== '' && stackMessage.includes(message);
 
-  /**
-   * Handle an warn message
-   * @param message the message to display
-   * @param object information about the message
-   */
-  public handleWarn(
-    message: string,
-    {
-      detail = null,
-      showNotification = true,
-      notificationButtons = [],
-      isButtonSelectionRequired = true
-    }: Message = {}
-  ): Thenable<void> {
-    // Log to output channel
-    this._logToOutputChannel(Logger.warn, message, detail);
+      let messageToDisplay = null;
+      if (stackMessageIncludesMessage) {
+        messageToDisplay = stackMessage;
+      } else if (detailMessageIncludesMessage) {
+        messageToDisplay = detailMessage;
+      } else {
+        messageToDisplay = this.sanitizeMessage(message);
+      }
+      if (messageToDisplay) {
+        this.logToOutputChannel(
+          LogLevel.Error,
+          messageToDisplay,
+          null,
+          showOutputChannel
+        );
+      }
 
-    // Handle notification
-    if (message && showNotification) {
-      return this._displayNotification(
-        window.showWarningMessage,
-        message,
-        notificationButtons,
-        isButtonSelectionRequired
-      );
-    }
+      messageToDisplay = null;
+      if (
+        detailMessage &&
+        detailMessage !== '' &&
+        !detailMessageIncludesMessage
+      ) {
+        messageToDisplay = detailMessage;
+      }
+      if (stackMessage && stackMessage !== '' && !stackMessageIncludesMessage) {
+        messageToDisplay = stackMessage;
+      }
+      if (messageToDisplay) {
+        this.logToOutputChannel(
+          LogLevel.Error,
+          messageToDisplay,
+          null,
+          showOutputChannel
+        );
+      }
 
-    return Promise.resolve();
-  }
-
-  /**
-   * Handle an error message
-   * @param message the message to display
-   * @param object information about the message
-   */
-  public handleError(
-    message: string,
-    {
-      detail = null,
-      stack = null,
-      showNotification = true,
-      notificationButtons = [],
-      isButtonSelectionRequired = true
-    }: Message = {}
-  ): Thenable<void> {
-    // Log to output channel
-    const outputChannel = this._getOutputChannel();
-    const detailMessage = Streams.getErrorMessage(detail);
-    let stackMessage: string;
-    // CDIS is the unique component prefix that identifies IBM Streams log messages
-    // If an error message contains such a log message, do not show the stack trace
-    if (message.includes('CDIS')) {
-      stackMessage = null;
-    } else if (stack && stack.config && stack.status) {
-      const stackObj: any = _pick(stack.config, ['method', 'url']);
-      stackObj.status = stack.status;
-      stackMessage = JSON.stringify(stackObj, null, 2);
-    } else {
-      stackMessage = Logger.getLoggableMessage(stack);
-    }
-
-    const detailMessageIncludesMessage =
-      detailMessage && detailMessage !== '' && detailMessage.includes(message);
-    const stackMessageIncludesMessage =
-      stackMessage && stackMessage !== '' && stackMessage.includes(message);
-
-    if (stackMessageIncludesMessage) {
-      Logger.error(outputChannel, stackMessage, false, false);
-    } else if (detailMessageIncludesMessage) {
-      Logger.error(outputChannel, detailMessage, false, false);
-    } else {
-      Logger.error(outputChannel, this._sanitizeMessage(message));
-    }
-    if (
-      detailMessage &&
-      detailMessage !== '' &&
-      !detailMessageIncludesMessage
-    ) {
-      Logger.error(outputChannel, detailMessage, false, false);
-    }
-    if (stackMessage && stackMessage !== '' && !stackMessageIncludesMessage) {
-      Logger.error(outputChannel, stackMessage, false, false);
-    }
-
-    // Handle notification
-    if (message && showNotification) {
-      return this._displayNotification(
+      return this.handleNotification(
         window.showErrorMessage,
         message,
-        notificationButtons,
-        isButtonSelectionRequired
+        messageProps
       );
     }
 
@@ -168,40 +130,91 @@ export default class MessageHandler {
   }
 
   /**
-   * Handle a success message
-   * @param message the message to display
-   * @param object information about the message
+   * Log a message at the warn level
+   * @param message the message to log
+   * @param messageProps the message properties
    */
-  public handleSuccess(
+  public logWarn(
     message: string,
-    {
-      detail = null,
-      showNotification = true,
-      notificationButtons = [],
-      isButtonSelectionRequired = true
-    }: Message = {}
-  ): Thenable<void> {
-    // Log to output channel
-    this._logToOutputChannel(Logger.success, message, detail);
-
-    // Handle notification
-    if (message && showNotification) {
-      return this._displayNotification(
-        window.showInformationMessage,
+    messageProps: MessageProps = {}
+  ): Promise<void> {
+    const logLevel = Configuration.getSetting(Settings.LOG_LEVEL);
+    const validLogLevels = [LogLevel.Warn, LogLevel.Info, LogLevel.Trace];
+    if (validLogLevels.includes(logLevel)) {
+      this.logToOutputChannel(
+        LogLevel.Warn,
         message,
-        notificationButtons,
-        isButtonSelectionRequired
+        messageProps.detail,
+        messageProps.showOutputChannel
+      );
+      return this.handleNotification(
+        window.showWarningMessage,
+        message,
+        messageProps
       );
     }
+    return Promise.resolve();
+  }
 
+  /**
+   * Log a message at the info level
+   * @param message the message to log
+   * @param messageProps the message properties
+   */
+  public logInfo(
+    message: string,
+    messageProps: MessageProps = {}
+  ): Promise<void> {
+    const logLevel = Configuration.getSetting(Settings.LOG_LEVEL);
+    const validLogLevels = [LogLevel.Info, LogLevel.Trace];
+    if (validLogLevels.includes(logLevel)) {
+      this.logToOutputChannel(
+        LogLevel.Info,
+        message,
+        messageProps.detail,
+        messageProps.showOutputChannel
+      );
+      return this.handleNotification(
+        window.showInformationMessage,
+        message,
+        messageProps
+      );
+    }
+    return Promise.resolve();
+  }
+
+  /**
+   * Log a message at the trace level
+   * @param message the message to log
+   * @param messageProps the message properties
+   */
+  public logTrace(
+    message: string,
+    messageProps: MessageProps = {}
+  ): Promise<void> {
+    const logLevel = Configuration.getSetting(Settings.LOG_LEVEL);
+    const validLogLevels = [LogLevel.Trace];
+    if (validLogLevels.includes(logLevel)) {
+      this.logToOutputChannel(
+        LogLevel.Trace,
+        message,
+        messageProps.detail,
+        messageProps.showOutputChannel
+      );
+      return this.handleNotification(
+        window.showInformationMessage,
+        message,
+        messageProps
+      );
+    }
     return Promise.resolve();
   }
 
   /**
    * Handle the scenario where a default Streams instance has not been set
    */
-  public handleDefaultInstanceNotSet(): Thenable<void> {
-    return this.handleWarn('A default Streams instance has not been set.', {
+  public handleDefaultInstanceNotSet(): Promise<void> {
+    return this.logWarn('A default Streams instance has not been set.', {
       notificationButtons: [
         {
           label: 'Set Default',
@@ -285,63 +298,72 @@ export default class MessageHandler {
    * Show the output channel
    */
   public showOutput(): void {
-    const outputChannel = this._getOutputChannel();
+    const outputChannel = this.getOutputChannel();
     outputChannel.show(true);
   }
 
   /**
    * Log a message to an output channel
-   * @param loggerFn the logger function
-   * @param message the message to display
+   * @param logLevel the log level
+   * @param message the message to log
    * @param detail the detail message
+   * @param showOutputChannel whether to switch focus to the output channel
    */
-  private _logToOutputChannel(
-    loggerFn: Function,
+  private logToOutputChannel(
+    logLevel: LogLevel,
     message: string,
-    detail: string | string[]
+    detail: string | string[],
+    showOutputChannel = false
   ): void {
-    const outputChannel = this._getOutputChannel();
+    const outputChannel = this.getOutputChannel();
     const detailMessage = Logger.getLoggableMessage(detail);
-    let logMessage = message ? this._sanitizeMessage(message) : '';
+    let logMessage = message ? this.sanitizeMessage(message) : '';
     if (detailMessage) {
       logMessage += `\n${detailMessage}`;
     }
     if (logMessage !== '') {
-      loggerFn(outputChannel, logMessage, false, false);
+      Logger.log(logLevel, outputChannel, logMessage, showOutputChannel, false);
     }
   }
 
   /**
-   * Display a notification
+   * Handle notification
    * @param notificationFn the show notification function
    * @param message the message to display
-   * @param notificationButtons the notification button objects
-   * @param isButtonSelectionRequired whether or not button selection is required
+   * @param messageProps the message properties
    */
-  private _displayNotification(
+  private handleNotification(
     notificationFn: Function,
     message: string,
-    notificationButtons,
-    isButtonSelectionRequired: boolean
-  ): Thenable<any> | Promise<any> {
-    const buttons = this._processButtons(notificationButtons);
-    const notificationPromise = notificationFn(
-      this._sanitizeMessage(message),
-      ...buttons
-    ).then((selection: string) =>
-      this._handleNotificationButtonSelection(notificationButtons, selection)
-    );
-    if (!isButtonSelectionRequired) {
-      return Promise.resolve();
+    messageProps: MessageProps = {}
+  ): Promise<void> {
+    const {
+      showNotification,
+      notificationButtons,
+      isButtonSelectionRequired
+    } = messageProps;
+    if (showNotification) {
+      const buttons = this.processButtons(notificationButtons);
+      const notificationPromise = notificationFn(
+        this.sanitizeMessage(message),
+        ...buttons
+      ).then((selection: string) =>
+        this.handleNotificationButtonSelection(notificationButtons, selection)
+      );
+      if (!isButtonSelectionRequired) {
+        return Promise.resolve();
+      }
+      return buttons.length ? notificationPromise : Promise.resolve();
     }
-    return buttons.length ? notificationPromise : Promise.resolve();
+
+    return Promise.resolve();
   }
 
   /**
    * Retrieve an output channel
    */
-  private _getOutputChannel(): OutputChannel {
-    if (!this._props) {
+  private getOutputChannel(): OutputChannel {
+    if (!this.props) {
       return Logger.mainOutputChannel;
     }
 
@@ -351,7 +373,7 @@ export default class MessageHandler {
       bundleFilePath,
       toolkitFolderPath,
       primitiveOperatorFolderPath
-    } = this._props;
+    } = this.props;
     let channelObj;
     if (appRoot && filePath) {
       channelObj = Logger.outputChannels[filePath];
@@ -420,9 +442,9 @@ export default class MessageHandler {
 
   /**
    * Sanitize a message
-   * @param message the message to display
+   * @param message the message to log
    */
-  private _sanitizeMessage(message: string): string {
+  private sanitizeMessage(message: string): string {
     return message.trim();
   }
 
@@ -430,7 +452,7 @@ export default class MessageHandler {
    * Retrieve the button labels to display
    * @param buttons the notification buttons to display
    */
-  private _processButtons(buttons: NotificationButton[]): string[] {
+  private processButtons(buttons: NotificationButton[]): string[] {
     let labels = [];
     if (Array.isArray(buttons)) {
       labels = _map(buttons, (obj: NotificationButton) => obj.label);
@@ -443,7 +465,7 @@ export default class MessageHandler {
    * @param buttons the notification buttons to display
    * @param selection the label of the button that the user clicked on
    */
-  private _handleNotificationButtonSelection(
+  private handleNotificationButtonSelection(
     buttons: NotificationButton[],
     selection: string
   ): Promise<void> {

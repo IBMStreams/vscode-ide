@@ -1,4 +1,4 @@
-import { ToolkitUtils } from '@ibmstreams/common';
+import { Registry, ToolkitUtils } from '@ibmstreams/common';
 import * as childProcess from 'child_process';
 import * as net from 'net';
 import * as os from 'os';
@@ -55,7 +55,10 @@ export default class SplLanguageClient {
       await this.start();
     } catch (err) {
       const errorMsg = `An error occurred while restarting the ${LANGUAGE_SERVER}.\n${err.toString()}`;
-      Logger.error(null, errorMsg, false, true);
+      Registry.getDefaultMessageHandler().logError(errorMsg, {
+        showOutputChannel: true,
+        showNotification: true
+      });
     }
   }
 
@@ -111,7 +114,10 @@ export default class SplLanguageClient {
             if (data) {
               const errorMsg =
                 'An error occurred while starting the SPL language server in socket mode.\n';
-              Logger.error(null, `${errorMsg}${data.toString()}`, false, true);
+              Registry.getDefaultMessageHandler().logError(
+                `${errorMsg}${data.toString()}`,
+                { showOutputChannel: true, showNotification: true }
+              );
             }
           });
         }
@@ -119,21 +125,24 @@ export default class SplLanguageClient {
           if (err) {
             const errorMsg =
               'Failed to start the SPL language server in socket mode. ';
-            Logger.error(null, `${errorMsg}${err.toString()}`, true, true);
+            Registry.getDefaultMessageHandler().logError(
+              `${errorMsg}${err.toString()}`,
+              { showOutputChannel: true, showNotification: true }
+            );
           }
         });
         serverProcess.on('close', (code) => {
-          Logger.debug(
-            null,
-            `The SPL language server child process exited with code ${code}.`,
-            false,
-            false
+          Registry.getDefaultMessageHandler().logInfo(
+            `The SPL language server child process exited with code ${code}.`
           );
         });
       } catch (err) {
         const errorMsg =
           'Failed to start the SPL language server in socket mode.';
-        Logger.error(null, `${errorMsg} ${err.toString()}`, true, true);
+        Registry.getDefaultMessageHandler().logError(
+          `${errorMsg} ${err.toString()}`,
+          { showOutputChannel: true, showNotification: true }
+        );
       }
 
       const connectionInfo = { port };
@@ -161,11 +170,9 @@ export default class SplLanguageClient {
         if (err) {
           Logger.languageServerOutputChannel.appendLine(err.toString());
         }
-        Logger.error(
-          null,
+        Registry.getDefaultMessageHandler().logError(
           `Failed to initialize the ${LANGUAGE_SERVER}.`,
-          true,
-          true
+          { showOutputChannel: true, showNotification: true }
         );
         return false;
       }
@@ -195,7 +202,10 @@ export default class SplLanguageClient {
             () => {
               const errorMsg =
                 'An error occurred while initializing SPL language features.';
-              Logger.error(null, errorMsg, true, true);
+              Registry.getDefaultMessageHandler().logError(errorMsg, {
+                showOutputChannel: true,
+                showNotification: true
+              });
               isClientReady = false;
               reject();
             }
@@ -221,7 +231,10 @@ export default class SplLanguageClient {
         default:
           break;
       }
-      Logger.debug(null, `The ${LANGUAGE_SERVER} ${status}.`, false, false);
+      Registry.getDefaultMessageHandler().logInfo(
+        `The ${LANGUAGE_SERVER} ${status}.`,
+        { showOutputChannel: true }
+      );
     });
 
     // Start the client (and launch the server)

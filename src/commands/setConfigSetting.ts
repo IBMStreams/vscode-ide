@@ -1,6 +1,7 @@
+import { Registry } from '@ibmstreams/common';
 import { ExtensionContext, window } from 'vscode';
 import { Commands, BaseCommand } from '.';
-import { Configuration, Logger, Settings } from '../utils';
+import { Configuration, Settings } from '../utils';
 
 /**
  * Command that allows a user to set a configuration setting
@@ -29,9 +30,8 @@ export default class SetConfigSettingCommand implements BaseCommand {
   private async _promptForConfigurationValue(
     callbackFn: (setting: any) => any
   ): Promise<void> {
-    Logger.info(
-      null,
-      `Received request to set the configuration setting: ${this.commandName}`
+    Registry.getDefaultMessageHandler().logInfo(
+      `Received request to set the configuration setting: ${this.commandName}.`
     );
 
     let name = null;

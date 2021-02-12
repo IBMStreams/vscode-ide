@@ -466,7 +466,11 @@ export default class StreamsAuthenticationPanel extends BaseWebviewPanel {
     const { args } = message;
     if (args) {
       try {
-        const { instanceType, instance, credentials } = args;
+        const { instanceType, connectionId, credentials } = args;
+        const instance = InstanceSelector.selectInstance(
+          store.getState(),
+          connectionId
+        );
         const callbackFn = (): void => {
           const successFn = async (result: any): Promise<void> => {
             this._handleAuthenticationSuccess(result, instance);
@@ -497,8 +501,7 @@ export default class StreamsAuthenticationPanel extends BaseWebviewPanel {
         super.replyMessage(message, {
           errorMsg: `${errorMsg} ${this.getErrorMessage(error)}`
         });
-        Registry.getDefaultMessageHandler().handleError(errorMsg, {
-          showNotification: false,
+        Registry.getDefaultMessageHandler().logError(errorMsg, {
           detail: error.response || error.message || error,
           stack: error.response || error.stack
         });
@@ -576,10 +579,9 @@ export default class StreamsAuthenticationPanel extends BaseWebviewPanel {
           }
         }
       });
-      Registry.getDefaultMessageHandler().handleError(
+      Registry.getDefaultMessageHandler().logError(
         'An error occurred during Streams authentication.',
         {
-          showNotification: false,
           detail: error.response || error.message || error,
           stack: error.response || error.stack
         }

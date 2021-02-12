@@ -57,11 +57,6 @@ kbd {
   box-shadow: unset;
 }
 
-// Carbon: feature flags
-$feature-flags: (
-  grid-columns-16: true
-);
-
 // Carbon: global styles
 @import '~carbon-components/scss/globals/scss/css--helpers';
 @import '~carbon-components/scss/globals/grid/grid';

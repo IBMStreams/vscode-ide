@@ -74,13 +74,12 @@ export default class JobTreeItem extends TreeItem {
       }
       throw new Error();
     } catch (error) {
-      Logger.error(
-        null,
+      Registry.getDefaultMessageHandler().logError(
         'Error opening IBM Cloud Pak for Data job details page.',
-        true
+        { showNotification: true }
       );
       if (error.stack) {
-        Logger.error(null, error.stack);
+        Registry.getDefaultMessageHandler().logError(error.stack);
       }
     }
   }
@@ -115,13 +114,12 @@ export default class JobTreeItem extends TreeItem {
           return env.openExternal(Uri.parse(cpdProjectUrl));
         }
       } catch (error) {
-        Logger.error(
-          null,
+        Registry.getDefaultMessageHandler().logError(
           'Error opening IBM Cloud Pak for Data project.',
-          true
+          { showNotification: true }
         );
         if (error.stack) {
-          Logger.error(null, error.stack);
+          Registry.getDefaultMessageHandler().logError(error.stack);
         }
       }
     }
@@ -137,7 +135,7 @@ export default class JobTreeItem extends TreeItem {
         this.instance.connectionId
       );
       try {
-        Registry.getDefaultMessageHandler().handleInfo(
+        Registry.getDefaultMessageHandler().logInfo(
           `Downloading logs for the job ${this.jobName} in the Streams instance ${instanceName}...`
         );
         const { data } = await store.dispatch(
@@ -164,17 +162,18 @@ export default class JobTreeItem extends TreeItem {
               fs.unlinkSync(uri.fsPath);
             }
             fs.writeFileSync(uri.fsPath, data);
-            Registry.getDefaultMessageHandler().handleInfo(
+            Registry.getDefaultMessageHandler().logInfo(
               `Downloaded logs for the job ${this.jobName} in the Streams instance ${instanceName} to: ${uri.fsPath}.`
             );
           }
         });
       } catch (error) {
-        Registry.getDefaultMessageHandler().handleError(
+        Registry.getDefaultMessageHandler().logError(
           `An error occurred while downloading logs for the job ${this.jobName} in the Streams instance ${instanceName}.`,
           {
             detail: error.response || error.message || error,
-            stack: error.response || error.stack
+            stack: error.response || error.stack,
+            showNotification: true
           }
         );
       }
@@ -193,7 +192,7 @@ export default class JobTreeItem extends TreeItem {
       const label = `Are you sure you want to cancel the job ${this.jobName} in the Streams instance ${instanceName}?`;
       const callbackFn = async (): Promise<void> => {
         try {
-          Registry.getDefaultMessageHandler().handleInfo(
+          Registry.getDefaultMessageHandler().logInfo(
             `Canceling the job ${this.jobName} in the Streams instance ${instanceName}...`
           );
           await store.dispatch(
@@ -201,16 +200,17 @@ export default class JobTreeItem extends TreeItem {
           );
           setTimeout(() => {
             StreamsInstance.refreshInstances();
-            Registry.getDefaultMessageHandler().handleSuccess(
+            Registry.getDefaultMessageHandler().logInfo(
               `The job ${this.jobName} in the Streams instance ${instanceName} was successfully canceled.`
             );
           }, 3000);
         } catch (error) {
-          Registry.getDefaultMessageHandler().handleError(
+          Registry.getDefaultMessageHandler().logError(
             `An error occurred while canceling the job ${this.jobName} in the Streams instance ${instanceName}.`,
             {
               detail: error.response || error.message || error,
-              stack: error.response || error.stack
+              stack: error.response || error.stack,
+              showNotification: true
             }
           );
         }

@@ -7,8 +7,9 @@ import {
 import { ExtensionContext } from 'vscode';
 import { BaseCommand, Commands } from '.';
 import { Streams, StreamsInstance } from '../streams';
-import { TreeItemType } from '../views/streamsExplorer/instancesView/treeItems';
 import { Authentication } from '../utils';
+import { TreeItemType as AppServiceTreeItemType } from '../views/streamsExplorer/appServicesView/treeItems';
+import { TreeItemType as InstanceTreeItemType } from '../views/streamsExplorer/instancesView/treeItems';
 import { JobGraphPanel } from '../webviews';
 
 /**
@@ -34,9 +35,19 @@ export default class ShowJobGraphCommand implements BaseCommand {
         properties = properties
           ? { ...properties, ...streamsProperties }
           : streamsProperties;
-        if (properties.type === TreeItemType.CpdJobRun && !properties.jobId) {
+        if (
+          (properties.type === InstanceTreeItemType.CpdJobRun ||
+            properties.type === 'streamsJobs') &&
+          !properties.jobId
+        ) {
           properties.jobId = properties.jobRun?.streamsJob?.id;
           properties.jobName = properties.jobRun?.streamsJob?.name;
+        } else if (
+          properties.type === AppServiceTreeItemType.AppService &&
+          !properties.jobId
+        ) {
+          properties.jobId = properties.service?.parameters?.jobId;
+          properties.jobName = properties.service?.parameters?.jobName;
         }
         JobGraphPanel.createOrShow(context, properties);
       };

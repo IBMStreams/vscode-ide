@@ -1,0 +1,13 @@
+@import '../../../../../styles/global.scss';
+@import '~carbon-components/scss/globals/scss/theme';
+
+@import '../StatusModal/status-modal.scss';
+@import '../Header/header.scss';
+@import '../Table/table.scss';
+@import '../Table/_overflow-tooltip.scss';
+
+.app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}

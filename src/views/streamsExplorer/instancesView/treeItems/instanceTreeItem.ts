@@ -1,5 +1,6 @@
 import {
   InstanceSelector,
+  Registry,
   store,
   StreamsInstanceType
 } from '@ibmstreams/common';
@@ -89,13 +90,12 @@ export default class InstanceTreeItem extends TreeItem {
       }
       throw new Error();
     } catch (error) {
-      Logger.error(
-        null,
+      Registry.getDefaultMessageHandler().logError(
         'Error opening IBM Cloud Pak for Data instance details page.',
-        true
+        { showNotification: true }
       );
       if (error.stack) {
-        Logger.error(null, error.stack);
+        Registry.getDefaultMessageHandler().logError(error.stack);
       }
     }
   }
@@ -116,9 +116,12 @@ export default class InstanceTreeItem extends TreeItem {
       }
       throw new Error();
     } catch (error) {
-      Logger.error(null, 'Error opening IBM Streams Console.', true);
+      Registry.getDefaultMessageHandler().logError(
+        'Error opening IBM Streams Console.',
+        { showNotification: true }
+      );
       if (error.stack) {
-        Logger.error(null, error.stack);
+        Registry.getDefaultMessageHandler().logError(error.stack);
       }
     }
   }

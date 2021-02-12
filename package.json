@@ -2,7 +2,7 @@
   "name": "ibm-streams",
   "displayName": "IBM Streams",
   "description": "IBM Streams Support for Visual Studio Code",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "publisher": "IBM",
   "license": "Apache-2.0",
   "icon": "images/ibm-streams.png",
@@ -15,7 +15,7 @@
     "url": "https://github.com/IBMStreams/vscode-ide/issues"
   },
   "engines": {
-    "vscode": "^1.38.0"
+    "vscode": "^1.41.0"
   },
   "categories": [
     "Programming Languages",
@@ -117,10 +117,12 @@
         "ibm-streams.logLevel": {
           "type": "string",
           "enum": [
-            "off",
-            "debug"
+            "error",
+            "warn",
+            "info",
+            "trace"
           ],
-          "default": "off",
+          "default": "info",
           "description": "Log level for the extension."
         },
         "ibm-streams.server.mode": {
@@ -579,9 +581,31 @@
         }
       },
       {
-        "command": "ibm-streams.view.streamsExplorer.streamsDetails.showDetailsForItem",
-        "title": "Show Details for Item",
-        "category": "IBM Streams"
+        "command": "ibm-streams.view.streamsExplorer.streamsAppServices.service.openRestApiDoc",
+        "title": "Open REST API Documentation",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/API.svg",
+          "dark": "images/icons/dark/API.svg"
+        }
+      },
+      {
+        "command": "ibm-streams.view.streamsExplorer.streamsAppServices.endpointPath.sendData",
+        "title": "Send Data",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/cloud--upload.svg",
+          "dark": "images/icons/dark/cloud--upload.svg"
+        }
+      },
+      {
+        "command": "ibm-streams.view.streamsExplorer.streamsAppServices.endpointPath.receiveData",
+        "title": "Receive Data",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/cloud--download.svg",
+          "dark": "images/icons/dark/cloud--download.svg"
+        }
       },
       {
         "command": "ibm-streams.view.streamsExplorer.streamsDetails.copyToClipboard",
@@ -590,6 +614,33 @@
         "icon": {
           "light": "images/icons/light/copy.svg",
           "dark": "images/icons/dark/copy.svg"
+        }
+      },
+      {
+        "command": "ibm-streams.view.streamsExplorer.streamsJobs.openCpdDetails",
+        "title": "Open Cloud Pak for Data Job Run Details",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/information.svg",
+          "dark": "images/icons/dark/information.svg"
+        }
+      },
+      {
+        "command": "ibm-streams.view.streamsExplorer.streamsJobs.createLogSnapshot",
+        "title": "Create Log Snapshot",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/camera.svg",
+          "dark": "images/icons/dark/camera.svg"
+        }
+      },
+      {
+        "command": "ibm-streams.view.streamsExplorer.streamsJobs.cancel",
+        "title": "Cancel Job Run",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/stop.svg",
+          "dark": "images/icons/dark/stop.svg"
         }
       },
       {
@@ -836,7 +887,15 @@
           "when": "false"
         },
         {
+          "command": "ibm-streams.view.streamsExplorer.streamsInstances.instance.submitJob",
+          "when": "false"
+        },
+        {
           "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdSpace.openCpdDetails",
+          "when": "false"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsJobs.openCpdDetails",
           "when": "false"
         },
         {
@@ -912,7 +971,23 @@
           "when": "false"
         },
         {
-          "command": "ibm-streams.view.streamsExplorer.streamsDetails.showDetailsForItem",
+          "command": "ibm-streams.view.streamsExplorer.streamsAppServices.service.openRestApiDoc",
+          "when": "false"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsAppServices.endpointPath.sendData",
+          "when": "false"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsAppServices.endpointPath.receiveData",
+          "when": "false"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsJobs.createLogSnapshot",
+          "when": "false"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsJobs.cancel",
           "when": "false"
         },
         {
@@ -1512,6 +1587,11 @@
           "group": "inline@2"
         },
         {
+          "command": "ibm-streams.environment.showJobGraph",
+          "when": "view == streamsJobs && viewItem =~ /streamsJobsTreeItem/",
+          "group": "inline@2"
+        },
+        {
           "command": "ibm-streams.view.streamsExplorer.streamsInstances.cpdJobRun.createLogSnapshot",
           "when": "view == streamsInstances && viewItem =~ /running_cpdJobRunTreeItem/",
           "group": "inline@3"
@@ -1552,8 +1632,39 @@
           "group": "inline@2"
         },
         {
-          "command": "ibm-streams.view.streamsExplorer.streamsDetails.showDetailsForItem",
-          "when": "view == streamsDetails && viewItem == detailTreeItem"
+          "command": "ibm-streams.environment.showJobGraph",
+          "when": "view == streamsAppServices && viewItem == appServiceTreeItem",
+          "group": "inline@1"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsAppServices.service.openRestApiDoc",
+          "when": "view == streamsAppServices && viewItem == appServiceTreeItem",
+          "group": "inline@2"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsAppServices.endpointPath.sendData",
+          "when": "view == streamsAppServices && viewItem == post_appServiceEndpointPathTreeItem",
+          "group": "inline@1"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsAppServices.endpointPath.receiveData",
+          "when": "view == streamsAppServices && viewItem == get_appServiceEndpointPathTreeItem",
+          "group": "inline@1"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsJobs.createLogSnapshot",
+          "when": "view == streamsJobs && viewItem =~ /streamsJobsTreeItem/",
+          "group": "inline@3"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsJobs.cancel",
+          "when": "view == streamsJobs && viewItem =~ /streamsJobsTreeItem/",
+          "group": "inline@4"
+        },
+        {
+          "command": "ibm-streams.view.streamsExplorer.streamsJobs.openCpdDetails",
+          "when": "view == streamsJobs && viewItem =~ /streamsJobsTreeItem/",
+          "group": "inline@1"
         },
         {
           "command": "ibm-streams.view.streamsExplorer.streamsDetails.copyToClipboard",
@@ -1625,16 +1736,29 @@
           "name": "Instances"
         },
         {
+          "id": "streamsAppServices",
+          "name": "Application Services",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "streamsJobs",
+          "name": "Active Runs",
+          "visibility": "collapsed"
+        },
+        {
           "id": "streamsDetails",
-          "name": "Details"
+          "name": "Details",
+          "visibility": "collapsed"
         },
         {
           "id": "streamsToolkits",
-          "name": "Toolkits"
+          "name": "Toolkits",
+          "visibility": "collapsed"
         },
         {
           "id": "streamsHelpfulResources",
-          "name": "Helpful Resources"
+          "name": "Helpful Resources",
+          "visibility": "collapsed"
         }
       ]
     }
@@ -1664,7 +1788,7 @@
     "@types/shelljs": "^0.8.5",
     "@types/sinon": "^7.5.0",
     "@types/unzipper": "^0.10.2",
-    "@types/vscode": "1.38.0",
+    "@types/vscode": "1.41.0",
     "@types/webpack": "^4.39.1",
     "@types/xml2js": "^0.4.5",
     "@typescript-eslint/eslint-plugin": "^2.3.3",
@@ -1714,21 +1838,24 @@
     "webpack-cli": "^3.3.9"
   },
   "dependencies": {
+    "@apidevtools/swagger-parser": "^10.0.2",
     "@carbon/icons-react": "^10.19.0",
     "@carbon/themes": "^10.20.0",
     "@ibmstreams/common": "0.9.5",
     "@ibmstreams/graph": "1.0.1",
     "@ibmstreams/spl-lsp": "1.1.0",
-    "axios": "^0.19.0",
+    "axios": "^0.21.1",
     "carbon-components": "10.21.0",
     "carbon-components-react": "7.21.0",
     "lodash": "^4.17.19",
+    "papaparse": "^5.3.0",
     "prop-types": "^15.7.2",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-intl": "^3.11.0",
     "react-redux": "^7.2.0",
     "semver": "^7.1.2",
+    "uuid": "^8.3.2",
     "vscode-languageclient": "^5.2.1",
     "vscode-languageserver-protocol": "^3.14.1",
     "xml2js": "^0.4.23"

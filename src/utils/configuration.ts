@@ -1,6 +1,7 @@
 import {
   EditorAction,
-  Logger as StreamsLogger,
+  LogLevel,
+  Registry,
   store,
   ToolkitUtils
 } from '@ibmstreams/common';
@@ -16,7 +17,7 @@ import {
   workspace
 } from 'vscode';
 import { DidChangeConfigurationNotification } from 'vscode-languageserver-protocol';
-import { EXTENSION_ID, Logger, Settings } from '.';
+import { EXTENSION_ID, Settings } from '.';
 import SplLanguageClient from '../languageClient';
 
 /**
@@ -107,7 +108,7 @@ export default class Configuration {
   }
 
   /**
-   * Migrate old settings that have updated names
+   * Migrate old settings that have updated names or values
    */
   private static migrateOldSettings(): void {
     // Migrate settings that have changed names
@@ -135,6 +136,18 @@ export default class Configuration {
         this.setSetting(newSetting.name, oldSettingValue);
       }
     });
+
+    // Migrate settings that have changed values
+    const logLevelSettingValue = this.getSetting(Settings.LOG_LEVEL);
+    let newLogLevelSettingValue;
+    if (logLevelSettingValue === 'off') {
+      newLogLevelSettingValue = LogLevel.Info;
+    } else if (logLevelSettingValue === 'debug') {
+      newLogLevelSettingValue = LogLevel.Trace;
+    }
+    if (newLogLevelSettingValue) {
+      this.setSetting(Settings.LOG_LEVEL, newLogLevelSettingValue);
+    }
   }
 
   /**
@@ -230,13 +243,11 @@ export default class Configuration {
         } else if (event.affectsConfiguration(Settings.LOG_LEVEL)) {
           changedSettingName = Settings.LOG_LEVEL;
           const logLevel = Configuration.getSetting(changedSettingName);
-          if (logLevel === Settings.LOG_LEVEL_VALUE.OFF) {
-            store.dispatch(EditorAction.setIsLoggingEnabled(false));
-            StreamsLogger.disable();
-          } else if (logLevel === Settings.LOG_LEVEL_VALUE.DEBUG) {
-            store.dispatch(EditorAction.setIsLoggingEnabled(true));
-            StreamsLogger.enable();
-          }
+          const keys = Object.keys(LogLevel).filter(
+            (x) => LogLevel[x] === logLevel
+          );
+          const logLevelKey = keys.length ? LogLevel[keys[0]] : LogLevel.Info;
+          store.dispatch(EditorAction.setLogLevel(logLevelKey));
         } else if (event.affectsConfiguration(Settings.SERVER_MODE)) {
           changedSettingName = Settings.SERVER_MODE;
           SplLanguageClient.restart();
@@ -267,8 +278,7 @@ export default class Configuration {
               ? `\n${JSON.stringify(value, null, 4)}`
               : ` ${value}`;
           const whitespaceValue = typeof oldValue === 'object' ? '\n\n' : '\n';
-          Logger.info(
-            null,
+          Registry.getDefaultMessageHandler().logInfo(
             `The ${changedSettingName} configuration setting was changed:\nPrevious value:${formatValue(
               oldValue
             )}${whitespaceValue}Current value: ${formatValue(newValue)}`

@@ -102,11 +102,12 @@ export default class StreamsInstance {
       await Promise.all(promises);
       getStreamsExplorer().refresh();
     } catch (err) {
-      Registry.getDefaultMessageHandler().handleError(
+      Registry.getDefaultMessageHandler().logError(
         'An error occurred while refreshing the Streams instances.',
         {
           detail: err.response || err.message || err,
-          stack: err.response || err.stack
+          stack: err.response || err.stack,
+          showNotification: true
         }
       );
     }
@@ -180,8 +181,9 @@ export default class StreamsInstance {
           store.getState(),
           connectionId
         );
-        Registry.getDefaultMessageHandler().handleInfo(
-          `Authenticating to the Streams instance ${instanceName}...`
+        Registry.getDefaultMessageHandler().logInfo(
+          `Authenticating to the Streams instance ${instanceName}...`,
+          { showNotification: true }
         );
         if (
           instanceType === StreamsInstanceType.V5_CPD ||
@@ -411,20 +413,23 @@ export default class StreamsInstance {
       connectionId
     );
     try {
-      Registry.getDefaultMessageHandler().handleInfo(
-        `Refreshing the Streams instance ${instanceName}... This may take a while.`
+      Registry.getDefaultMessageHandler().logInfo(
+        `Refreshing the Streams instance ${instanceName}... This may take a while.`,
+        { showNotification: true }
       );
       await store.dispatch(getStreamsInstance(connectionId, false, false));
       getStreamsExplorer().refresh();
-      Registry.getDefaultMessageHandler().handleSuccess(
-        `Successfully refreshed the Streams instance ${instanceName}.`
+      Registry.getDefaultMessageHandler().logInfo(
+        `Successfully refreshed the Streams instance ${instanceName}.`,
+        { showNotification: true }
       );
     } catch (err) {
-      Registry.getDefaultMessageHandler().handleError(
+      Registry.getDefaultMessageHandler().logError(
         `An error occurred while refreshing the Streams instance ${instanceName}.`,
         {
           detail: err.response || err.message || err,
-          stack: err.response || err.stack
+          stack: err.response || err.stack,
+          showNotification: true
         }
       );
     }
@@ -443,8 +448,9 @@ export default class StreamsInstance {
     instanceName: string,
     queuedActionId: string
   ): Promise<void> {
-    Registry.getDefaultMessageHandler().handleInfo(
-      `Successfully authenticated to the Streams instance ${instanceName}.`
+    Registry.getDefaultMessageHandler().logInfo(
+      `Successfully authenticated to the Streams instance ${instanceName}.`,
+      { showNotification: true }
     );
     getStreamsExplorer().getInstancesView().addInstance(newInstance);
 
@@ -486,9 +492,8 @@ export default class StreamsInstance {
         {
           label: openCloudDashboardLabel,
           callbackFn: (): void => {
-            Registry.getDefaultMessageHandler().handleInfo(
-              `Selected: ${openCloudDashboardLabel}`,
-              { showNotification: false }
+            Registry.getDefaultMessageHandler().logInfo(
+              `Selected: ${openCloudDashboardLabel}`
             );
             return Registry.openUrl(IBM_CLOUD_DASHBOARD_URL);
           }
@@ -496,9 +501,8 @@ export default class StreamsInstance {
         {
           label: startServiceAndRetryLabel,
           callbackFn: (): Promise<any> => {
-            Registry.getDefaultMessageHandler().handleInfo(
-              `Selected: ${startServiceAndRetryLabel}`,
-              { showNotification: false }
+            Registry.getDefaultMessageHandler().logInfo(
+              `Selected: ${startServiceAndRetryLabel}`
             );
             return store.dispatch(
               Instance.startStreamingAnalyticsService(
@@ -509,25 +513,27 @@ export default class StreamsInstance {
           }
         }
       ];
-      Registry.getDefaultMessageHandler().handleError(
+      Registry.getDefaultMessageHandler().logError(
         `Failed to authenticate to the Streams instance ${instanceName}. ${error.message}`,
         {
           notificationButtons,
           detail: error.response || error.message || error,
-          stack: error.response || error.stack
+          stack: error.response || error.stack,
+          showNotification: true
         }
       );
     } else if (
       error.data &&
       error.data.type === StreamsErrorType.AUTHENTICATION_IN_PROGRESS
     ) {
-      Registry.getDefaultMessageHandler().handleWarn(error.message);
+      Registry.getDefaultMessageHandler().logWarn(error.message);
     } else {
-      Registry.getDefaultMessageHandler().handleError(
+      Registry.getDefaultMessageHandler().logError(
         `Failed to authenticate to the Streams instance ${instanceName}.`,
         {
           detail: error.response || error.message || error,
           stack: error.response || error.stack,
+          showNotification: true,
           notificationButtons: [
             {
               label: 'View Output',
@@ -557,7 +563,7 @@ export default class StreamsInstance {
       await this.setDefaultInstance({ instance: storedInstances[0] });
 
       // Prompt user to pick a new default
-      Registry.getDefaultMessageHandler().handleWarn(
+      Registry.getDefaultMessageHandler().logWarn(
         'The default Streams instance was removed. Set another instance as the default.',
         {
           notificationButtons: [

@@ -1,0 +1,19 @@
+.status-modal__heading-container {
+  align-items: center;
+  display: flex;
+
+  .status-modal__error-icon {
+    fill: $support-01;
+    margin-right: $spacing-03;
+  }
+
+  .status-modal__success-icon {
+    fill: $support-02;
+    margin-right: $spacing-03;
+  }
+
+  .status-modal__warning-icon {
+    fill: $support-03;
+    margin-right: $spacing-03;
+  }
+}

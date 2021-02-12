@@ -61,6 +61,9 @@ function getWebviewsConfig(mode) {
     name: 'webviews',
     context: path.resolve(__dirname, 'src/webviews'),
     entry: {
+      cloudPakForDataAppService: [
+        './cloudPakForDataAppService/resources/index.js'
+      ],
       cloudPakForDataJob: ['./cloudPakForDataJob/resources/index.js'],
       configureImageBuild: ['./configureImageBuild/resources/index.js'],
       configureJobSubmission: ['./configureJobSubmission/resources/index.js'],
@@ -145,7 +148,7 @@ function getWebviewsConfig(mode) {
           test: /\.(png|jpe?g|gif|svg)(\?.*)?$/,
           loader: 'url-loader',
           options: {
-            limit: 10000
+            limit: 30000
           }
         }
       ]

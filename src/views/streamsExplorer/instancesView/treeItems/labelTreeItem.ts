@@ -11,7 +11,8 @@ export default class LabelTreeItem extends TreeItem {
     label: string,
     public data: any,
     type: string,
-    public children: StreamsTreeItem[]
+    public children: StreamsTreeItem[],
+    public instance: any
   ) {
     super(
       label,
