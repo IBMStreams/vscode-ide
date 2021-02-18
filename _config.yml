@@ -15,7 +15,7 @@
 # in the templates via {{ site.myvariable }}.
 name: IBM Streams
 title: IBM Streams extension for Visual Studio Code
-title_separator: '|'
+title_separator: "|"
 description: An extension provides support for IBM Streams within the Visual Studio Code editor.
 url: https://ibmstreams.github.io
 baseurl: /vscode-ide
@@ -65,6 +65,7 @@ videos:
     build_cpp_primitive_operator: https://ibm.box.com/shared/static/pwh7l1wjfbnhkq53b89mg3nqwhsam9bx.mp4
     create_spl_application: https://ibm.box.com/shared/static/x5ksvtpo64u1qv15p94d0lnhrqd3y3bn.mp4
     build_submit_spl_application: https://ibm.box.com/shared/static/i4sjbcshqofqalaypbqh585m7h78msr1.mp4
+    show_job_graph: https://ibm.box.com/shared/static/q8p42hup8zmoa5i28osyxbtwn0soxn6t.mp4
 
 # Build settings
 markdown: kramdown
@@ -107,16 +108,16 @@ collections:
 defaults:
   # _pages
   - scope:
-      path: '_pages'
+      path: "_pages"
       type: pages
     values:
       layout: single
       author_profile: false
       sidebar:
-        nav: 'docs'
+        nav: "docs"
   # _docs
   - scope:
-      path: ''
+      path: ""
       type: docs
     values:
       layout: single
@@ -125,7 +126,7 @@ defaults:
       share: false
       comments: false
       sidebar:
-        nav: 'docs'
+        nav: "docs"
 
 category_archive:
   type: liquid

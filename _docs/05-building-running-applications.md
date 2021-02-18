@@ -1,5 +1,5 @@
 ---
-title: 'Building and running applications'
+title: "Building and running applications"
 permalink: /docs/building-running-applications/
 toc: true
 toc_sticky: true
@@ -14,7 +14,7 @@ When you have finished [developing an SPL application]({{ "/docs/developing-spl-
 If you plan to build and/or submit your application(s) from a `Makefile`, you must configure your [`sc`](https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.3.0/com.ibm.streams.ref.doc/doc/sc.html) command invocation to pull in toolkit dependencies using `-t, --spl-path=path`.
 
 | Toolkit type                                                                 | Toolkit lookup path                |
-| ---------------------------------------------------------------------------- | ---------------------------------- |
+| ---------------------------------------------------------------------------- | ---------------------------------- | ------------- |
 | Streams product toolkits                                                     | `$(STREAMS_INSTALL)/toolkits`      |
 | Toolkits that were uploaded to the Streams build service (Streams 5.0+ only) | `$(STREAMS_BUILDSERVICE_TOOLKITS)` |
 | Local toolkits included the [**Toolkit Paths**]({{ "/docs/settings"          | relative_url }}) setting           | `../toolkits` |
@@ -110,6 +110,11 @@ Some of the useful features include:
 <figure>
   <img src="{{ "/assets/images/building-running-applications/job-graph.png" | relative_url }}" alt="Job graph" title="Job graph">
 </figure>
+
+<div class="notice--video">
+  <p><strong>Watch and learn</strong>: This video demonstrates the features of the job graph.</p>
+  <video class="tutorial-video" src="https://ibm.box.com/shared/static/q8p42hup8zmoa5i28osyxbtwn0soxn6t.mp4" controls></video>
+</div>
 
 ### Streams Console
 
