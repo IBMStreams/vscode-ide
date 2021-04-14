@@ -1,5 +1,5 @@
 ---
-title: 'Developing Java primitive operators'
+title: "Developing Java primitive operators"
 permalink: /docs/developing-java-primitive-operators/
 toc: true
 toc_sticky: true
@@ -54,7 +54,8 @@ For more information, see [Configure JDK](https://code.visualstudio.com/docs/jav
 1.  [Add your Streams 5.5 instance]({{ "/docs/streams-explorer#adding-an-instance" | relative_url }}) to the Streams Explorer in VS Code if you haven't already.
 1.  Bring up the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) and select **Create Java Primitive Operator**.
 1.  Follow the prompts to create the Java primitive operator. Specify the following:
-    - **Project folder path**: The project folder path for the primitive operator. Use the **Browse...** button to create and select an empty folder on your machine. The primitive operator files will be created in this folder.
+    - **Windows users only**: Create an empty folder which will container the operator and set this folder to be the workspace.
+    - **Project folder path**: The project folder path for the primitive operator. Use the **Browse...** button to create and select an empty folder on your machine. The primitive operator files will be created in this folder. (should be workspace for windows users)
     - **Operator namespace**: The SPL namespace for the primitive operator.
     - **Operator name**: The name of the primitive operator.
     - **Operator processing pattern**: The operator processing pattern identifies whether the operator has input ports, output ports, or both and the type of tuple flow the operator provides.
