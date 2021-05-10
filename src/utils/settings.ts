@@ -86,3 +86,63 @@ export const TRACE_SERVER_VALUE = {
  * Default value for the `trace.server` setting
  */
 export const TRACE_SERVER_DEFAULT = TRACE_SERVER_VALUE.OFF;
+
+/**
+ * The option to enamble v4.3 builds`
+ */
+export const OSSTREAMS_BUILD = 'ibm-streams.environment.enableOSStreamsBuilds';
+
+/**
+ * Default value for the enable v4 build setting
+ */
+export const OSSTREAMS_BUILD_DEFAULT = false;
+
+/**
+ * The input value for OSStreams`
+ */
+export const OSS_INPUT = 'ibm-streams.environment.OSStreamsImageLocation';
+
+/**
+ * Default value for the OSS input
+ */
+export const OSS_INPUT_DEFAULT = 'localhost:5000/$USER/streams-runtime:6.debug';
+
+/**
+ * The option to enamble v4.3 builds`
+ */
+export const V43_BUILD = 'ibm-streams.environment.enableV43Builds';
+
+/**
+ * Default value for the enable v4 build setting
+ */
+export const V43_BUILD_DEFAULT = false;
+
+/**
+ * The image name for a v4.3 build
+ */
+export const V43_IMAGE_NAME = 'ibm-streams.environment.V43Imagename';
+
+/**
+ * Default value for the `V43Imagename` setting
+ */
+export const V43_IMAGE_NAME_DEFAULT = '';
+
+/**
+ * The shared folder for v43 builds
+ */
+export const V43_SHARED_FOLDER = 'ibm-streams.environment.sharedWorkspace';
+
+/**
+ * Default value for the `V43SharedFolder` setting
+ */
+export const V43_SHARED_FOLDER_DEFAULT = '';
+
+/**
+ * The V43 version
+ */
+export const V43_VERSION = 'ibm-streams.environment.QSEVersion';
+
+/**
+ * Default value for the `V43Version` setting
+ */
+export const V43_VERSION_DEFAULT = '';

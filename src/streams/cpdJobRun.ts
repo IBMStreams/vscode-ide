@@ -198,6 +198,82 @@ const cancelJobRun = async (
 };
 
 /**
+ * Cancel a Cloud Pak for Data job run
+ * @param instance the target Streams instance
+ * @param spaceId the Cloud Pak for Data space identifier
+ * @param projectId the Cloud Pak for Data project identifier
+ * @param jobId the Cloud Pak for Data job identifier
+ * @param jobName the Cloud Pak for Data job name
+ * @param jobRunId the Cloud Pak for Data job run identifier
+ * @param jobRunName the Cloud Pak for Data job run name
+ */
+const cancelJobRuns = async (
+  instance: any,
+  spaceId: string,
+  projectId: string,
+  jobId: string,
+  jobName: string,
+  jobRunId: string,
+  jobRunName: string
+): Promise<void> => {
+  const { connectionId } = instance;
+  const instanceName = InstanceSelector.selectInstanceName(
+    store.getState(),
+    connectionId
+  );
+
+  const label = `Are you sure you want to cancel the job run ${jobRunName} for the job definition ${jobName} in the Streams instance ${instanceName}?`;
+  const callbackFn = async (): Promise<void> => {
+    const downloadPromiseArrs = await store.dispatch(
+      CpdJobRunCommon.cancelRun(
+        connectionId,
+        getCpdJobType(spaceId),
+        spaceId || projectId,
+        jobId,
+        jobName,
+        jobRunId,
+        jobRunName,
+        refreshJob
+      )
+    );
+
+    if (downloadPromiseArrs && downloadPromiseArrs.length) {
+      const instanceName = InstanceSelector.selectInstanceName(
+        store.getState(),
+        connectionId
+      );
+
+      await downloadPromiseArrs.map(async (downloadPromiseArr) => {
+        const [
+          jobRunLogName,
+          jobRunLogType,
+          logData
+        ]: any[] = await Promise.all(downloadPromiseArr);
+        await handleDownloadLog(
+          instanceName,
+          jobName,
+          jobRunName,
+          jobRunLogName,
+          jobRunLogType,
+          logData
+        );
+      });
+    }
+
+    await store.dispatch(
+      getStreamsApplicationServiceInstances(connectionId, null)
+    );
+    await refreshJob(
+      connectionId,
+      getCpdJobType(spaceId),
+      spaceId || projectId,
+      jobId
+    );
+  };
+  callbackFn();
+};
+
+/**
  * Delete a Cloud Pak for Data job run
  * @param instance the target Streams instance
  * @param spaceId the Cloud Pak for Data space identifier
@@ -244,6 +320,54 @@ const deleteJobRun = async (
     );
   };
   return VSCode.showConfirmationDialog(label, callbackFn);
+};
+/**
+ * Delete a Cloud Pak for Data job run
+ * @param instance the target Streams instance
+ * @param spaceId the Cloud Pak for Data space identifier
+ * @param projectId the Cloud Pak for Data project identifier
+ * @param jobId the Cloud Pak for Data job identifier
+ * @param jobName the Cloud Pak for Data job name
+ * @param jobRunId the Cloud Pak for Data job run identifier
+ * @param jobRunName the Cloud Pak for Data job run name
+ */
+const deleteJobRuns = async (
+  instance: any,
+  spaceId: string,
+  projectId: string,
+  jobId: string,
+  jobName: string,
+  jobRunId: string,
+  jobRunName: string
+): Promise<void> => {
+  const { connectionId } = instance;
+  const instanceName = InstanceSelector.selectInstanceName(
+    store.getState(),
+    connectionId
+  );
+
+  const label = `Are you sure you want to delete the job run ${jobRunName} for the job definition ${jobName} in the Streams instance ${instanceName}?`;
+  const callbackFn = async (): Promise<void> => {
+    await store.dispatch(
+      CpdJobRunCommon.deleteRun(
+        connectionId,
+        getCpdJobType(spaceId),
+        spaceId || projectId,
+        jobId,
+        jobName,
+        jobRunId,
+        jobRunName
+      )
+    );
+
+    await refreshJob(
+      connectionId,
+      getCpdJobType(spaceId),
+      spaceId || projectId,
+      jobId
+    );
+  };
+  callbackFn();
 };
 
 /**
@@ -526,7 +650,9 @@ const handleError = (err: any): void => {
 const CpdJobRun = {
   getCpdJobRunDetailsPageUrl,
   cancelJobRun,
+  cancelJobRuns,
   deleteJobRun,
+  deleteJobRuns,
   createJobRunLogSnapshot,
   deleteJobRunLogs,
   deleteJobRunLog,

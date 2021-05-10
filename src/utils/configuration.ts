@@ -262,6 +262,18 @@ export default class Configuration {
           }
         } else if (event.affectsConfiguration(Settings.TRACE_SERVER)) {
           changedSettingName = Settings.TRACE_SERVER;
+        } else if (event.affectsConfiguration(Settings.OSS_INPUT)) {
+          changedSettingName = Settings.OSS_INPUT;
+        } else if (event.affectsConfiguration(Settings.V43_SHARED_FOLDER)) {
+          changedSettingName = Settings.V43_SHARED_FOLDER;
+        } else if (event.affectsConfiguration(Settings.V43_IMAGE_NAME)) {
+          changedSettingName = Settings.V43_IMAGE_NAME;
+        } else if (event.affectsConfiguration(Settings.V43_VERSION)) {
+          changedSettingName = Settings.V43_VERSION;
+        } else if (event.affectsConfiguration(Settings.V43_BUILD)) {
+          changedSettingName = Settings.V43_BUILD;
+        } else if (event.affectsConfiguration(Settings.OSSTREAMS_BUILD)) {
+          changedSettingName = Settings.OSSTREAMS_BUILD;
         }
 
         if (changedSettingName) {

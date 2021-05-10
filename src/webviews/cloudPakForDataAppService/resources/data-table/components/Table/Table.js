@@ -53,8 +53,10 @@ import OverflowTooltip from './OverflowTooltip';
 
 const TupleTable = ({ receiveData, sendData, action, schema }) => {
   const { data, isLoading, setData, setIsLoading } = useApp();
-
-  const [tableRows, setTableRows] = useState(DataUtils.transformData(data));
+  const [rowNum, setRowNum] = useState(10);
+  const [tableRows, setTableRows] = useState(
+    DataUtils.transformData(data.slice(0, rowNum))
+  );
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [newRowValues, setNewRowValues] = useState({});
   const [
@@ -94,8 +96,8 @@ const TupleTable = ({ receiveData, sendData, action, schema }) => {
 
   // When data changes (i.e., data is imported), update table rows
   useEffect(() => {
-    setTableRows(DataUtils.transformData(data));
-  }, [data]);
+    setTableRows(DataUtils.transformData(data.slice(0, rowNum)));
+  }, [data, rowNum]);
 
   const statusHeader =
     action === ACTION.SEND
@@ -293,8 +295,21 @@ const TupleTable = ({ receiveData, sendData, action, schema }) => {
     return info;
   };
 
-  const numRows = isAddingNew ? tableRows.length - 1 : tableRows.length;
+  const handleScroll = (e) => {
+    const bottom =
+      e.target.scrollHeight - e.target.scrollTop === e.target.clientHeight;
+    if (bottom) {
+      setRowNum(rowNum + 10);
+    }
+  };
 
+  const handleKeyPress = (event) => {
+    if (event.key === 'Enter') {
+      handleAdd();
+    }
+  };
+
+  const numRows = isAddingNew ? tableRows.length - 1 : tableRows.length;
   return (
     <>
       <Loading active={isSendingData} description="Sending data..." />
@@ -470,7 +485,7 @@ const TupleTable = ({ receiveData, sendData, action, schema }) => {
                     )}
                   </TableToolbarContent>
                 </TableToolbar>
-                <Table {...getTableProps()}>
+                <Table onScroll={handleScroll} {...getTableProps()}>
                   <TableHead>
                     <TableRow>
                       {/* eslint-disable-next-line no-nested-ternary */}
@@ -643,6 +658,7 @@ const TupleTable = ({ receiveData, sendData, action, schema }) => {
                                       header
                                     )
                                   }
+                                  onKeyPress={handleKeyPress}
                                   size="sm"
                                   warn={
                                     inputValueError &&
