@@ -64,23 +64,26 @@ For more information, refer to the [documentation](https://www.ibm.com/support/k
 ### Building on OSStreams
 
 - **Prerequisites**:
-- Have a docker registry running https://github.com/IBMStreams/OSStreams
-- steps under "Building streams"
-- Have an SPL application ready to be built with OSStreams. Example: https://github.com/xguerin/spl-playground/tree/master/apps/custommetrics
+
+1. Have a docker registry running https://github.com/IBMStreams/OSStreams
+2. steps under "Building streams"
+3. Have an SPL application ready to be built with OSStreams. Example: https://github.com/xguerin/spl-playground/tree/master/apps/custommetrics
 
 - **Setting up**:
-- Open command palette using command + shift + p and select "Open Settings(UI)"
-- in the search bar, type in "Streams"
-- Checkmark the "Enable OSStreams Builds" box
-- In the "OSStreams Image" setting, enter the string containing DNS and port, namespace and the image
-- The default is "localhost:5000/\$USER/streams-runtime:6.debug"
-- Settings are automatically saved, so the tab can be closed
+
+1. Open command palette using command + shift + p and select "Open Settings(UI)"
+2. in the search bar, type in "Streams"
+3. Checkmark the "Enable OSStreams Builds" box
+4. In the "OSStreams Image" setting, enter the string containing DNS and port, namespace and the image
+5. The default is "localhost:5000/\$USER/streams-runtime:6.debug"
+6. Settings are automatically saved, so the tab can be closed
 
 - **Workspace**:
-- Click on file on VSCode and select "Open"
-- Select an SPL Project containing the SPL file you wish to build. ex: open this project https://github.com/xguerin/spl-playground
-- make sure the workspace you open is not included in the namespace of your file you wish to build. For example, the namespace in https://github.com/xguerin/spl-playground/blob/master/apps/custommetrics/CustomMetrics.spl is apps.custommetrics, so set your workspace to be the folder right before apps/custommetrics.
-- ex: users/bob/documents/spl-playground
+
+1. Click on file on VSCode and select "Open"
+2. Select an SPL Project containing the SPL file you wish to build. ex: open this project https://github.com/xguerin/spl-playground
+3. make sure the workspace you open is not included in the namespace of your file you wish to build. For example, the namespace in https://github.com/xguerin/spl-playground/blob/master/apps/custommetrics/CustomMetrics.spl is apps.custommetrics, so set your workspace to be the folder right before apps/custommetrics.
+4. ex: users/bob/documents/spl-playground
 
 - **Building the App**:
 
@@ -92,21 +95,24 @@ For more information, refer to the [documentation](https://www.ibm.com/support/k
 ### Building on V4.3
 
 - **Prerequisites**:
-- Have QSE running on docker
-- Have an SPL application ready to be built
+
+1. Have QSE running on docker
+2. Have an SPL application ready to be built
 
 - **Setting up**:
-- Open command palette using command + shift + p and select "Open Settings(UI)"
-- in the search bar, type in "Streams"
-- Checkmark the "Enable V4.3 Builds" box
-- In the "QSE Version" setting, enter the QSE version (ex: 4.3.1.4)
-- In the "Shared Workspace" setting, enter the volume that is mounted between your computer and the image (ex: "workspace" and make sure to have the file you wish to build in here)
-- In the "V43 Imagename" setting, enter the name of the image (ex: streamsdocker4314)
-- Settings are automatically saved, so the tab can be closed
+
+1. Open command palette using command + shift + p and select "Open Settings(UI)"
+2. in the search bar, type in "Streams"
+3. Checkmark the "Enable V4.3 Builds" box
+4. In the "QSE Version" setting, enter the QSE version (ex: 4.3.1.4)
+5. In the "Shared Workspace" setting, enter the volume that is mounted between your computer and the image (ex: "workspace" and make sure to have the file you wish to build in here)
+6. In the "V43 Imagename" setting, enter the name of the image (ex: streamsdocker4314)
+7. Settings are automatically saved, so the tab can be closed
 
 - **Workspace**:
-- Click on file on VSCode and select "Open"
-- Select an SPL Project containing the SPL file you wish to build. Make sure this is in your shared workspace folder
+
+1. Click on file on VSCode and select "Open"
+2. Select an SPL Project containing the SPL file you wish to build. Make sure this is in your shared workspace folder
 
 - **Building the App**:
 
