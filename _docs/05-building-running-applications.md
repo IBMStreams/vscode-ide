@@ -14,7 +14,7 @@ When you have finished [developing an SPL application]({{ "/docs/developing-spl-
 If you plan to build and/or submit your application(s) from a `Makefile`, you must configure your [`sc`](https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.3.0/com.ibm.streams.ref.doc/doc/sc.html) command invocation to pull in toolkit dependencies using `-t, --spl-path=path`.
 
 | Toolkit type                                                                 | Toolkit lookup path                |
-| ---------------------------------------------------------------------------- | ---------------------------------- | ------------- |
+| ---------------------------------------------------------------------------- | ---------------------------------- |
 | Streams product toolkits                                                     | `$(STREAMS_INSTALL)/toolkits`      |
 | Toolkits that were uploaded to the Streams build service (Streams 5.0+ only) | `$(STREAMS_BUILDSERVICE_TOOLKITS)` |
 | Local toolkits included the [**Toolkit Paths**]({{ "/docs/settings"          | relative_url }}) setting           | `../toolkits` |
@@ -60,6 +60,60 @@ For more information, refer to the [documentation](https://www.ibm.com/support/k
   <p><strong>Watch and learn</strong>: This video demonstrates how to build and submit an application.</p>
   <video class="tutorial-video" src="{{ site.videos.building_running_applications.build_submit_spl_application }}" controls></video>
 </div>
+
+### Building on OSStreams
+
+- **Prerequisites**:
+- Have a docker registry running https://github.com/IBMStreams/OSStreams
+- steps under "Building streams"
+- Have an SPL application ready to be built with OSStreams. Example: https://github.com/xguerin/spl-playground/tree/master/apps/custommetrics
+
+- **Setting up**:
+- Open command palette using command + shift + p and select "Open Settings(UI)"
+- in the search bar, type in "Streams"
+- Checkmark the "Enable OSStreams Builds" box
+- In the "OSStreams Image" setting, enter the string containing DNS and port, namespace and the image
+- The default is "localhost:5000/\$USER/streams-runtime:6.debug"
+- Settings are automatically saved, so the tab can be closed
+
+- **Workspace**:
+- Click on file on VSCode and select "Open"
+- Select an SPL Project containing the SPL file you wish to build. ex: open this project https://github.com/xguerin/spl-playground
+- make sure the workspace you open is not included in the namespace of your file you wish to build. For example, the namespace in https://github.com/xguerin/spl-playground/blob/master/apps/custommetrics/CustomMetrics.spl is apps.custommetrics, so set your workspace to be the folder right before apps/custommetrics.
+- ex: users/bob/documents/spl-playground
+
+- **Building the App**:
+
+1. In the explorer, right click the spl file you wish to build and select "Build on OSStreams"
+2. In the IBM Streams output console, updates will be shown with the status of the build, starting with "Building with OSStreams..."
+3. The console will update once the app has been built, or will show any errors that occurred during the build
+4. The output folder containing the .sab file will be in the directory of the folder that was mounted
+
+### Building on V4.3
+
+- **Prerequisites**:
+- Have QSE running on docker
+- Have an SPL application ready to be built
+
+- **Setting up**:
+- Open command palette using command + shift + p and select "Open Settings(UI)"
+- in the search bar, type in "Streams"
+- Checkmark the "Enable V4.3 Builds" box
+- In the "QSE Version" setting, enter the QSE version (ex: 4.3.1.4)
+- In the "Shared Workspace" setting, enter the volume that is mounted between your computer and the image (ex: "workspace" and make sure to have the file you wish to build in here)
+- In the "V43 Imagename" setting, enter the name of the image (ex: streamsdocker4314)
+- Settings are automatically saved, so the tab can be closed
+
+- **Workspace**:
+- Click on file on VSCode and select "Open"
+- Select an SPL Project containing the SPL file you wish to build. Make sure this is in your shared workspace folder
+
+- **Building the App**:
+
+1. In the explorer, right click the spl file you wish to build and select "Build on V4.3"
+2. In the IBM Streams output console, updates will be shown with the status of the build, starting with "Building with V4.3..."
+3. The console will update once the app has been built, or will show any errors that occurred during the build
+4. The output folder containing the .sab file will be in the directory of the folder that was mounted
 
 ### Results
 
