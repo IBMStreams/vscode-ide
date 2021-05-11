@@ -42,7 +42,7 @@ import {
 } from 'vscode';
 import * as packageJson from '../../package.json';
 import { Commands } from '../commands';
-import { CpdJob, Streams, StreamsInstance } from '../streams';
+import { CpdJob, Streams, StreamsInstance, CpdJobRun } from '../streams';
 import {
   ActionType,
   Authentication,
@@ -57,6 +57,9 @@ import {
 import { getStreamsExplorer } from '../views';
 import LintHandler from './LintHandler';
 import MessageHandler from './MessageHandler';
+
+import cp from 'child_process';
+import util from 'util';
 
 /**
  * Handles Streams builds and submissions
@@ -238,6 +241,392 @@ export default class StreamsBuild {
     };
     addToolkitToBuildService();
   }
+  /**
+   * Remove a run from the Streams build service
+   * @param selectedPath    The selected path
+   */
+  public static async cancelActiveRuns(): Promise<void> {
+    const messageHandler = Registry.getDefaultMessageHandler();
+    messageHandler.logInfo(
+      'Received request to remove toolkit(s) from the Streams build service.'
+    );
+
+    // Check for default instance
+    if (!Streams.getInstances().length) {
+      const notificationButtons = [
+        {
+          label: 'Add Instance',
+          callbackFn: (): void => {
+            const queuedActionId = generateRandomId('queuedAction');
+            store.dispatch(
+              EditorAction.addQueuedAction({
+                id: queuedActionId,
+                action: Editor.executeCallbackFn(() => this.cancelActiveRuns())
+              })
+            );
+            StreamsInstance.authenticate(null, false, queuedActionId);
+          }
+        }
+      ];
+      const message =
+        'There are no Streams instances available. Add an instance to continue with removing a toolkit.';
+      messageHandler.logInfo(message, { notificationButtons });
+    } else if (!Streams.getDefaultInstanceEnv()) {
+      window
+        .showWarningMessage(
+          `A default Streams instance has not been set.`,
+          'Set Default'
+        )
+        .then((selection: string) => {
+          if (selection) {
+            window
+              .showQuickPick(
+                Streams.getQuickPickItems(Streams.getInstances()),
+                {
+                  canPickMany: false,
+                  ignoreFocusOut: true,
+                  placeHolder: 'Select a Streams instance to set as the default'
+                }
+              )
+              .then(
+                async (item: any): Promise<void> => {
+                  if (item) {
+                    StreamsInstance.setDefaultInstance(item);
+                    return this.cancelActiveRuns();
+                  }
+                }
+              );
+          }
+          return null;
+        });
+    } else {
+      const defaultInstance = Streams.checkDefaultInstance();
+      if (!defaultInstance) {
+        return;
+      }
+      this.runCancelActiveRuns(defaultInstance);
+    }
+  }
+
+  /**
+   * Handle removing a run from the Streams build service
+   * @param targetInstance    The target Streams instance
+   */
+  public static async runCancelActiveRuns(targetInstance: any): Promise<void> {
+    const cancelActiveRuns = (): void => {
+      if (targetInstance) {
+        if (!Authentication.isAuthenticated(targetInstance)) {
+          const queuedActionId = generateRandomId('queuedAction');
+          store.dispatch(
+            EditorAction.addQueuedAction({
+              id: queuedActionId,
+              action: Editor.executeCallbackFn(cancelActiveRuns)
+            })
+          );
+          StreamsInstance.authenticate(targetInstance, false, queuedActionId);
+        } else {
+          const instanceName = InstanceSelector.selectInstanceName(
+            store.getState(),
+            targetInstance.connectionId
+          );
+          const spaces = InstanceSelector.selectCloudPakForDataSpacesOrProjects(
+            store.getState(),
+            targetInstance.connectionId,
+            CloudPakForDataJobType.Space
+          );
+          const spaceItems = [];
+          spaces.forEach((space) => {
+            space.jobs.forEach((job) => {
+              job.runs.forEach((run) => {
+                if (run.streamsJob && run.streamsJob.status === 'running') {
+                  const runInfo = {
+                    instance: targetInstance,
+                    spaceId: space.metadata.id,
+                    projectId: null,
+                    jobId: job.metadata.asset_id,
+                    jobName: job.metadata.name,
+                    jobRunId: run.metadata.asset_id,
+                    jobRunName: run.metadata.name
+                  };
+                  spaceItems.push({
+                    label: run.metadata.name,
+                    description: run.metadata.description,
+                    runInfo
+                  });
+                }
+              });
+            });
+          });
+
+          if (spaceItems.length > 0) {
+            window
+              .showQuickPick(spaceItems, {
+                canPickMany: true,
+                ignoreFocusOut: true,
+                placeHolder:
+                  'Select one or more Streams build service toolkits to remove'
+              })
+              .then(
+                async (items: Array<any>): Promise<void> => {
+                  if (items) {
+                    items.forEach((item) => {
+                      const cancelJobRun = async (): Promise<void> => {
+                        try {
+                          if (
+                            item.runInfo.instance &&
+                            (item.runInfo.spaceId || item.runInfo.projectId) &&
+                            item.runInfo.jobId &&
+                            item.runInfo.jobRunId
+                          ) {
+                            await CpdJobRun.cancelJobRuns(
+                              item.runInfo.instance,
+                              item.runInfo.spaceId,
+                              item.runInfo.projectId,
+                              item.runInfo.jobId,
+                              item.runInfo.jobName,
+                              item.runInfo.jobRunId,
+                              item.runInfo.jobRunName
+                            );
+                            return;
+                          }
+                          throw new Error();
+                        } catch (err) {
+                          CpdJobRun.handleError(err);
+                        }
+                      };
+                      cancelJobRun();
+                    });
+
+                    // store
+                    //   .dispatch(startRemoveAction)
+                    //   .then(async () => {
+                    //     // Refresh the toolkits
+                    //     setTimeout(async () => {
+                    //       await ToolkitUtils.refreshToolkits(
+                    //         targetInstance.connectionId
+                    //       );
+                    //       getStreamsExplorer().refreshToolkitsView();
+                    //     }, 10000);
+                    //   })
+                    //   .catch((err) => {
+                    //     const instanceName = InstanceSelector.selectInstanceName(
+                    //       store.getState(),
+                    //       targetInstance.connectionId
+                    //     );
+                    //     const errorMsg = `Failed to remove the toolkit(s) from the build service using the Streams instance ${instanceName}.`;
+                    //     this.handleError(
+                    //       err,
+                    //       Registry.getDefaultMessageHandler(),
+                    //       errorMsg
+                    //     );
+                    //   });
+                  }
+                }
+              );
+          } else {
+            this._defaultMessageHandler.logInfo(
+              `There are no build service toolkits available to remove from the Streams instance ${instanceName}.`
+            );
+          }
+        }
+      }
+    };
+    cancelActiveRuns();
+  }
+
+  /**
+   * Remove a toolkit from the Streams build service
+   * @param selectedPath    The selected path
+   */
+  public static async deleteCanceledRuns(): Promise<void> {
+    const messageHandler = Registry.getDefaultMessageHandler();
+    messageHandler.logInfo(
+      'Received request to remove canceled runs(s) from the Streams build service.'
+    );
+
+    // Check for default instance
+    if (!Streams.getInstances().length) {
+      const notificationButtons = [
+        {
+          label: 'Add Instance',
+          callbackFn: (): void => {
+            const queuedActionId = generateRandomId('queuedAction');
+            store.dispatch(
+              EditorAction.addQueuedAction({
+                id: queuedActionId,
+                action: Editor.executeCallbackFn(() => this.cancelActiveRuns())
+              })
+            );
+            StreamsInstance.authenticate(null, false, queuedActionId);
+          }
+        }
+      ];
+      const message =
+        'There are no Streams instances available. Add an instance to continue with removing a canceled job';
+      messageHandler.logInfo(message, { notificationButtons });
+    } else if (!Streams.getDefaultInstanceEnv()) {
+      window
+        .showWarningMessage(
+          `A default Streams instance has not been set.`,
+          'Set Default'
+        )
+        .then((selection: string) => {
+          if (selection) {
+            window
+              .showQuickPick(
+                Streams.getQuickPickItems(Streams.getInstances()),
+                {
+                  canPickMany: false,
+                  ignoreFocusOut: true,
+                  placeHolder: 'Select a Streams instance to set as the default'
+                }
+              )
+              .then(
+                async (item: any): Promise<void> => {
+                  if (item) {
+                    StreamsInstance.setDefaultInstance(item);
+                    return this.deleteCanceledRuns();
+                  }
+                }
+              );
+          }
+          return null;
+        });
+    } else {
+      const defaultInstance = Streams.checkDefaultInstance();
+      if (!defaultInstance) {
+        return;
+      }
+      this.runDeleteCanceledRuns(defaultInstance);
+    }
+  }
+
+  /**
+   * Handle removing a run from the Streams build service
+   * @param targetInstance    The target Streams instance
+   */
+  public static async runDeleteCanceledRuns(
+    targetInstance: any
+  ): Promise<void> {
+    const cancelActiveRuns = (): void => {
+      if (targetInstance) {
+        if (!Authentication.isAuthenticated(targetInstance)) {
+          const queuedActionId = generateRandomId('queuedAction');
+          store.dispatch(
+            EditorAction.addQueuedAction({
+              id: queuedActionId,
+              action: Editor.executeCallbackFn(cancelActiveRuns)
+            })
+          );
+          StreamsInstance.authenticate(targetInstance, false, queuedActionId);
+        } else {
+          const instanceName = InstanceSelector.selectInstanceName(
+            store.getState(),
+            targetInstance.connectionId
+          );
+          const spaces = InstanceSelector.selectCloudPakForDataSpacesOrProjects(
+            store.getState(),
+            targetInstance.connectionId,
+            CloudPakForDataJobType.Space
+          );
+          const spaceItems = [];
+          spaces.forEach((space) => {
+            space.jobs.forEach((job) => {
+              job.runs.forEach((run) => {
+                if (!run.streamsJob) {
+                  const runInfo = {
+                    instance: targetInstance,
+                    spaceId: space.metadata.id,
+                    projectId: null,
+                    jobId: job.metadata.asset_id,
+                    jobName: job.metadata.name,
+                    jobRunId: run.metadata.asset_id,
+                    jobRunName: run.metadata.name
+                  };
+                  spaceItems.push({
+                    label: run.metadata.name,
+                    description: run.metadata.description,
+                    runInfo
+                  });
+                }
+              });
+            });
+          });
+
+          if (spaceItems.length > 0) {
+            window
+              .showQuickPick(spaceItems, {
+                canPickMany: true,
+                ignoreFocusOut: true,
+                placeHolder: 'Select one or more canceled jobs to remove'
+              })
+              .then(
+                async (items: Array<any>): Promise<void> => {
+                  if (items) {
+                    items.forEach((item) => {
+                      const cancelJobRun = async (): Promise<void> => {
+                        try {
+                          if (
+                            item.runInfo.instance &&
+                            (item.runInfo.spaceId || item.runInfo.projectId) &&
+                            item.runInfo.jobId &&
+                            item.runInfo.jobRunId
+                          ) {
+                            await CpdJobRun.deleteJobRuns(
+                              item.runInfo.instance,
+                              item.runInfo.spaceId,
+                              item.runInfo.projectId,
+                              item.runInfo.jobId,
+                              item.runInfo.jobName,
+                              item.runInfo.jobRunId,
+                              item.runInfo.jobRunName
+                            );
+                            return;
+                          }
+                          throw new Error();
+                        } catch (err) {
+                          CpdJobRun.handleError(err);
+                        }
+                      };
+                      cancelJobRun();
+                    });
+
+                    // store
+                    //   .dispatch(startRemoveAction)
+                    //   .then(async () => {
+                    //     // Refresh the toolkits
+                    //     setTimeout(async () => {
+                    //       await ToolkitUtils.refreshToolkits(
+                    //         targetInstance.connectionId
+                    //       );
+                    //       getStreamsExplorer().refreshToolkitsView();
+                    //     }, 10000);
+                    //   })
+                    //   .catch((err) => {
+                    //     const instanceName = InstanceSelector.selectInstanceName(
+                    //       store.getState(),
+                    //       targetInstance.connectionId
+                    //     );
+                    //     const errorMsg = `Failed to remove the toolkit(s) from the build service using the Streams instance ${instanceName}.`;
+                    //     this.handleError(
+                    //       err,
+                    //       Registry.getDefaultMessageHandler(),
+                    //       errorMsg
+                    //     );
+                    //   });
+                  }
+                }
+              );
+          } else {
+            this._defaultMessageHandler.logInfo(
+              `There are no canceled runs available to remove from the Streams instance ${instanceName}.`
+            );
+          }
+        }
+      }
+    };
+    cancelActiveRuns();
+  }
 
   /**
    * Remove a toolkit from the Streams build service
@@ -395,6 +784,205 @@ export default class StreamsBuild {
       }
     };
     removeToolkitsFromBuildService();
+  }
+
+  /**
+   * Perform a build of an SPL file and either download the bundle or submit the application
+   * @param filePath the path to the SPL file
+   * @param action the post-build action to take
+   */
+  public static async buildOsstreams(filePath, OSSInput): Promise<void> {
+    const messageHandlerId = filePath;
+    let messageHandler = Registry.getMessageHandler(messageHandlerId);
+    const workspaceFolders = workspace.workspaceFolders
+      ? _map(
+          workspace.workspaceFolders,
+          (folder: WorkspaceFolder) => folder.uri.fsPath
+        )
+      : [];
+    const appRoot = SourceArchiveUtils.getApplicationRoot(
+      workspaceFolders,
+      filePath,
+      true
+    );
+    if (!messageHandler) {
+      messageHandler = new MessageHandler({ appRoot, filePath });
+      Registry.addMessageHandler(messageHandlerId, messageHandler);
+    }
+    const {
+      namespace,
+      mainComposites
+    }: any = StreamsUtils.getFqnMainComposites(filePath, messageHandlerId);
+    const compositeToBuild = await this.getCompositeToBuild(
+      namespace,
+      mainComposites
+    );
+
+    const indexOfSlash = filePath.lastIndexOf('/');
+    const directoryPath = filePath.substring(0, indexOfSlash);
+
+    const getWorkspaceFolder = (workspaceFolders) => {
+      for (let i = 0; i < workspaceFolders.length; i++) {
+        let tempDir = directoryPath;
+        while (tempDir !== '') {
+          if (tempDir === workspaceFolders[i]) {
+            return workspaceFolders[i];
+          } else {
+            const slashIndex = tempDir.lastIndexOf('/');
+            tempDir = tempDir.substring(0, slashIndex);
+          }
+        }
+      }
+      return null;
+    };
+    const workspaceFolder = getWorkspaceFolder(workspaceFolders);
+
+    const localToolkitPathsSetting = Configuration.getSetting(
+      Settings.ENV_TOOLKIT_PATHS
+    );
+
+    const toolkitPathArr = localToolkitPathsSetting.split('; ');
+    const mountCommands = (arr) => {
+      let outputString = '';
+      arr.forEach((element) => {
+        outputString = outputString + `-v ${element}:${element}:rw `;
+      });
+      return outputString;
+    };
+    const mountCommand = mountCommands(toolkitPathArr);
+    const toolkitCommand = toolkitPathArr.join(' ');
+
+    const exec = util.promisify(require('child_process').exec);
+
+    const messageHandlerDefault = Registry.getDefaultMessageHandler();
+
+    const namespaceLength = namespace.length;
+    const directoryLength = directoryPath.length;
+    const mountPath =
+      namespace !== ''
+        ? directoryPath.substring(0, directoryLength - (namespaceLength + 1))
+        : directoryPath;
+
+    let dockerCommand = '';
+    if (localToolkitPathsSetting === '/path/to/toolkits/directory') {
+      dockerCommand = `docker run -i --rm -v ${workspaceFolder}:${workspaceFolder}:rw -v $HOME/.m2:/home/builder/.m2:rw ${OSSInput} doas $(id -u) $(id -g) ${mountPath} sc --output-dir=./output -M ${compositeToBuild} -a`;
+    } else {
+      dockerCommand = `docker run -i --rm ${mountCommand} -v ${workspaceFolder}:${workspaceFolder}:rw -v $HOME/.m2:/home/builder/.m2:rw ${OSSInput} doas $(id -u) $(id -g) ${mountPath} sc -t ${toolkitCommand} --output-dir=./output -M ${compositeToBuild} -a`;
+    }
+    async function runCommand() {
+      messageHandlerDefault.logInfo('Building with OSStreams...');
+      const { stdout, stderr } = await exec(dockerCommand).catch((error) => {
+        messageHandlerDefault.logError(`Docker build error: ${error}`);
+        throw error;
+      });
+      messageHandlerDefault.logInfo(`Docker build output: ${stdout}.`);
+      messageHandlerDefault.logInfo(`Finished building the app`);
+      if (stderr)
+        messageHandlerDefault.logError(`Docker build error: ${stderr}`);
+    }
+    runCommand();
+  }
+
+  /**
+   * Perform a build of an SPL file and either download the bundle or submit the application
+   * @param filePath the path to the SPL file
+   * @param action the post-build action to take
+   */
+  public static async buildv43(
+    V43Image: string,
+    V43Version: string,
+    V43Folder: string,
+    filePath
+  ): Promise<void> {
+    const messageHandlerId = filePath;
+    let messageHandler = Registry.getMessageHandler(messageHandlerId);
+    const workspaceFolders = workspace.workspaceFolders
+      ? _map(
+          workspace.workspaceFolders,
+          (folder: WorkspaceFolder) => folder.uri.fsPath
+        )
+      : [];
+    const appRoot = SourceArchiveUtils.getApplicationRoot(
+      workspaceFolders,
+      filePath,
+      true
+    );
+    if (!messageHandler) {
+      messageHandler = new MessageHandler({ appRoot, filePath });
+      Registry.addMessageHandler(messageHandlerId, messageHandler);
+    }
+    const {
+      namespace,
+      mainComposites
+    }: any = StreamsUtils.getFqnMainComposites(filePath, messageHandlerId);
+    const compositeToBuild = await this.getCompositeToBuild(
+      namespace,
+      mainComposites
+    );
+
+    const exec = util.promisify(require('child_process').exec);
+    const indexOfSlash = filePath.lastIndexOf('/');
+    const directoryPath = filePath.substring(0, indexOfSlash);
+
+    const getWorkspaceFolder = (workspaceFolders) => {
+      for (let i = 0; i < workspaceFolders.length; i++) {
+        let tempDir = directoryPath;
+        while (tempDir !== '') {
+          if (tempDir === workspaceFolders[i]) {
+            return workspaceFolders[i];
+          } else {
+            const slashIndex = tempDir.lastIndexOf('/');
+            tempDir = tempDir.substring(0, slashIndex);
+          }
+        }
+      }
+      return null;
+    };
+    const workspaceFolder = getWorkspaceFolder(workspaceFolders);
+
+    const indexofWorkspace = workspaceFolder.lastIndexOf(`/${V43Folder}`);
+
+    const cdDir = workspaceFolder.substring(indexofWorkspace).substring(1);
+
+    const localToolkitPathsSetting = Configuration.getSetting(
+      Settings.ENV_TOOLKIT_PATHS
+    );
+
+    const toolkitPathArr = localToolkitPathsSetting.split('; ');
+
+    const workspaceToolkits = [];
+    toolkitPathArr.forEach((toolkit) => {
+      if (toolkit.includes(`/${V43Folder}`)) {
+        const indexofWorkspace = toolkit.lastIndexOf(`/${V43Folder}`);
+
+        const toolkitDir = toolkit.substring(indexofWorkspace).substring(1);
+        workspaceToolkits.push(`/home/streamsadmin/${toolkitDir}`);
+      }
+    });
+
+    const toolkitCommand = workspaceToolkits.join(' ');
+
+    const messageHandlerDefault = Registry.getDefaultMessageHandler();
+
+    let dockerCommand = '';
+    if (localToolkitPathsSetting === '/path/to/toolkits/directory') {
+      dockerCommand = `docker exec -u streamsadmin -i ${V43Image} /bin/bash -c "export LANG=en_US.UTF-8;locale; source /opt/ibm/InfoSphere_Streams/${V43Version}/bin/streamsprofile.sh; cd /home/streamsadmin/${cdDir}; sc --output-dir=./output -M ${compositeToBuild}"`;
+    } else {
+      dockerCommand = `docker exec -u streamsadmin -i ${V43Image} /bin/bash -c "export LANG=en_US.UTF-8;locale; source /opt/ibm/InfoSphere_Streams/${V43Version}/bin/streamsprofile.sh; cd /home/streamsadmin/${cdDir}; sc -t ${toolkitCommand} --output-dir=./output -M ${compositeToBuild}"`;
+    }
+
+    async function runBuild() {
+      messageHandlerDefault.logInfo('Starting the Docker build');
+      const { stdout, stderr } = await exec(dockerCommand).catch((error) => {
+        messageHandlerDefault.logError(`Docker build error: ${error}`);
+        throw error;
+      });
+      messageHandlerDefault.logInfo(`Docker build output: ${stdout}.`);
+      messageHandlerDefault.logInfo(`Finished building the app`);
+      if (stderr)
+        messageHandlerDefault.logError(`Docker build error: ${stderr}`);
+    }
+    runBuild();
   }
 
   /**

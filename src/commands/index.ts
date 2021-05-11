@@ -62,6 +62,8 @@ export function initialize(context: ExtensionContext): void {
   streamsCommands.push(
     new BuildCommand(Commands.BUILD.APP_DOWNLOAD, PostBuildAction.Download)
   );
+  streamsCommands.push(new BuildCommand(Commands.BUILD.V43_BUILD));
+  streamsCommands.push(new BuildCommand(Commands.BUILD.OSSTREAMS_BUILD));
   streamsCommands.push(
     new BuildCommand(Commands.BUILD.APP_SUBMIT, PostBuildAction.Submit)
   );
@@ -92,6 +94,12 @@ export function initialize(context: ExtensionContext): void {
   );
   streamsCommands.push(
     new BuildCommand(Commands.ENVIRONMENT.REMOVE_TOOLKITS_FROM_BUILD_SERVICE)
+  );
+  streamsCommands.push(
+    new BuildCommand(Commands.ENVIRONMENT.CANCEL_RUNNING_JOBS)
+  );
+  streamsCommands.push(
+    new BuildCommand(Commands.ENVIRONMENT.DELETE_CANCELED_JOBS)
   );
   streamsCommands.push(
     new OpenLinkCommand(Commands.ENVIRONMENT.CPD_OPEN_CONSOLE)

@@ -64,6 +64,14 @@ export const BUILD = {
    */
   APP_SUBMIT: 'ibm-streams.build.appSubmit',
   /**
+   * Build using V4.3
+   */
+  V43_BUILD: 'ibm-streams.build.v43Build',
+  /**
+   * Build using OSStreams
+   */
+  OSSTREAMS_BUILD: 'ibm-streams.build.OSStreamsBuild',
+  /**
    * Build Edge Application Image
    */
   APP_IMAGE: 'ibm-streams.build.appEdgeAnalyticsImage',
@@ -181,7 +189,15 @@ export const ENVIRONMENT = {
    * Remove Toolkits from Streams Build Service
    */
   REMOVE_TOOLKITS_FROM_BUILD_SERVICE:
-    'ibm-streams.environment.removeToolkitsFromBuildService'
+    'ibm-streams.environment.removeToolkitsFromBuildService',
+  /**
+   * Cancel multiple active jobs
+   */
+  CANCEL_RUNNING_JOBS: 'ibm-streams.environment.cancelRunningJobs',
+  /**
+   * Delete multiple canceled jobs
+   */
+  DELETE_CANCELED_JOBS: 'ibm-streams.environment.deleteCanceledJobs'
 };
 
 /**

@@ -1,8 +1,9 @@
-import { PrimitiveOperatorType } from '@ibmstreams/common';
+import { PrimitiveOperatorType, Registry } from '@ibmstreams/common';
 import * as fs from 'fs';
 import { ExtensionContext, Uri, window } from 'vscode';
 import { Commands, BaseCommand } from '.';
 import StreamsBuild from '../build';
+import { Settings, Configuration } from '../utils';
 
 /**
  * Command that allows a user to build or submit Streams application(s)
@@ -41,6 +42,27 @@ export default class BuildCommand implements BaseCommand {
             throw error;
           }
         );
+      case Commands.BUILD.OSSTREAMS_BUILD:
+        const OSSInput = Configuration.getSetting(Settings.OSS_INPUT);
+        const messageHandlerDefault = Registry.getDefaultMessageHandler();
+        return StreamsBuild.buildOsstreams(filePaths[0], OSSInput).catch(
+          (error) => {
+            messageHandlerDefault.logError(`Docker build error: ${error}`);
+            throw error;
+          }
+        );
+      case Commands.BUILD.V43_BUILD:
+        const V43Image = Configuration.getSetting(Settings.V43_IMAGE_NAME);
+        const V43Version = Configuration.getSetting(Settings.V43_VERSION);
+        const V43Folder = Configuration.getSetting(Settings.V43_SHARED_FOLDER);
+        return StreamsBuild.buildv43(
+          V43Image,
+          V43Version,
+          V43Folder,
+          filePaths[0]
+        ).catch((error) => {
+          throw error;
+        });
       case Commands.BUILD.MAKE_DOWNLOAD:
       case Commands.BUILD.MAKE_SUBMIT:
       case Commands.BUILD.MAKE_IMAGE:
@@ -93,6 +115,14 @@ export default class BuildCommand implements BaseCommand {
         );
       case Commands.ENVIRONMENT.REMOVE_TOOLKITS_FROM_BUILD_SERVICE:
         return StreamsBuild.removeToolkitsFromBuildService().catch((error) => {
+          throw error;
+        });
+      case Commands.ENVIRONMENT.CANCEL_RUNNING_JOBS:
+        return StreamsBuild.cancelActiveRuns().catch((error) => {
+          throw error;
+        });
+      case Commands.ENVIRONMENT.DELETE_CANCELED_JOBS:
+        return StreamsBuild.deleteCanceledRuns().catch((error) => {
           throw error;
         });
       default:

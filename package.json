@@ -2,7 +2,7 @@
   "name": "ibm-streams",
   "displayName": "IBM Streams",
   "description": "IBM Streams Support for Visual Studio Code",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "publisher": "IBM",
   "license": "Apache-2.0",
   "icon": "images/ibm-streams.png",
@@ -148,6 +148,36 @@
           ],
           "default": "off",
           "description": "Traces the communication between VS Code and the SPL language server."
+        },
+        "ibm-streams.environment.enableV43Builds": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enables V4.3 builds"
+        },
+        "ibm-streams.environment.V43Imagename": {
+          "type": "string",
+          "default": "",
+          "description": "image name (ex:streamsdocker4314)"
+        },
+        "ibm-streams.environment.sharedWorkspace": {
+          "type": "string",
+          "default": "",
+          "description": "name of shared root folder (ex: 'workspace'"
+        },
+        "ibm-streams.environment.QSEVersion": {
+          "type": "string",
+          "default": "",
+          "description": "version of QSE(ex:4314)"
+        },
+        "ibm-streams.environment.enableOSStreamsBuilds": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enables OSSstream builds"
+        },
+        "ibm-streams.environment.OSStreamsImageLocation": {
+          "type": "string",
+          "default": "localhost:5000/$USER/streams-runtime:6.debug",
+          "description": "Path to registry DNS and port(ex: localhost:5000), namespace(ex: $USER) and the image(ex: streams-runtime:6.debug)"
         }
       }
     },
@@ -200,6 +230,16 @@
       {
         "command": "ibm-streams.build.appSubmit",
         "title": "Build and Submit Job",
+        "category": "IBM Streams"
+      },
+      {
+        "command": "ibm-streams.build.v43Build",
+        "title": "Build on V4.3",
+        "category": "IBM Streams"
+      },
+      {
+        "command": "ibm-streams.build.OSStreamsBuild",
+        "title": "Build on OSStreams",
         "category": "IBM Streams"
       },
       {
@@ -313,6 +353,24 @@
       {
         "command": "ibm-streams.environment.removeToolkitsFromBuildService",
         "title": "Remove Toolkits from Streams Build Service",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/subtract--alt.svg",
+          "dark": "images/icons/dark/subtract--alt.svg"
+        }
+      },
+      {
+        "command": "ibm-streams.environment.cancelRunningJobs",
+        "title": "Cancel Running Jobs",
+        "category": "IBM Streams",
+        "icon": {
+          "light": "images/icons/light/subtract--alt.svg",
+          "dark": "images/icons/dark/subtract--alt.svg"
+        }
+      },
+      {
+        "command": "ibm-streams.environment.deleteCanceledJobs",
+        "title": "Delete Canceled Jobs",
         "category": "IBM Streams",
         "icon": {
           "light": "images/icons/light/subtract--alt.svg",
@@ -773,6 +831,14 @@
           "when": "editorLangId == spl"
         },
         {
+          "command": "ibm-streams.build.v43Build",
+          "when": "editorLangId == spl && config.ibm-streams.environment.enableV43Builds == true"
+        },
+        {
+          "command": "ibm-streams.build.OSStreamsBuild",
+          "when": "editorLangId == spl && config.ibm-streams.environment.enableOSStreamsBuilds == true"
+        },
+        {
           "command": "ibm-streams.build.appEdgeAnalyticsImage",
           "when": "editorLangId == spl"
         },
@@ -1046,6 +1112,16 @@
           "group": "STREAMS1@2"
         },
         {
+          "command": "ibm-streams.build.v43Build",
+          "when": "resourceLangId == spl && config.ibm-streams.environment.enableV43Builds == true",
+          "group": "STREAMS1@2"
+        },
+        {
+          "command": "ibm-streams.build.OSStreamsBuild",
+          "when": "resourceLangId == spl && config.ibm-streams.environment.enableOSStreamsBuilds == true",
+          "group": "STREAMS1@2"
+        },
+        {
           "command": "ibm-streams.build.appEdgeAnalyticsImage",
           "when": "resourceLangId == spl",
           "group": "STREAMS1@3"
@@ -1194,6 +1270,16 @@
           "group": "STREAMS1@2"
         },
         {
+          "command": "ibm-streams.build.v43Build",
+          "when": "editorLangId == spl && config.ibm-streams.environment.enableV43Builds == true",
+          "group": "STREAMS1@1"
+        },
+        {
+          "command": "ibm-streams.build.OSStreamsBuild",
+          "when": "editorLangId == spl && config.ibm-streams.environment.enableOSStreamsBuilds == true",
+          "group": "STREAMS1@1"
+        },
+        {
           "command": "ibm-streams.build.appEdgeAnalyticsImage",
           "when": "editorLangId == spl",
           "group": "STREAMS1@3"
@@ -1340,6 +1426,16 @@
           "command": "ibm-streams.build.appSubmit",
           "when": "resourceLangId == spl",
           "group": "STREAMS1@2"
+        },
+        {
+          "command": "ibm-streams.build.v43Build",
+          "when": "resourceLangId == spl && config.ibm-streams.environment.enableV43Builds == true",
+          "group": "STREAMS1@1"
+        },
+        {
+          "command": "ibm-streams.build.OSStreamsBuild",
+          "when": "resourceLangId == spl && config.ibm-streams.environment.enableOSStreamsBuilds == true",
+          "group": "STREAMS1@1"
         },
         {
           "command": "ibm-streams.build.appEdgeAnalyticsImage",
@@ -1847,6 +1943,7 @@
     "axios": "^0.21.1",
     "carbon-components": "10.21.0",
     "carbon-components-react": "7.21.0",
+    "hosted-git-info": "^2.8.9",
     "lodash": "^4.17.19",
     "papaparse": "^5.3.0",
     "prop-types": "^15.7.2",
@@ -1855,10 +1952,12 @@
     "react-intl": "^3.11.0",
     "react-redux": "^7.2.0",
     "semver": "^7.1.2",
+    "underscore": "^1.12.1",
     "uuid": "^8.3.2",
     "vscode-languageclient": "^5.2.1",
     "vscode-languageserver-protocol": "^3.14.1",
-    "xml2js": "^0.4.23"
+    "xml2js": "^0.4.23",
+    "y18n": "^4.0.1"
   },
   "resolutions": {
     "serialize-javascript": "^3.1.0"
