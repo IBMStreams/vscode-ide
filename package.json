@@ -1938,7 +1938,7 @@
     "@carbon/icons-react": "^10.19.0",
     "@carbon/themes": "^10.20.0",
     "@ibmstreams/common": "0.9.6",
-    "@ibmstreams/graph": "1.0.2",
+    "@ibmstreams/graph": "1.0.3",
     "@ibmstreams/spl-lsp": "1.1.0",
     "axios": "^0.21.1",
     "carbon-components": "10.21.0",
