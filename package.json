@@ -1943,7 +1943,6 @@
     "axios": "^0.21.1",
     "carbon-components": "10.21.0",
     "carbon-components-react": "7.21.0",
-    "hosted-git-info": "^2.8.9",
     "lodash": "^4.17.19",
     "papaparse": "^5.3.0",
     "prop-types": "^15.7.2",
@@ -1952,12 +1951,10 @@
     "react-intl": "^3.11.0",
     "react-redux": "^7.2.0",
     "semver": "^7.1.2",
-    "underscore": "^1.12.1",
     "uuid": "^8.3.2",
     "vscode-languageclient": "^5.2.1",
     "vscode-languageserver-protocol": "^3.14.1",
-    "xml2js": "^0.4.23",
-    "y18n": "^4.0.1"
+    "xml2js": "^0.4.23"
   },
   "resolutions": {
     "serialize-javascript": "^3.1.0"
