@@ -42,7 +42,7 @@ feature_row4:
     btn_class: "btn--primary"
 ---
 
-**Version Update**: There is a problem with the extension when running a vscode version 1.56.0 or above. Please use a version below that if a certification error appears when authenticating.
+**Version Update**: There is a problem with the extension when running vscode version 1.56.0 or above. Please use a version below that if a certification error appears when authenticating.
 
 With the **IBM Streams** extension, you can work with the following Streams versions.
 
