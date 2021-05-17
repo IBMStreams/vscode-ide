@@ -66,8 +66,8 @@ For more information, refer to the [documentation](https://www.ibm.com/support/k
 - **Prerequisites**:
 
 1. Have a docker registry running
-2. Follow the steps under "Building streams" (https://github.com/IBMStreams/OSStreams)
-3. Have an SPL application ready to be built with OSStreams. Example: (https://github.com/xguerin/spl-playground/tree/master/apps/custommetrics)
+2. Follow the steps under [Building streams](https://github.com/IBMStreams/OSStreams)
+3. Have an SPL application ready to be built with OSStreams. [Example](https://github.com/xguerin/spl-playground/tree/master/apps/custommetrics)
 
 - **Setting up**:
 
@@ -80,8 +80,8 @@ For more information, refer to the [documentation](https://www.ibm.com/support/k
 - **Workspace**:
 
 1. Click on file on VSCode and select "Open"
-2. Select an SPL Project containing the SPL file you wish to build. ex: open this project (https://github.com/xguerin/spl-playground)
-3. make sure the workspace you open is not included in the namespace of your file you wish to build. For example, the namespace in (https://github.com/xguerin/spl-playground/blob/master/apps/custommetrics/CustomMetrics.spl) is apps.custommetrics, so set your workspace to be the folder right before apps/custommetrics.
+2. Select an SPL Project containing the SPL file you wish to build. ex: open this [project](https://github.com/xguerin/spl-playground)
+3. make sure the workspace you open is not included in the namespace of your file you wish to build. For example, the namespace in [here](https://github.com/xguerin/spl-playground/blob/master/apps/custommetrics/CustomMetrics.spl) is apps.custommetrics, so set your workspace to be the folder right before apps/custommetrics.
 4. ex: users/bob/documents/spl-playground
 
 - **Building the App**:
