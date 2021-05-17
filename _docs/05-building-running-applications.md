@@ -65,18 +65,17 @@ For more information, refer to the [documentation](https://www.ibm.com/support/k
 
 - **Prerequisites**:
 
-1. Have a docker registry running https://github.com/IBMStreams/OSStreams
-2. steps under "Building streams"
+1. Have a docker registry running
+2. Follow the steps under "Building streams" https://github.com/IBMStreams/OSStreams
 3. Have an SPL application ready to be built with OSStreams. Example: https://github.com/xguerin/spl-playground/tree/master/apps/custommetrics
 
 - **Setting up**:
 
 1. Open command palette using command + shift + p and select "Open Settings(UI)"
-2. in the search bar, type in "Streams"
+2. In the search bar, type in "Streams"
 3. Checkmark the "Enable OSStreams Builds" box
-4. In the "OSStreams Image" setting, enter the string containing DNS and port, namespace and the image
-5. The default is "localhost:5000/\$USER/streams-runtime:6.debug"
-6. Settings are automatically saved, so the tab can be closed
+4. In the "OSStreams Image" setting, enter the string containing DNS and port, namespace and the image (The default is "localhost:5000/\$USER/streams-runtime:6.debug")
+5. Settings are automatically saved, so the tab can be closed
 
 - **Workspace**:
 
