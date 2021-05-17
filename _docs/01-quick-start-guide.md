@@ -1,5 +1,5 @@
 ---
-title: 'Quick start guide'
+title: "Quick start guide"
 permalink: /docs/quick-start-guide/
 toc: true
 toc_sticky: true
@@ -19,6 +19,7 @@ Follow this guide to get up and running quickly!
     </figure>
 1.  Set the `JAVA_HOME` environment variable to a Java JRE or JDK/SDK version 8 or higher. This satisfies the requirements of the IBM Streams SPL language server, which provides [IntelliSense](https://code.visualstudio.com/docs/editor/intellisense) support for SPL files.
 1.  Set the `java.home` VS Code setting to a Java JDK version 11 or higher. This satisfies the [requirements]({{ "/docs/developing-java-primitive-operators/#setting-up-vs-code-for-java-development" | relative_url }}) of the Language Support for Java(TM) by Red Hat extension that this extension depends on.
+1.  Set "http.proxySupport": "off" in the settings.json file.
 1.  [Add an IBM Streams instance]({{ "/docs/streams-explorer#adding-an-instance" | relative_url }}).
     <div class="notice--video">
       <p><strong>Watch and learn</strong>: This video demonstrates how to add your first instance.</p>
